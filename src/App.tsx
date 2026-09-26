@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { createHashRouter, NavLink, Outlet, RouterProvider, useLocation } from 'react-router';
 import { BookOpen, Calculator, CalendarDays, FlaskConical, Home, Layers, Menu, Settings as SettingsIcon, Trophy, X } from 'lucide-react';
 import { Dashboard } from './features/dashboard/Dashboard';
@@ -11,13 +11,22 @@ import { PracticeHome } from './features/practice/PracticeHome';
 import { ExamSession } from './features/practice/ExamSession';
 import { ExamResults } from './features/practice/ExamResults';
 import { LabsHome } from './features/labs/LabsHome';
-import { LabWorkspace } from './features/labs/LabWorkspace';
 import { DrillsHome } from './features/drills/DrillsHome';
 import { Settings } from './features/settings/Settings';
 import { useAllLessons } from './content/registry';
 import { useProgress, useSettings } from './store/progress';
 import { useExamVersion } from './store/version';
 import { buildQueue, versionCards } from './features/flashcards/deck';
+
+const LabWorkspace = lazy(() => import('./features/labs/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
+
+function Loading() {
+  return (
+    <div className="page">
+      <div className="loading"><div className="spinner" /> Loading…</div>
+    </div>
+  );
+}
 
 function useDueCount() {
   const { data } = useAllLessons();
@@ -128,7 +137,7 @@ const router = createHashRouter([
       { path: 'practice/session', element: <ExamSessionKeyed /> },
       { path: 'practice/results/:id', element: <ExamResults /> },
       { path: 'labs', element: <LabsHome /> },
-      { path: 'labs/:labId', element: <LabWorkspace /> },
+      { path: 'labs/:labId', element: <Suspense fallback={<Loading />}><LabWorkspace /></Suspense> },
       { path: 'drills/*', element: <DrillsHome /> },
       { path: 'settings', element: <Settings /> },
       { path: '*', element: <NotFound /> },

@@ -8,6 +8,9 @@
  */
 import { LESSONS, MODULES, lessonInVersion, type ExamVersion } from '../../content/curriculum';
 import type { Lab } from '../../content/labTypes';
+
+/** What the planner needs to know about any lab (IOS simulator labs and GUI labs alike). */
+export type PlanLab = Pick<Lab, 'id' | 'title' | 'minutes' | 'lessons'>;
 import { addDays, daysBetween, today as todayFn, weekday } from '../../lib/date';
 import type { ExamRecord, LabProgress, LessonProgress, PlanSettings } from '../../store/progress';
 
@@ -72,7 +75,7 @@ export interface PlanInputs {
   version: ExamVersion;
   lessons: Record<string, LessonProgress>;
   labs: Record<string, LabProgress>;
-  labDefs: Lab[];
+  labDefs: PlanLab[];
   exams: ExamRecord[];
   availableLessons?: Set<string>;
   today?: string;
@@ -85,7 +88,7 @@ export function buildItems(inp: PlanInputs): PlanItem[] {
   const inVersion = new Set(LESSONS.filter((l) => lessonInVersion(l, version)).map((l) => l.id));
 
   // Place each lab after the last of its lessons (in curriculum order).
-  const labAfter = new Map<string, Lab[]>();
+  const labAfter = new Map<string, PlanLab[]>();
   for (const lab of labDefs) {
     const ls = lab.lessons.filter((id) => inVersion.has(id));
     if (!ls.length) continue;

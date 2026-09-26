@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { GUI_LABS } from '../guilabs/registry';
 import { AVAILABLE_LESSONS, useAllLabs } from '../../content/registry';
 import { useProgress } from '../../store/progress';
 import { resolveVersion } from '../../store/version';
@@ -19,7 +20,7 @@ export function usePlan(): PlanResult | null {
       version: resolveVersion(plan),
       lessons,
       labs,
-      labDefs: Object.values(labDefs ?? {}),
+      labDefs: [...Object.values(labDefs ?? {}), ...GUI_LABS],
       exams,
       availableLessons: AVAILABLE_LESSONS,
       today: t,

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { GUI_LABS } from '../guilabs/registry';
 import { CalendarDays } from 'lucide-react';
 import { EXAM_VERSIONS, versionForDate, type ExamVersion } from '../../content/curriculum';
 import { useAllLabs } from '../../content/registry';
@@ -38,7 +39,7 @@ export function PlanSetup({ onDone, initial }: { onDone?: () => void; initial?: 
   };
   const resolved: ExamVersion = version === 'auto' ? versionForDate(goal) : version;
   const preview = useMemo(
-    () => (goal > t && days.length ? computePlan({ plan: draft, version: resolved, lessons, labs, labDefs: Object.values(labDefs ?? {}), exams, today: t }) : null),
+    () => (goal > t && days.length ? computePlan({ plan: draft, version: resolved, lessons, labs, labDefs: [...Object.values(labDefs ?? {}), ...GUI_LABS], exams, today: t }) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [goal, days.join(','), daily, version, experience, labDefs, lessons, labs, exams],
   );

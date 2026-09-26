@@ -3,13 +3,14 @@ import { Check, Clock, FlaskConical } from 'lucide-react';
 import { LESSON_BY_ID, LESSONS } from '../../content/curriculum';
 import { useAllLabs } from '../../content/registry';
 import { useProgress } from '../../store/progress';
+import { GUI_LABS } from '../guilabs/registry';
 
 export function LabsHome() {
   const { data: labs, loading } = useAllLabs();
   const progress = useProgress((s) => s.labs);
-  if (loading || !labs) return <div className="page"><div className="loading"><div className="spinner" /> Loading labs…</div></div>;
+  if (loading && !labs) return <div className="page"><div className="loading"><div className="spinner" /> Loading labs…</div></div>;
   const order = new Map(LESSONS.map((l, i) => [l.id, i]));
-  const list = Object.values(labs).sort((a, b) => Math.max(...a.lessons.map((x) => order.get(x) ?? 0)) - Math.max(...b.lessons.map((x) => order.get(x) ?? 0)));
+  const list = [...Object.values(labs ?? {}), ...GUI_LABS].sort((a, b) => Math.max(...a.lessons.map((x) => order.get(x) ?? 0)) - Math.max(...b.lessons.map((x) => order.get(x) ?? 0)));
   return (
     <div className="page">
       <div className="page-head">

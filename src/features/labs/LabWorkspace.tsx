@@ -13,6 +13,8 @@ import { Console } from './Console';
 import { HostPanel } from './HostPanel';
 import { TaskPanel } from './TaskPanel';
 import './labs.css';
+import { GUI_LAB_BY_ID } from '../guilabs/registry';
+import { GuiLabPage } from '../guilabs/GuiLabPage';
 
 function createSim(lab: Lab, fresh = false): NetworkSim {
   const topo = { devices: lab.devices, links: lab.links };
@@ -45,7 +47,9 @@ function evaluate(sim: NetworkSim, lab: Lab): Record<string, CheckResult[]> {
 
 export function LabWorkspace() {
   const { labId = '' } = useParams();
-  const { data: lab, loading } = useLab(labId);
+  const gui = GUI_LAB_BY_ID[labId];
+  const { data: lab, loading } = useLab(gui ? '' : labId);
+  if (gui) return <GuiLabPage key={gui.id} meta={gui} />;
   if (loading) return <div className="page"><div className="loading"><div className="spinner" /> Loading lab…</div></div>;
   if (!lab) return <div className="page"><div className="empty"><h3>Lab not found</h3><Link to="/labs" className="btn mt">All labs</Link></div></div>;
   return <LabRunner key={lab.id} lab={lab} />;
