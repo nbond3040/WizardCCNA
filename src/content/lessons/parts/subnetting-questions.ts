@@ -300,7 +300,7 @@ end`,
     stem: 'Refer to the exhibit. A new host is configured with 172.16.5.190 and the correct mask for its segment. Behind which R1 interface must the host be connected?',
     exhibit: {
       kind: 'cli',
-      text: `R1# show ip route connected
+      text: `R1# show ip route connected | include 172.16
       172.16.0.0/16 is variably subnetted, 6 subnets, 4 masks
 C        172.16.5.0/25 is directly connected, GigabitEthernet0/0/0
 L        172.16.5.1/32 is directly connected, GigabitEthernet0/0/0

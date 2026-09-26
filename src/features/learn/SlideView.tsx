@@ -1,5 +1,5 @@
 import { AlertTriangle, GraduationCap, KeyRound, Lightbulb } from 'lucide-react';
-import type { Bullet, Slide } from '../../content/types';
+import type { Bullet, Diagram as DiagramSpec, Slide } from '../../content/types';
 import { Rich } from '../../lib/rich';
 import { Diagram } from '../diagrams/Diagram';
 import { CliBlock } from '../../components/CliBlock';
@@ -31,6 +31,23 @@ function Bullets({ items, className }: { items: Bullet[]; className?: string }) 
   );
 }
 
+/** Diagrams that need the full slide width; they stack under the text instead of sitting beside it. */
+function isWide(d: DiagramSpec): boolean {
+  switch (d.type) {
+    case 'bits':
+    case 'header':
+      return true;
+    case 'sequence':
+      return d.actors.length >= 4;
+    case 'flow':
+      return (d.direction ?? 'horizontal') === 'horizontal' && !d.nodes.some((n) => n.x !== undefined) && d.nodes.length >= 4;
+    case 'topology':
+      return (d.width ?? 10) / (d.height ?? 5) >= 2.4;
+    default:
+      return false;
+  }
+}
+
 const CALLOUT_ICON = { tip: Lightbulb, exam: GraduationCap, key: KeyRound, warning: AlertTriangle } as const;
 const CALLOUT_LABEL = { tip: 'Tip', exam: 'Exam tip', key: 'Key idea', warning: 'Watch out' } as const;
 
@@ -49,7 +66,14 @@ export function SlideView({ slide, meta }: { slide: Slide; meta?: { module?: str
       return (
         <div className="sl">
           <h2 className="sl-h2">{slide.title}</h2>
-          {slide.diagram ? (
+          {slide.diagram && isWide(slide.diagram) ? (
+            <div className="sl-stacked">
+              <Bullets items={slide.bullets} className={slide.bullets.length > 4 ? 'two-col' : ''} />
+              <div className="sl-visual">
+                <Diagram d={slide.diagram} />
+              </div>
+            </div>
+          ) : slide.diagram ? (
             <div className="sl-split">
               <Bullets items={slide.bullets} />
               <div className="sl-split-visual">
@@ -164,8 +188,8 @@ export function SlideView({ slide, meta }: { slide: Slide; meta?: { module?: str
       return (
         <div className="sl">
           <h2 className="sl-h2">{slide.title}</h2>
-          <div className={slide.diagram ? 'sl-split' : ''}>
-            <ol className="sl-steps">
+          <div className={slide.diagram ? (isWide(slide.diagram) ? 'sl-stacked' : 'sl-split') : ''}>
+            <ol className={`sl-steps ${slide.diagram && isWide(slide.diagram) && slide.steps.length > 3 ? 'two-col' : ''}`}>
               {slide.steps.map((s, i) => (
                 <li key={i}>
                   <span className="sl-step-n">{i + 1}</span>
@@ -179,8 +203,8 @@ export function SlideView({ slide, meta }: { slide: Slide; meta?: { module?: str
               ))}
             </ol>
             {slide.diagram && (
-              <div className="sl-split-visual">
-                <Diagram d={slide.diagram} compact />
+              <div className={isWide(slide.diagram) ? 'sl-visual' : 'sl-split-visual'}>
+                <Diagram d={slide.diagram} compact={!isWide(slide.diagram)} />
               </div>
             )}
           </div>

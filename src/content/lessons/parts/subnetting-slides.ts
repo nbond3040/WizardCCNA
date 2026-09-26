@@ -380,7 +380,7 @@ export const slides: Slide[] = [
 R1(config-if)# ip address 192.168.10.150 255.255.255.224
 R1(config-if)# no shutdown
 R1(config-if)# end
-R1# show ip route connected
+R1# show ip route connected | include 192.168.10
       192.168.10.0/24 is variably subnetted, 2 subnets, 2 masks
 C        192.168.10.128/27 is directly connected, GigabitEthernet0/0/1
 L        192.168.10.150/32 is directly connected, GigabitEthernet0/0/1

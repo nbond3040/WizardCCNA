@@ -1,0 +1,120 @@
+import type { Flashcard, Question } from '../../types';
+
+export const ipv6FundamentalsFlashcards: Flashcard[] = [
+  { id: 'f1', front: 'Length of an IPv6 address', back: '**128 bits** (16 bytes), written as 8 hextets of 4 hex digits.' },
+  { id: 'f2', front: 'Hextet', back: 'One 16-bit group of an IPv6 address = **4 hex digits**. Eight hextets are separated by colons.' },
+  { id: 'f3', front: 'Bits per hex digit', back: '**4 bits** (a nibble). 32 hex digits × 4 = 128 bits.' },
+  { id: 'f4', front: 'Binary of hex `A`, `C` and `F`', back: '`A` = 1010, `C` = 1100, `F` = 1111.' },
+  { id: 'f5', front: 'Abbreviation rule 1', back: 'Remove **leading** zeros in any hextet (`0DB8`→`DB8`, `0000`→`0`). Trailing zeros must stay.' },
+  { id: 'f6', front: 'Abbreviation rule 2', back: 'Replace **one** run of consecutive all-zero hextets with `::` — the **longest** run.' },
+  { id: 'f7', front: 'Two zero runs of equal length — which one becomes `::`?', back: 'The **leftmost** (first) run; the other run is written as `0:0`.' },
+  { id: 'f8', front: 'Why may `::` appear only once?', back: 'The reader expands `::` by counting missing hextets; with two of them the split of zeros would be ambiguous.' },
+  { id: 'f9', front: 'Expanding: how many hextets does `::` represent?', back: '**8 minus the number of hextets shown**, each `0000`.' },
+  { id: 'f10', front: 'Shortest form of `2001:0DB8:0000:0000:0000:0000:0000:0001`', back: '`2001:DB8::1`' },
+  { id: 'f11', front: 'Documentation prefix for IPv6 examples', back: '`2001:DB8::/32` (RFC 3849) — never routed on the Internet.' },
+  { id: 'f12', front: 'Standard prefix length for an IPv6 LAN', back: '**/64** — leaves a 64-bit interface ID, required for SLAAC and EUI-64.' },
+  { id: 'f13', front: 'Three parts of a global unicast address', back: '**Global routing prefix** + **subnet ID** + **interface ID** (typically 48 + 16 + 64 bits).' },
+  { id: 'f14', front: 'Number of /64 subnets in a /48', back: '2^16 = **65,536**.' },
+  { id: 'f15', front: 'Number of /64 subnets in a /56', back: '2^8 = **256**.' },
+  { id: 'f16', front: 'IPv6 base header size', back: 'Fixed **40 bytes** (IPv4: 20–60 bytes).' },
+  { id: 'f17', front: 'IPv6 field that replaces the IPv4 TTL', back: '**Hop Limit** (8 bits) — decremented by each router; at 0 the packet is dropped.' },
+  { id: 'f18', front: 'IPv6 field that replaces the IPv4 Protocol field', back: '**Next Header** — e.g. 6 = TCP, 17 = UDP, 58 = ICMPv6, or an extension header.' },
+  { id: 'f19', front: 'Flow Label', back: 'New **20-bit** IPv6 header field that tags packets belonging to the same flow.' },
+  { id: 'f20', front: 'Traffic Class', back: '8-bit IPv6 header field for QoS (DSCP + ECN) — same role as the IPv4 ToS byte.' },
+  { id: 'f21', front: 'Payload Length', back: '16-bit field: bytes that follow the 40-byte base header (including extension headers).' },
+  { id: 'f22', front: 'Who fragments IPv6 packets?', back: 'Only the **source host** (Fragment extension header). Routers drop oversized packets and send ICMPv6 Packet Too Big.' },
+  { id: 'f23', front: 'Does the IPv6 header have a checksum?', back: '**No.** Errors are caught by the link-layer FCS and upper-layer checksums (UDP checksum is mandatory in IPv6).' },
+  { id: 'f24', front: 'Minimum link MTU required by IPv6', back: '**1280 bytes**.' },
+  { id: 'f25', front: '`ipv6 unicast-routing`', back: 'Global command (off by default) that lets a router forward IPv6 packets and send Router Advertisements; the router also joins FF02::2.' },
+  { id: 'f26', front: '`ipv6 address 2001:db8:acad:2::/64 eui-64`', back: 'Uses the typed /64 prefix and builds the interface ID from the interface MAC (modified EUI-64).' },
+  { id: 'f27', front: '`ipv6 enable`', back: 'Enables IPv6 on an interface with only an automatic **link-local** address — no global address.' },
+  { id: 'f28', front: '`ipv6 address autoconfig`', back: 'The interface learns its prefix from Router Advertisements (**SLAAC**) and builds its own address.' },
+  { id: 'f29', front: 'Second `ipv6 address` command on the same interface', back: '**Adds** another address; it does not replace the first (unlike `ip address`).' },
+  { id: 'f30', front: '`L` routes in `show ipv6 route`', back: '**/128 local** routes for each of the router\'s own addresses (plus `FF00::/8` via Null0). Link-local addresses never appear.' },
+];
+
+export const ipv6FundamentalsQuiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'How many bits are in an IPv6 address?',
+    options: ['32', '64', '128', '256'],
+    answer: 2,
+    difficulty: 1,
+    explanation:
+      'An IPv6 address is **128 bits**: 8 hextets × 16 bits. 32 bits is IPv4, 64 bits is the size of the interface ID in a /64, and 256 is not used.',
+  },
+  {
+    id: 'q2',
+    type: 'input',
+    stem: 'Write `2001:0DB8:0000:0000:0000:0000:0000:0001` in its shortest form.',
+    answers: ['2001:db8::1'],
+    placeholder: '2001:...',
+    difficulty: 1,
+    explanation:
+      'Drop the leading zero of `0DB8` and of `0001`, then replace the run of five zero hextets with `::` → **2001:DB8::1**.',
+  },
+  {
+    id: 'q3',
+    type: 'input',
+    stem: 'Expand `FE80::1:2:3` to its full 32-digit form.',
+    answers: ['fe80:0000:0000:0000:0000:0001:0002:0003'],
+    placeholder: 'xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx',
+    difficulty: 2,
+    explanation:
+      'Four hextets are shown (FE80, 1, 2, 3), so `::` stands for 8 − 4 = 4 zero hextets. Padding each hextet to four digits gives **FE80:0000:0000:0000:0000:0001:0002:0003**.',
+  },
+  {
+    id: 'q4',
+    type: 'single',
+    stem: 'An address contains two separate runs of two all-zero hextets. Following the standard (RFC 5952) rules, which run is replaced by `::`?',
+    options: ['The leftmost run', 'The rightmost run', 'Both runs, each with its own `::`', 'Neither — `::` requires three or more zero hextets'],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'On a tie the **first (leftmost)** run is compressed and the other is written as `0:0`. Using `::` twice is illegal because it would be ambiguous, and a run of two zero hextets is long enough to compress.',
+  },
+  {
+    id: 'q5',
+    type: 'multi',
+    stem: 'Which two fields are part of the IPv6 base header? (Choose two.)',
+    options: ['Flow Label', 'Hop Limit', 'Header Checksum', 'Fragment Offset', 'Time to Live'],
+    answers: [0, 1],
+    difficulty: 1,
+    explanation:
+      '**Flow Label** and **Hop Limit** are IPv6 header fields. The header checksum and the fragmentation fields were removed, and Time to Live is the IPv4 name for what IPv6 calls Hop Limit.',
+  },
+  {
+    id: 'q6',
+    type: 'match',
+    stem: 'Match each IOS command to its effect.',
+    pairs: [
+      { left: '`ipv6 unicast-routing`', right: 'Lets the router forward IPv6 packets and send RAs' },
+      { left: '`ipv6 enable`', right: 'Enables IPv6 with a link-local address only' },
+      { left: '`ipv6 address autoconfig`', right: 'Learns the prefix from a Router Advertisement' },
+      { left: '`ipv6 address 2001:db8:1:1::/64 eui-64`', right: 'Builds the interface ID from the MAC address' },
+    ],
+    difficulty: 2,
+    explanation:
+      '`ipv6 unicast-routing` is the global routing switch; `ipv6 enable` gives only a link-local address; `autoconfig` uses SLAAC from RAs; the `eui-64` keyword completes a typed /64 prefix with a MAC-based interface ID.',
+  },
+  {
+    id: 'q7',
+    type: 'input',
+    stem: 'How many /64 subnets fit in a /56 prefix?',
+    answers: ['256', '2^8'],
+    placeholder: 'number',
+    difficulty: 2,
+    explanation: 'A /56 leaves 64 − 56 = 8 subnet bits, and 2^8 = **256** /64 subnets. (A /48 would give 2^16 = 65,536.)',
+  },
+  {
+    id: 'q8',
+    type: 'single',
+    stem: 'Which command shows every interface with its status and IPv6 addresses in a compact list?',
+    options: ['`show ipv6 interface brief`', '`show ipv6 route`', '`show ip interface brief`', '`show ipv6 neighbors`'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '`show ipv6 interface brief` lists each interface, its [status/protocol] and its link-local and global addresses. `show ipv6 route` shows prefixes, `show ip interface brief` is IPv4 only, and `show ipv6 neighbors` shows the NDP neighbor cache.',
+  },
+];

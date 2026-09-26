@@ -1,0 +1,11 @@
+.drill-hero { display: flex; align-items: center; gap: 16px; }
+.drill-hero > div { flex: 1; }
+.drill-card { max-width: 760px; margin: 0 auto; padding: 32px; }
+.drill-given { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; margin-bottom: 10px; word-break: break-all; }
+.drill-prompt { font-size: 16px; color: var(--text-2); margin-bottom: 20px; }
+.drill-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.drill-input { flex: 1; min-width: 220px; height: 46px; font-size: 17px; }
+.drill-input.ok { border-color: var(--good); background: var(--good-soft); }
+.drill-input.no { border-color: var(--bad); background: var(--bad-soft); }
+.drill-choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.drill-explain { margin: 6px 0 0; padding-left: 18px; font-size: 14px; color: var(--text-2); display: flex; flex-direction: column; gap: 3px; font-family: var(--font-mono); }
