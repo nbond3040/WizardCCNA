@@ -859,7 +859,7 @@ export interface FloodResult {
 }
 
 /** The physical port and 802.1Q tag an L3 interface transmits on. */
-export function txPoint(net: Net, dev: Device, ifName: string): { phys: string; tag: number | null } | { vlan: number } | null {
+export function txPoint(_net: Net, dev: Device, ifName: string): { phys: string; tag: number | null } | { vlan: number } | null {
   if (dev.t === 'host') return { phys: dev.hw.ifaces[0].name, tag: null };
   const parent = parentOf(ifName);
   if (parent) {

@@ -119,7 +119,7 @@ export function hostEffective(dev: Device): HostEff {
 }
 
 /** All IPv4 addresses owned by a device (for "is this packet for me?"). */
-export function ownsIp(net: Net, addrs: Map<string, Addr4[]>, dev: Device, ip: number): string | null {
+export function ownsIp(_net: Net, addrs: Map<string, Addr4[]>, dev: Device, ip: number): string | null {
   if (dev.t === 'host') {
     const e = hostEffective(dev);
     return e.ip === ip ? dev.hw.ifaces[0].name : null;
@@ -229,7 +229,7 @@ export function routeKey(net: number, len: number): string {
   return `${net}/${len}`;
 }
 
-export function connectedRoutes(net: Net, l2: L2State, addrs: Map<string, Addr4[]>, dev: IosDevice): Route[] {
+export function connectedRoutes(_net: Net, l2: L2State, addrs: Map<string, Addr4[]>, dev: IosDevice): Route[] {
   const out: Route[] = [];
   for (const name of Object.keys(dev.st.cfg.ifaces)) {
     const list = addrs.get(ek(dev.id, name));
@@ -297,7 +297,7 @@ export interface RibInput {
 }
 
 /** Validate static routes against a table (recursive next hops, exit interface state). */
-export function staticCandidates(net: Net, l2: L2State, dev: IosDevice, table: Route[]): Route[] {
+export function staticCandidates(_net: Net, l2: L2State, dev: IosDevice, table: Route[]): Route[] {
   const out: Route[] = [];
   for (const s of dev.st.cfg.routes) {
     const len = maskLen(s.mask);
@@ -383,7 +383,7 @@ export function classfulNet(ip: number): { net: number; len: number } {
 /* IPv6 RIB                                                            */
 /* ------------------------------------------------------------------ */
 
-export function buildRib6(net: Net, l2: L2State, addrs6: Map<string, V6Addr[]>, dev: IosDevice, ospf6: Route6[]): Route6[] {
+export function buildRib6(_net: Net, l2: L2State, addrs6: Map<string, V6Addr[]>, dev: IosDevice, ospf6: Route6[]): Route6[] {
   const base: Route6[] = [];
   for (const name of Object.keys(dev.st.cfg.ifaces)) {
     const list = addrs6.get(ek(dev.id, name));
