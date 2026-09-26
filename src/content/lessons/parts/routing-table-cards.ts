@@ -1,0 +1,128 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'RIB', back: 'Routing Information Base: the routing table (`show ip route`). It holds only the best route per prefix from all sources.' },
+  { id: 'f2', front: 'Route code `C`', back: 'Connected: the subnet of an up/up interface that has an IP address. AD 0.' },
+  { id: 'f3', front: 'Route code `L`', back: "Local: the interface's own IP address as a /32 host route (IOS 15 and later). Tells the router to process, not forward." },
+  { id: 'f4', front: 'Route code `S*`', back: 'A static route that is a **candidate default**, normally `0.0.0.0/0`.' },
+  { id: 'f5', front: 'Route code `O IA`', back: 'OSPF **inter-area** route: the prefix comes from another OSPF area. AD 110.' },
+  { id: 'f6', front: 'Route code `O E2`', back: 'OSPF external type 2: redistributed into OSPF. The metric (seed 20 by default) does not grow inside OSPF.' },
+  { id: 'f7', front: 'Route codes `D` and `D EX`', back: '`D` = internal EIGRP (AD 90). `D EX` = external EIGRP, redistributed (AD 170).' },
+  { id: 'f8', front: 'Route code `R`', back: 'RIP route. AD 120; the metric is the hop count.' },
+  { id: 'f9', front: 'Route code `B`', back: 'BGP route: AD 20 if learned from an eBGP peer, 200 if learned from an iBGP peer.' },
+  { id: 'f10', front: 'In `[110/2]`, which number is the AD?', back: 'The **first**: AD 110. The second number (2) is the metric.' },
+  { id: 'f11', front: 'AD: connected / static', back: '**0** / **1**' },
+  { id: 'f12', front: 'AD: eBGP / iBGP', back: '**20** / **200**' },
+  { id: 'f13', front: 'AD: internal EIGRP / external EIGRP', back: '**90** / **170**' },
+  { id: 'f14', front: 'AD: OSPF / IS-IS / RIP', back: '**110** / **115** / **120**' },
+  { id: 'f15', front: 'AD 255', back: 'Unknown or unusable source: the route is **never installed**.' },
+  { id: 'f16', front: 'When does a router compare AD?', back: 'Only when the **exact same prefix** (network and length) is learned from different sources. Lowest AD wins.' },
+  { id: 'f17', front: 'OSPF metric', back: 'Cost: the sum of outgoing interface costs; cost = reference bandwidth (default 100 Mbps) / interface bandwidth.' },
+  { id: 'f18', front: 'RIP metric', back: 'Hop count. Maximum 15; 16 means unreachable.' },
+  { id: 'f19', front: 'EIGRP metric (default K values)', back: 'Composite of the slowest bandwidth and the cumulative delay: 256 x (10,000,000 / min bandwidth in kbps + total delay in tens of microseconds).' },
+  { id: 'f20', front: 'Can an OSPF cost be compared with a RIP hop count?', back: 'No. Metrics are protocol-specific; AD decides between protocols before metrics are considered.' },
+  { id: 'f21', front: 'Gateway of last resort', back: 'The next hop of the best default route (0.0.0.0/0). *Gateway of last resort is not set* means there is no default route.' },
+  { id: 'f22', front: 'Static default route command', back: '`ip route 0.0.0.0 0.0.0.0 <next-hop-ip | exit-interface>`' },
+  { id: 'f23', front: '*Gateway of last resort is 0.0.0.0 to network 0.0.0.0*', back: 'The default route points to an **exit interface only**, so there is no next-hop IP to display.' },
+  { id: 'f24', front: 'Two `via` lines under one prefix', back: 'Equal-cost multipath: both next hops are installed and used (OSPF and EIGRP allow 4 paths by default).' },
+  { id: 'f25', front: 'IPv6 local route', back: 'The interface address as a **/128**, marked `receive`. `L FF00::/8 via Null0` is always present too.' },
+  { id: 'f26', front: 'IPv6 route code `ND`', back: 'Default route learned from a Router Advertisement (interface configured with `ipv6 address autoconfig default`).' },
+  { id: 'f27', front: 'Next hop of an OSPFv3 route in `show ipv6 route`', back: 'A **link-local** (FE80::) address, listed with the exit interface.' },
+  { id: 'f28', front: 'IPv6 route code `OI`', back: 'OSPFv3 inter-area route (IPv4 equivalent: `O IA`).' },
+  { id: 'f29', front: '`show ip route 10.2.2.77`', back: 'Shows the entry the router would use for that address, with source, distance, metric, next hops and age spelled out.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'In `show ip route`, what does the code `L` identify?',
+    options: [
+      'A route learned from IS-IS level 1',
+      'The /32 address configured on one of the router\'s interfaces',
+      'A static route to a loopback interface',
+      'A route learned from a LISP map server',
+    ],
+    answer: 1,
+    difficulty: 1,
+    explanation:
+      '`L` is a **local** route: the exact interface address with a /32 mask, installed together with the connected (`C`) subnet route. IS-IS level 1 is `L1`, static routes use `S`, and LISP uses a lowercase `l`.',
+  },
+  {
+    id: 'q2',
+    type: 'input',
+    stem: 'What is the default administrative distance of a route learned from RIP? (Enter the number.)',
+    answers: ['120'],
+    placeholder: 'AD',
+    difficulty: 1,
+    explanation: 'RIP routes have a default AD of **120**, which is higher (less trusted) than EIGRP (90) and OSPF (110).',
+  },
+  {
+    id: 'q3',
+    type: 'multi',
+    stem: 'Consider the entry `O 10.2.2.0/24 [110/2] via 10.0.12.2, 00:14:09, GigabitEthernet0/0/1`. Which two statements are true? (Choose two.)',
+    options: [
+      'The OSPF cost to reach 10.2.2.0/24 is 2',
+      'The administrative distance of the route is 2',
+      'Packets for 10.2.2.0/24 are sent to next hop 10.0.12.2',
+      'The route will expire in 14 minutes and 9 seconds',
+      'The route was learned from another OSPF area',
+    ],
+    answers: [0, 2],
+    difficulty: 2,
+    explanation:
+      'In `[110/2]` the AD is 110 and the **metric (cost) is 2**, and the next hop follows `via`: **10.0.12.2**. The AD is not 2, the age counts up from when the route was learned rather than down to an expiry, and an inter-area route would be coded `O IA`.',
+  },
+  {
+    id: 'q4',
+    type: 'order',
+    stem: 'Order these route sources from most trusted (lowest AD) to least trusted (highest AD).',
+    items: ['Connected', 'Static', 'eBGP', 'Internal EIGRP', 'OSPF', 'RIP', 'iBGP'],
+    difficulty: 2,
+    explanation: 'Connected 0, static 1, eBGP 20, internal EIGRP 90, OSPF 110, RIP 120, iBGP 200.',
+  },
+  {
+    id: 'q5',
+    type: 'single',
+    stem: 'Which line shows that a router has **no** default route?',
+    options: [
+      'Gateway of last resort is not set',
+      'Gateway of last resort is 0.0.0.0 to network 0.0.0.0',
+      '`S* 0.0.0.0/0 is directly connected, GigabitEthernet0/1/0`',
+      '`O*E2 0.0.0.0/0 [110/1] via 10.0.12.2`',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '*Gateway of last resort is not set* means no default route is installed. A gateway of 0.0.0.0 means a default route exists but points to an exit interface only; the `S*` and `O*E2` lines are default routes themselves.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'A router learns 10.9.9.0/24 from RIP with a hop count of 1 and from OSPF with a cost of 30. Which route is installed?',
+    options: [
+      'The RIP route, because 1 is lower than 30',
+      'The OSPF route, because OSPF has the lower administrative distance',
+      'Both routes, and the router load-balances between them',
+      'Neither route, because the two sources conflict',
+    ],
+    answer: 1,
+    difficulty: 2,
+    explanation:
+      'Same prefix, two sources: the router compares **AD** first, and OSPF (110) beats RIP (120). Metrics from different protocols are never compared, and load balancing only happens between equal-metric paths from the same source.',
+  },
+  {
+    id: 'q7',
+    type: 'match',
+    stem: 'Match each `show ipv6 route` code to its meaning.',
+    pairs: [
+      { left: '`C`', right: 'Prefix of a connected interface' },
+      { left: '`L`', right: 'The interface address as a /128' },
+      { left: '`OI`', right: 'OSPFv3 inter-area route' },
+      { left: '`ND`', right: 'Default route learned from a Router Advertisement' },
+    ],
+    difficulty: 2,
+    explanation:
+      '`C` and `L` work as in IPv4 but the local route is a /128. OSPFv3 inter-area routes are `OI` (not `O IA`), and `ND` marks a default learned through Neighbor Discovery Router Advertisements.',
+  },
+];

@@ -1,0 +1,127 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Console terminal emulator settings', back: '**9600** baud, **8** data bits, **no** parity, **1** stop bit, no flow control (9600 8N1).' },
+  { id: 'f2', front: 'Telnet vs SSH: port and security', back: 'Telnet uses **TCP 23** and sends everything in cleartext. SSH uses **TCP 22** and encrypts the session.' },
+  { id: 'f3', front: 'Out-of-band vs in-band management', back: 'Out-of-band (console) uses a dedicated path and needs no IP address. In-band (Telnet, SSH) crosses the production network and needs an IP address.' },
+  { id: 'f4', front: 'Which lines accept Telnet and SSH sessions?', back: 'The **VTY** (virtual terminal) lines, configured with e.g. `line vty 0 4`.' },
+  { id: 'f5', front: 'User EXEC vs privileged EXEC prompt', back: '`R1>` is user EXEC (monitoring only). `R1#` is privileged EXEC, reached with `enable`; `disable` returns to `>`.' },
+  { id: 'f6', front: 'Command to enter global configuration mode', back: '`configure terminal` (`conf t`) from privileged EXEC; the prompt becomes `R1(config)#`.' },
+  { id: 'f7', front: 'Prompts after `interface g0/0/0`, `line vty 0 4` and `router ospf 1`', back: '`R1(config-if)#`, `R1(config-line)#` and `R1(config-router)#`.' },
+  { id: 'f8', front: '`exit` vs `end` (Ctrl+Z)', back: '`exit` moves up one level. `end` or Ctrl+Z returns straight to privileged EXEC from any configuration mode.' },
+  { id: 'f9', front: '`% Ambiguous command`', back: 'Too few characters were typed to identify a single command. Type more letters.' },
+  { id: 'f10', front: '`% Incomplete command.`', back: 'A required keyword or argument is missing. Use `?` to see what comes next.' },
+  { id: 'f11', front: "`% Invalid input detected at '^' marker.`", back: 'A typo, bad syntax or a command entered in the wrong mode; the caret marks where parsing failed.' },
+  { id: 'f12', front: '`cl?` vs `clock ?`', back: 'No space: lists the commands that start with those letters. With a space: lists the next keyword or argument.' },
+  { id: 'f13', front: 'Default size of the command history buffer', back: '**10** commands. Change it with `terminal history size` (current session) or `history size` (under a line).' },
+  { id: 'f14', front: 'Keys to recall previous and next commands', back: 'Up arrow or **Ctrl+P** for previous; Down arrow or **Ctrl+N** for next. `show history` lists the buffer.' },
+  { id: 'f15', front: '`do` keyword', back: 'Runs an EXEC command (for example `do show ip interface brief`) from any configuration mode.' },
+  { id: 'f16', front: 'The `no` form of a command', back: 'Removes or reverses the command, e.g. `no shutdown`, `no ip address`, `no ip domain-lookup`.' },
+  { id: 'f17', front: 'Where is the running-config stored?', back: '**RAM**: volatile, so it is lost on reload or power loss.' },
+  { id: 'f18', front: 'Where is the startup-config stored?', back: '**NVRAM**: non-volatile; it is copied into RAM at boot.' },
+  { id: 'f19', front: 'What do flash and ROM hold?', back: 'Flash: IOS image files (and `vlan.dat` on switches). ROM: POST, the bootstrap program and ROMMON.' },
+  { id: 'f20', front: 'Two commands that save the running configuration', back: '`copy running-config startup-config` and `write memory`.' },
+  { id: 'f21', front: 'Return a device to a blank configuration', back: '`erase startup-config` (or `write erase`), then `reload`, answering **no** if asked to save.' },
+  { id: 'f22', front: '`copy startup-config running-config`', back: '**Merges** the saved configuration into the running one; it does not replace it.' },
+  { id: 'f23', front: '`enable secret` vs `enable password`', back: '`enable secret` is hashed and wins when both exist. `enable password` is cleartext (type 7 only with `service password-encryption`).' },
+  { id: 'f24', front: 'A line `password` is enforced only when...', back: 'The `login` command is also configured on that line.' },
+  { id: 'f25', front: '`no ip domain-lookup`', back: 'Stops IOS from treating mistyped commands as hostnames and trying to resolve them through DNS.' },
+  { id: 'f26', front: '`logging synchronous`', back: 'Line command that reprints your partially typed input after a log message interrupts it.' },
+  { id: 'f27', front: '`exec-timeout`: default and how to disable', back: 'Default **10 minutes** of idle time. `exec-timeout 0 0` means the session never times out.' },
+  { id: 'f28', front: 'Default configuration register value', back: '`0x2102`: normal boot, IOS from flash and the startup-config from NVRAM.' },
+  { id: 'f29', front: 'Management IP on a Layer 2 switch', back: 'Configure it on an SVI (e.g. `interface vlan 1`) and set `ip default-gateway` so the switch can reach remote subnets.' },
+  { id: 'f30', front: 'What does `show version` display?', back: 'IOS version, uptime, last reload reason, boot image file, memory sizes, interface counts and the configuration register.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which prompt shows that an engineer is in privileged EXEC mode?',
+    options: ['`R1>`', '`R1#`', '`R1(config)#`', '`R1(config-if)#`'],
+    answer: 1,
+    difficulty: 1,
+    explanation:
+      '`R1#` is privileged EXEC, reached with `enable`. `R1>` is user EXEC, `R1(config)#` is global configuration and `R1(config-if)#` is interface configuration; the configuration prompts also end in `#`, but they include the word **config**.',
+  },
+  {
+    id: 'q2',
+    type: 'multi',
+    stem: 'Which three types of router memory keep their contents when the router loses power? (Choose three.)',
+    options: ['RAM', 'NVRAM', 'Flash', 'ROM', 'Packet buffers'],
+    answers: [1, 2, 3],
+    difficulty: 1,
+    explanation:
+      '**NVRAM** (startup-config), **flash** (IOS images) and **ROM** (POST, bootstrap, ROMMON) are all non-volatile. **RAM** is volatile, and packet buffers live in RAM, so both lose their contents at power-off.',
+  },
+  {
+    id: 'q3',
+    type: 'input',
+    stem: 'Which privileged EXEC command copies the running configuration into NVRAM so it survives a reload? Enter the full `copy` command.',
+    answers: [
+      'copy running-config startup-config',
+      'copy run start',
+      'copy run startup-config',
+      'copy running-config start',
+      'copy running startup',
+      'write memory',
+      'write mem',
+      'wr mem',
+      'write',
+      'wr',
+    ],
+    placeholder: 'command',
+    difficulty: 1,
+    explanation:
+      '`copy running-config startup-config` (abbreviated `copy run start`) writes the active configuration from RAM to NVRAM. The older `write memory` does the same job and is also accepted. `copy startup-config running-config` goes the other way and only merges.',
+  },
+  {
+    id: 'q4',
+    type: 'order',
+    stem: 'Put the router boot steps in the correct order.',
+    items: [
+      'POST runs from ROM',
+      'The bootstrap program loads from ROM',
+      'IOS is located and loaded, normally from flash',
+      'The startup-config is copied from NVRAM into RAM',
+    ],
+    difficulty: 1,
+    explanation:
+      'Hardware is tested first (POST), then the bootstrap starts and finds IOS, and only a running IOS can read the startup-config from NVRAM. If no IOS image is found the router stops in ROMMON; if no startup-config exists, the initial configuration dialog appears.',
+  },
+  {
+    id: 'q5',
+    type: 'single',
+    stem: 'At the `R1(config)#` prompt, an engineer types `show running-config` and receives `% Invalid input detected`. What should the engineer type to view the configuration without leaving configuration mode?',
+    options: ['`do show running-config`', '`exec show running-config`', '`end show running-config`', '`show running-config all`'],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'The `do` prefix runs any EXEC command from a configuration mode. `exec` and `end show` are not valid syntax (and `end` alone would leave configuration mode), and adding `all` does not make `show` valid in configuration mode.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'Which terminal emulator settings match the default Cisco console port?',
+    options: [
+      '9600 baud, 8 data bits, no parity, 1 stop bit',
+      '115200 baud, 8 data bits, even parity, 1 stop bit',
+      '9600 baud, 7 data bits, odd parity, 2 stop bits',
+      '19200 baud, 8 data bits, no parity, 2 stop bits',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      'The Cisco console default is **9600 8N1** with no flow control. The other options change the speed, data bits, parity or stop bits, and any mismatch produces garbage characters or no output at all.',
+  },
+  {
+    id: 'q7',
+    type: 'single',
+    stem: 'A Layer 2 switch has an IP address on interface Vlan1. Hosts on the same subnet can ping it, but administrators on other subnets cannot. Which command is most likely missing?',
+    options: ['`ip default-gateway`', '`ip routing`', '`no ip domain-lookup`', '`logging synchronous`'],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'Without `ip default-gateway`, a Layer 2 switch cannot send replies to other subnets. `ip routing` would turn it into a router and is not how you manage an L2 switch, while `no ip domain-lookup` and `logging synchronous` are convenience settings that do not affect reachability.',
+  },
+];

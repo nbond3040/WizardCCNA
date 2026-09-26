@@ -77,16 +77,10 @@ interface GigabitEthernet0/0/1
     stem: 'Refer to the exhibit. Hosts in VLAN 30 do not receive addresses. DSW1 relays their requests to the IOS DHCP server DHCP1 (10.99.1.10), which is reachable from VLAN 30. What is the problem?',
     exhibit: {
       kind: 'cli',
-      text: `DSW1# show running-config interface vlan 30
-Building configuration...
-
-Current configuration : 96 bytes
-!
+      text: `DSW1# show running-config | section interface Vlan30
 interface Vlan30
  ip address 10.30.0.1 255.255.255.0
  ip helper-address 10.99.1.10
-end
-
 DHCP1# show running-config | section ip dhcp
 ip dhcp excluded-address 10.30.0.1 10.30.0.20
 ip dhcp pool VLAN30

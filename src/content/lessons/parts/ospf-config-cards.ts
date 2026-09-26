@@ -1,0 +1,118 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Is the OSPF process ID in `router ospf 10` shared with neighbors?', back: 'No. The process ID (1–65535) is **locally significant** and never sent in packets; neighbors may use different IDs.' },
+  { id: 'f2', front: 'Wildcard mask bits', back: '**0** = the bit must match; **1** = ignore the bit.' },
+  { id: 'f3', front: '`network 10.0.12.1 0.0.0.0 area 0`', back: 'Enables OSPF only on the interface whose IP address is exactly 10.0.12.1.' },
+  { id: 'f4', front: '`network 0.0.0.0 255.255.255.255 area 0`', back: 'Enables OSPF on every interface that has an IPv4 address.' },
+  { id: 'f5', front: 'Wildcard for a /21 subnet', back: '`0.0.7.255` (255.255.255.255 − 255.255.248.0).' },
+  { id: 'f6', front: 'What prefix does a network statement cause OSPF to advertise?', back: 'The matching interface\'s **own subnet and mask** — never the range written in the statement.' },
+  { id: 'f7', front: 'Interface command that enables OSPF', back: '`ip ospf <process-id> area <area-id>`, e.g. `ip ospf 1 area 0`.' },
+  { id: 'f8', front: 'Network statement and `ip ospf … area` both cover an interface — which wins?', back: 'The interface command takes precedence.' },
+  { id: 'f9', front: '"Attached via Interface Enable"', back: 'Shown by `show ip ospf interface` when OSPF was enabled with `ip ospf <pid> area <n>` (otherwise "Attached via Network Statement").' },
+  { id: 'f10', front: '`passive-interface GigabitEthernet0/0/1`', back: 'Stops OSPF Hellos on G0/0/1, so no neighbor can form there — but the subnet is **still advertised**.' },
+  { id: 'f11', front: '`passive-interface default`', back: 'Makes every interface passive; re-enable transit links with `no passive-interface <interface>`.' },
+  { id: 'f12', front: 'How do you spot a passive interface in show output?', back: '"No Hellos (Passive interface)" in `show ip ospf interface`, and the "Passive Interface(s)" list in `show ip protocols`.' },
+  { id: 'f13', front: '`default-information originate`', back: 'Advertises a default route into OSPF as a **Type 5** LSA and makes the router an **ASBR**. Needs a default route in the table unless `always` is added.' },
+  { id: 'f14', front: 'How does the OSPF-advertised default route look on other routers?', back: '`O*E2 0.0.0.0/0 [110/1]` — external type 2, metric 1 by default.' },
+  { id: 'f15', front: 'E2 vs E1 external routes', back: '**E2** (default): metric stays as set by the ASBR. **E1**: the internal cost to reach the ASBR is added.' },
+  { id: 'f16', front: 'OSPF default `maximum-paths` on IOS', back: '**4** equal-cost paths.' },
+  { id: 'f17', front: '`maximum-paths 1`', back: 'Disables OSPF equal-cost load balancing: only one path is installed per destination.' },
+  { id: 'f18', front: 'Does OSPF support unequal-cost load balancing?', back: 'No. OSPF load-balances only across paths with exactly equal cost (ECMP).' },
+  { id: 'f19', front: 'Why set `auto-cost reference-bandwidth` on every router?', back: 'Each router computes its own interface costs; mismatched references produce inconsistent costs and suboptimal paths.' },
+  { id: 'f20', front: 'Units of `auto-cost reference-bandwidth` and `bandwidth`', back: 'Reference bandwidth in **Mbps**; interface `bandwidth` in **kbps**.' },
+  { id: 'f21', front: '`FULL/DR` in `show ip ospf neighbor`', back: 'The adjacency is Full and the **neighbor** is the DR on that segment.' },
+  { id: 'f22', front: 'Command: interfaces, areas, costs and neighbor counts at a glance', back: '`show ip ospf interface brief`.' },
+  { id: 'f23', front: 'Command: RID, network statements, passive interfaces and Maximum path', back: '`show ip protocols`.' },
+  { id: 'f24', front: 'Command: only the OSPF routes in the routing table', back: '`show ip route ospf`.' },
+  { id: 'f25', front: 'Command: router, network and external LSAs', back: '`show ip ospf database`.' },
+  { id: 'f26', front: 'OSPF route codes: O, O IA, O E2', back: '`O` intra-area · `O IA` inter-area · `O E1`/`O E2` external (redistributed or default).' },
+  { id: 'f27', front: 'How is a loopback advertised by OSPF by default?', back: 'As a **/32 host route**, regardless of the configured mask.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which command enables OSPF process 1 in area 0 directly on an interface?',
+    options: ['`ip ospf 1 area 0`', '`network 1 area 0`', '`router ospf 1 area 0`', '`ospf 1 area 0 enable`'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '`ip ospf <process-id> area <area-id>` is the interface-mode command. `network` needs an address and wildcard, `router ospf 1` takes no area, and the last option is not an IOS command.',
+  },
+  {
+    id: 'q2',
+    type: 'input',
+    stem: 'Which wildcard mask makes a network statement match exactly one interface IP address?',
+    answers: ['0.0.0.0'],
+    placeholder: 'x.x.x.x',
+    difficulty: 1,
+    explanation: 'A wildcard of **0.0.0.0** requires every bit to match, so only the interface with that exact address is enabled.',
+  },
+  {
+    id: 'q3',
+    type: 'multi',
+    stem: 'Which two statements about an OSPF passive interface are true? (Choose two.)',
+    options: [
+      'The interface stops sending OSPF Hellos',
+      'The interface\'s subnet is no longer advertised',
+      'No OSPF neighbor can form on that interface',
+      'The interface is administratively shut down',
+      'The interface cost changes to 0',
+    ],
+    answers: [0, 2],
+    difficulty: 2,
+    explanation:
+      'Passive stops Hellos, so **no neighbor** can form, but the connected subnet is **still advertised**. The interface keeps forwarding traffic normally, and its cost is unchanged.',
+  },
+  {
+    id: 'q4',
+    type: 'single',
+    stem: 'R1 advertises its static default route with `default-information originate`. How does the route appear on the other routers in the area?',
+    options: ['`O*E2 0.0.0.0/0 [110/1]`', '`S* 0.0.0.0/0 [1/0]`', '`O*IA 0.0.0.0/0 [110/2]`', '`O 0.0.0.0/0 [110/10]`'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      'The default is flooded as a Type 5 external LSA, so receivers see **O*E2** with AD 110 and the default metric **1**. `S*` exists only on R1 itself, and O IA or plain O would describe inter-area or intra-area routes.',
+  },
+  {
+    id: 'q5',
+    type: 'match',
+    stem: 'Match each command to the information it is best for.',
+    pairs: [
+      { left: '`show ip ospf neighbor`', right: 'Neighbor RIDs and adjacency states' },
+      { left: '`show ip ospf interface brief`', right: 'Area, cost and neighbor count per interface' },
+      { left: '`show ip protocols`', right: 'Router ID, network statements and passive interfaces' },
+      { left: '`show ip route ospf`', right: 'OSPF routes installed with AD and metric' },
+      { left: '`show ip ospf database`', right: 'The LSAs in the link-state database' },
+    ],
+    difficulty: 1,
+    explanation:
+      'Each verification command answers one question: neighbors, per-interface status, the process summary, the installed routes, and the LSDB.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'R1 runs `router ospf 1` and R2 runs `router ospf 2`. Their shared link is in area 0 on both routers with default timers. What happens?',
+    options: [
+      'They form a full adjacency',
+      'No adjacency forms because the process IDs differ',
+      'They remain in the 2-Way state',
+      'They form an adjacency only if their router IDs match',
+    ],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'The process ID is **locally significant**, so the routers become fully adjacent. Differing process IDs never block an adjacency, and router IDs must be unique — matching RIDs would cause problems, not solve them.',
+  },
+  {
+    id: 'q7',
+    type: 'input',
+    stem: 'By default, how many equal-cost paths does OSPF install for one destination on Cisco IOS?',
+    answers: ['4', 'four'],
+    placeholder: 'number',
+    difficulty: 1,
+    explanation: 'The IOS default for OSPF `maximum-paths` is **4**. `maximum-paths 1` disables load balancing.',
+  },
+];

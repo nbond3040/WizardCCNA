@@ -1,0 +1,130 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Longest prefix match', back: 'For each packet the router uses the matching route with the **longest prefix length** (most specific), regardless of AD or metric.' },
+  { id: 'f2', front: 'When is administrative distance used?', back: 'While building the routing table, only to choose between **different sources** offering the **same prefix and length**. Lowest wins.' },
+  { id: 'f3', front: 'When is the metric used?', back: 'To choose between paths to the same prefix **inside one routing protocol**. Lowest wins.' },
+  { id: 'f4', front: 'Two paths from one protocol with equal metrics', back: 'Both are installed and traffic is shared across them: equal-cost multipath (ECMP).' },
+  { id: 'f5', front: 'Static `10.0.0.0/8 [1/0]` and OSPF `10.1.0.0/16 [110/20]`: which route for 10.1.2.3?', back: 'The OSPF /16. The longer prefix wins; AD never compares different prefixes.' },
+  { id: 'f6', front: 'Default route: prefix length and role', back: '/0. It matches every destination but is used only when no longer prefix matches.' },
+  { id: 'f7', front: 'Block size of a /19', back: '32 in the third octet (256 - 224). Networks start at 0, 32, 64, 96 and so on.' },
+  { id: 'f8', front: 'Range of 172.16.32.0/19', back: '172.16.32.0 to 172.16.63.255.' },
+  { id: 'f9', front: 'Range of 10.10.4.0/22', back: '10.10.4.0 to 10.10.7.255 (block size 4 in the third octet).' },
+  { id: 'f10', front: 'First check a router performs on a received frame', back: 'The **FCS**. Frames that fail the check are discarded.' },
+  { id: 'f11', front: 'IPv4 fields a router changes in normal forwarding', back: '**TTL** (decremented by 1) and **Header Checksum** (recomputed).' },
+  { id: 'f12', front: 'TTL reaches 0 at a router', back: 'The packet is dropped and ICMP **Time Exceeded** is sent to the source. Traceroute relies on this.' },
+  { id: 'f13', front: 'Do the IP addresses change hop by hop?', back: 'No, unless NAT rewrites them. Only the MAC addresses change on each link.' },
+  { id: 'f14', front: 'MAC addresses in a frame between two routers', back: "Source: the sending router's exit interface MAC. Destination: the next-hop router's interface MAC, learned by ARP." },
+  { id: 'f15', front: 'IPv6 equivalent of the TTL', back: '**Hop Limit**, decremented by each router. IPv6 has no header checksum to recompute.' },
+  { id: 'f16', front: 'No matching route and no default route', back: 'The packet is dropped, and an ICMP destination unreachable may be returned to the source.' },
+  { id: 'f17', front: 'CEF', back: 'Cisco Express Forwarding: the default IOS forwarding method, using a precomputed **FIB** and **adjacency table**.' },
+  { id: 'f18', front: 'FIB', back: "Forwarding Information Base: CEF's copy of the best routes, optimized for longest-prefix lookups (`show ip cef`)." },
+  { id: 'f19', front: 'Adjacency table', back: 'CEF table of next hops with the precomputed Layer 2 rewrite, built from ARP (`show adjacency`).' },
+  { id: 'f20', front: 'Process switching', back: 'The CPU handles every packet with a full routing-table lookup. Slowest method; still used for packets punted to the CPU.' },
+  { id: 'f21', front: 'Command that enables CEF', back: '`ip cef` (enabled by default).' },
+  { id: 'f22', front: '`show ip cef 10.3.3.30`', back: 'Shows the FIB entry used for that destination: prefix, next hop and exit interface.' },
+  { id: 'f23', front: 'Control plane vs data plane (routing)', back: 'Control plane: learning and selecting routes (protocols, AD, metric). Data plane: forwarding packets (lookup, TTL, rewrite).' },
+  { id: 'f24', front: 'EIGRP unequal-cost load balancing', back: 'Enabled with the `variance` command; otherwise every protocol needs an exact metric tie to share load.' },
+  { id: 'f25', front: 'Can a longer prefix with a worse AD win?', back: 'Yes. A RIP /25 beats a static /24 for any destination inside the /25.' },
+  { id: 'f26', front: 'EtherType telling a router that an IPv4 packet is inside', back: '`0x0800` (IPv6 is `0x86DD`).' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: "When several routes match a packet's destination, which route does the router use?",
+    options: [
+      'The route with the longest prefix length',
+      'The route with the lowest administrative distance',
+      'The route with the lowest metric',
+      'The route that was learned most recently',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      'Forwarding always uses **longest prefix match**. AD and metric only decide which routes enter the table when sources offer the same prefix, and the age of a route plays no part.',
+  },
+  {
+    id: 'q2',
+    type: 'single',
+    stem: 'R1 has `S 10.0.0.0/8 [1/0]` and `O 10.5.0.0/16 [110/20]`. Which route is used for a packet to 10.5.1.1?',
+    options: [
+      'The OSPF route, because /16 is longer than /8',
+      'The static route, because its AD is lower',
+      'Both routes, with the load shared between them',
+      'Neither; the default route is used',
+    ],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'Both routes match 10.5.1.1, and the OSPF **/16** is longer. The two routes are different prefixes, so AD never compares them; routes from different sources are not load-balanced; and the default is used only when nothing else matches.',
+  },
+  {
+    id: 'q3',
+    type: 'multi',
+    stem: 'Which two IPv4 header fields does a router change when it forwards a packet without NAT? (Choose two.)',
+    options: ['TTL', 'Header checksum', 'Source address', 'Destination address', 'Protocol'],
+    answers: [0, 1],
+    difficulty: 2,
+    explanation:
+      'The router decrements the **TTL**, which forces it to recompute the **header checksum**. The addresses stay the same end to end without NAT, and the Protocol field (for example 6 for TCP) never changes in transit.',
+  },
+  {
+    id: 'q4',
+    type: 'input',
+    stem: 'What is the last address in the range covered by 172.16.32.0/19?',
+    answers: ['172.16.63.255'],
+    placeholder: 'a.b.c.d',
+    difficulty: 2,
+    explanation: 'A /19 has a block size of 32 in the third octet, so 172.16.32.0/19 runs from 172.16.32.0 to **172.16.63.255**; the next block starts at 172.16.64.0.',
+  },
+  {
+    id: 'q5',
+    type: 'order',
+    stem: 'Put the steps a router performs to forward a received frame in order.',
+    items: [
+      'Check the FCS',
+      'Remove the data-link header and trailer',
+      'Look up the destination IP with longest prefix match',
+      'Decrement the TTL and recompute the checksum',
+      'Resolve the next-hop MAC address',
+      'Encapsulate the packet in a new frame and transmit it',
+    ],
+    difficulty: 2,
+    explanation:
+      'The frame is verified and stripped, the packet is looked up, the TTL and checksum are updated, the next-hop MAC is found through ARP or the CEF adjacency, and a new frame is built and sent.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'Which pair of tables does CEF build to forward packets?',
+    options: [
+      'The FIB and the adjacency table',
+      'The RIB and the ARP cache',
+      'The MAC address table and the CAM table',
+      'The topology table and the neighbor table',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      'CEF builds the **FIB** from the RIB and the **adjacency table** from ARP. The RIB and ARP cache are its sources, the MAC/CAM table belongs to switching, and topology and neighbor tables belong to routing protocols such as EIGRP.',
+  },
+  {
+    id: 'q7',
+    type: 'categorize',
+    stem: 'A packet crosses a router and NAT is not configured. Classify each value.',
+    categories: ['Changes at each router', 'Stays the same end to end'],
+    items: [
+      { text: 'Source MAC address', category: 0 },
+      { text: 'Destination MAC address', category: 0 },
+      { text: 'TTL', category: 0 },
+      { text: 'Source IP address', category: 1 },
+      { text: 'Destination IP address', category: 1 },
+      { text: 'Protocol field', category: 1 },
+    ],
+    difficulty: 2,
+    explanation:
+      'Each router builds a new frame, so both MAC addresses change on every link, and the TTL drops by one per router. The IP addresses and the Protocol field travel unchanged from source to destination.',
+  },
+];
