@@ -1,0 +1,23 @@
+.hero { padding: 40px 0 8px; max-width: 820px; }
+.hero-title { font-size: clamp(32px, 4.6vw, 50px); letter-spacing: -0.04em; line-height: 1.08; font-weight: 720; }
+.hero-sub { font-size: 18px; color: var(--text-2); margin-top: 18px; line-height: 1.55; }
+.feature { display: flex; flex-direction: column; }
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 960px) { .dash-grid { grid-template-columns: minmax(0, 1fr); } }
+.today-list { display: flex; flex-direction: column; gap: 6px; }
+.today-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); }
+.today-item:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.today-item.done { opacity: 0.6; }
+.today-item.done .today-title { text-decoration: line-through; }
+.today-check { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); flex: none; color: var(--text-2); }
+.today-check.on { background: var(--good); color: #fff; }
+.today-title { font-weight: 600; font-size: 14.5px; }
+.continue { display: flex; align-items: center; gap: 14px; }
+.continue-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+.upcoming { display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: start; padding: 6px 0; border-top: 1px solid var(--border); }
+.upcoming:first-child { border-top: 0; }
+.upcoming-day { font-weight: 600; font-size: 13.5px; padding-top: 2px; }
+.upcoming-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; height: 90px; align-items: end; }
+.week-bar { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.week-bar-fill { width: 100%; max-width: 26px; border-radius: 6px; min-height: 3px; }

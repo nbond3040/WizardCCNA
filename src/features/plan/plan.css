@@ -1,0 +1,31 @@
+.plan-setup { padding: 28px; }
+.plan-preview { border-radius: 14px; background: var(--surface-2); padding: 20px; border: 1px solid var(--border); }
+.plan-preview-big { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin-top: 4px; }
+.plan-preview-big .muted { font-size: 15px; font-weight: 500; letter-spacing: 0; }
+
+.week { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.week-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 14px 18px; border: 0; background: transparent; text-align: left; }
+.week-head:hover { background: var(--surface-2); }
+.week-title { font-weight: 650; }
+.week-days { border-top: 1px solid var(--border); }
+.day { display: grid; grid-template-columns: 110px minmax(0, 1fr) 80px; gap: 14px; padding: 12px 18px; border-top: 1px solid var(--border); align-items: start; }
+.day:first-child { border-top: 0; }
+.day.today { background: var(--accent-soft); }
+.day.overflow { background: var(--bad-soft); }
+.day.exam-day { border: 1px dashed var(--border-strong); border-radius: 16px; background: var(--surface); }
+.day-name { font-weight: 650; font-size: 14px; }
+.day-items { display: flex; flex-direction: column; gap: 6px; }
+.day-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.day.today .day-item { background: var(--surface); }
+.day-item:hover { outline: 1px solid var(--border-strong); }
+.day-item.done { opacity: 0.6; }
+.day-item.done .day-item-title { text-decoration: line-through; }
+.day-item-icon { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: var(--surface); flex: none; color: var(--text-2); }
+.day-item.t-lab .day-item-icon { color: var(--accent); }
+.day-item.t-exam .day-item-icon { color: var(--warn); }
+.day-item.t-checkpoint .day-item-icon { color: var(--good); }
+.day-item.done .day-item-icon { background: var(--good); color: #fff; }
+.day-item-title { flex: 1; min-width: 0; font-weight: 550; }
+.day-item-meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.day-mins { text-align: right; padding-top: 6px; }
+@media (max-width: 700px) { .day { grid-template-columns: 1fr; gap: 6px; } .day-mins { text-align: left; } .day-item-meta { display: none; } }

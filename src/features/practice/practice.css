@@ -1,0 +1,12 @@
+.exam-hero { padding: 28px; }
+.exam-hero-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+.score-pill { min-width: 58px; height: 32px; padding: 0 10px; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-variant-numeric: tabular-nums; background: var(--surface-2); font-size: 14px; }
+.score-pill.good { background: var(--good-soft); color: var(--good); }
+.score-pill.bad { background: var(--bad-soft); color: var(--bad); }
+.result-hero { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; padding: 28px; }
+.scaled { font-size: 56px; font-weight: 750; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.scaled-scale { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.domain-row { display: grid; grid-template-columns: minmax(0, 1fr) 160px 56px; gap: 14px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.domain-row:first-child { border-top: 0; }
+@media (max-width: 600px) { .domain-row { grid-template-columns: 1fr 70px; } .domain-row .bar { display: none; } }
+.list-link { padding: 8px 0; border-top: 1px solid var(--border); } .list-link:first-child { border-top: 0; } .list-link:hover { color: var(--accent); }

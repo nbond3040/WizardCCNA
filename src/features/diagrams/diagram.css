@@ -1,0 +1,25 @@
+.diagram { width: 100%; }
+.dg { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.dg svg { max-width: 100%; height: auto; overflow: visible; }
+.dg text { font-family: var(--font-sans); fill: var(--text); }
+.dg .dg-node-label { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+.dg .dg-node-sub { font-size: 11px; font-family: var(--font-mono); fill: var(--muted); }
+.dg .dg-port { font-size: 10.5px; font-family: var(--font-mono); fill: var(--muted); }
+.dg .dg-link-label { font-size: 11px; font-family: var(--font-mono); fill: var(--text-2); }
+.dg .dg-pill { fill: var(--dg-bg, var(--surface)); stroke-width: 1; }
+.dg .dg-group-label { font-size: 10.5px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; }
+.dg .dg-annot { font-size: 12px; fill: var(--text-2); }
+.dg .dg-msg { font-size: 12.5px; font-weight: 550; }
+.dg .dg-sub { font-size: 11px; font-family: var(--font-mono); fill: var(--muted); }
+.dg .dg-note { font-size: 12px; fill: var(--text-2); }
+.dg .dg-field { font-size: 12.5px; font-weight: 550; }
+.dg .dg-tick { font-size: 10px; font-family: var(--font-mono); fill: var(--muted); }
+.dg .dg-layer { font-size: 13px; font-weight: 600; }
+.dg .dg-col-title { font-size: 11px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; fill: var(--muted); }
+.dg .dg-bits-label { font-size: 12.5px; font-weight: 600; }
+.dg .dg-bit { font-family: var(--font-mono); font-weight: 600; }
+.dg .dg-dec { font-size: 12px; font-family: var(--font-mono); fill: var(--text-2); font-weight: 600; }
+.dg .muted-fill { fill: var(--muted); }
+.dg .dg-flow-label { font-size: 12.5px; font-weight: 600; }
+.dg .faint-text { fill: var(--faint); }
+.dg-caption { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: center; }

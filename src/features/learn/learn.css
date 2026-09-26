@@ -1,0 +1,13 @@
+.module-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+.module-num { font-size: 13px; font-weight: 700; color: var(--faint); font-variant-numeric: tabular-nums; padding-top: 4px; width: 22px; }
+.module-progress { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 4px; }
+.lesson-row { gap: 14px; }
+.lesson-row.off { opacity: 0.55; }
+.lesson-status { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none; color: var(--faint); }
+.lesson-status.s-progress { color: var(--accent); }
+.lesson-status.s-done { color: var(--good); border: 1.5px solid var(--good); }
+.lesson-status.s-mastered { background: var(--good); color: #fff; }
+.lesson-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lesson-tags { display: flex; align-items: center; gap: 6px; flex: none; }
+.lesson-lock { color: var(--faint); display: inline-flex; }
+@media (max-width: 700px) { .lesson-tags .chip { display: none; } .lesson-sub { white-space: normal; } }

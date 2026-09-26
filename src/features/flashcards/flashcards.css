@@ -1,0 +1,35 @@
+.fc-cta { display: flex; flex-direction: column; }
+.fc-module { font-size: 12px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+.fc-deck-icon { width: 32px; height: 32px; border-radius: 9px; background: var(--surface-2); display: grid; place-items: center; color: var(--text-2); flex: none; }
+.list-item.locked .fc-deck-icon { color: var(--faint); }
+.list-item.locked .title { color: var(--text-2); }
+.fc-mini-bar { width: 90px; height: 5px; border-radius: 3px; background: var(--surface-3); overflow: hidden; display: flex; }
+.fc-mini-bar span { height: 100%; }
+@media (max-width: 600px) { .fc-mini-bar { display: none; } }
+
+.fc-stage { max-width: 720px; margin: 0 auto; }
+.fc-card {
+  width: 100%; min-height: 340px; border-radius: 22px; border: 1px solid var(--border); background: var(--surface);
+  box-shadow: var(--shadow-1); display: flex; flex-direction: column; padding: 22px 28px; text-align: center; cursor: pointer;
+  transition: box-shadow .15s, border-color .15s;
+}
+.fc-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-2); }
+.fc-meta { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: var(--muted); font-weight: 550; }
+.fc-face { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 24px 0; }
+.fc-front { font-size: 24px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.35; }
+.fc-card.flipped .fc-front { font-size: 18px; color: var(--text-2); font-weight: 600; }
+.fc-sep { width: 40px; height: 2px; background: var(--border-strong); margin: 0 auto; border-radius: 2px; }
+.fc-back { font-size: 19px; line-height: 1.55; animation: fade .2s ease; }
+.fc-tap { font-size: 12.5px; color: var(--faint); }
+.fc-grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; min-height: 64px; }
+.fc-grades.placeholder { display: flex; justify-content: center; align-items: flex-start; }
+.fc-grade { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--surface); }
+.fc-grade:hover { background: var(--surface-2); }
+.fc-grade .kbd { margin-top: 4px; }
+.fc-grade-label { font-weight: 650; font-size: 14.5px; }
+.fc-grade-int { font-size: 11.5px; color: var(--muted); }
+.fc-grade.again { border-color: var(--bad); }
+.fc-grade.again .fc-grade-label { color: var(--bad); }
+.fc-grade.good .fc-grade-label { color: var(--good); }
+.fc-grade.easy .fc-grade-label { color: var(--accent); }
+@media (max-width: 600px) { .fc-grades { grid-template-columns: repeat(2, 1fr); } .fc-front { font-size: 20px; } }
