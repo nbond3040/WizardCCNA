@@ -57,3 +57,4 @@
 .trace-hops li.bad { color: var(--bad); }
 .trace-sep { list-style: none; margin-left: -18px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
 .host-sol { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); }
+.lab-node-label, .lab-node-sub, .lab-port { paint-order: stroke fill; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
