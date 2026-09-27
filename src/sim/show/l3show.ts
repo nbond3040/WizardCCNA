@@ -131,7 +131,8 @@ function showRouteEntry(c: Ctx, all: Route[]): void {
   let r: Route | undefined;
   if (mask !== undefined) r = all.find((x) => x.net === netOf(ip, mask) && x.len === maskLen(mask));
   else {
-    r = all.find((x) => x.net === ip && x.len !== 32) ?? lpm(all, ip);
+    const nonDefault = all.filter((x) => x.len > 0);
+    r = nonDefault.find((x) => x.net === ip && x.len !== 32) ?? lpm(nonDefault, ip);
   }
   if (!r) {
     const cn = classfulNet(ip);

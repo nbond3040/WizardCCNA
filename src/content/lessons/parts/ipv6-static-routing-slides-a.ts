@@ -6,7 +6,7 @@ export const slidesA: Slide[] = [
     title: 'IPv6 Static Routing',
     subtitle: 'Static, default, host and floating routes for IPv6 — and the link-local rule',
     notes:
-      'Everything you learned about IPv4 static routes carries over to IPv6: a destination prefix, a way to reach it, an optional administrative distance, and the same rules about installation and return paths. A few details change, and the exam targets exactly those details. In this deck you will enable IPv6 routing with `ipv6 unicast-routing`, write routes with `ipv6 route prefix/length`, build **default** (::/0), **host** (/128) and **floating** routes, and learn why a **link-local next hop** must be paired with an exit interface. You will read `show ipv6 route`, whose layout differs from the IPv4 table, verify with `ping` and `traceroute`, and troubleshoot the classic IPv6 static-routing faults. This lesson maps to v1.1 exam topics 3.3.a–3.3.d and to Domain 3 (IP Routing) of v2.0 — both versions expect IPv6 static routes at the same depth as IPv4.',
+      'Everything you learned about IPv4 static routes carries over to IPv6: a destination prefix, a way to reach it, an optional administrative distance, and the same rules about installation and return paths. A few details change, and the exam targets exactly those details. In this deck you will enable IPv6 routing with `ipv6 unicast-routing`, write routes with `ipv6 route prefix/length`, build **default** (::/0), **host** (/128) and **floating** routes, and learn why a **link-local next hop** must be paired with an exit interface. You will read `show ipv6 route`, whose layout differs from the IPv4 table, verify with `ping` and `traceroute`, and troubleshoot the classic IPv6 static-routing faults. This lesson maps to v1.1 exam topics 3.3.a–3.3.d — default, network, host and floating static routes — and to domain 3 of the v2.0 blueprint.',
   },
   {
     kind: 'bullets',
@@ -33,11 +33,11 @@ export const slidesA: Slide[] = [
         { from: 'pc1', to: 'r1', toLabel: 'G0/0/0', label: '2001:db8:1::/64' },
         { from: 'r1', to: 'r2', fromLabel: 'G0/0/1 ::1', toLabel: '::2 G0/0/1', label: '2001:db8:12::/64' },
         { from: 'r2', to: 'srv', fromLabel: 'G0/0/0', label: '2001:db8:2::/64' },
-        { from: 'r1', to: 'r2', fromLabel: 'S0/1/0 ::1', toLabel: '::2 S0/1/0', label: '2001:db8:99::/64 (backup)', style: 'serial', tone: 'muted' },
       ],
+      annotations: [{ x: 5, y: 3.3, text: 'Backup serial link: R1 S0/1/0 ::1 ↔ R2 S0/1/0 ::2 · 2001:db8:99::/64', tone: 'muted' }],
     },
     notes:
-      'This topology mirrors the IPv4 lesson so you can focus on what is new. R1 owns LAN **2001:db8:1::/64**, R2 owns LAN **2001:db8:2::/64**, and they share the Gigabit transit prefix **2001:db8:12::/64**, where R1 is ::1 and R2 is ::2. Both routers also have manually configured **link-local** addresses on the transit link — FE80::1 on R1 and FE80::2 on R2 — which makes link-local next hops easy to read. A serial link, 2001:db8:99::/64, is the backup path for the floating static later. The big differences from IPv4: IOS routers do **not** route IPv6 until you enable it; routes are written with a **prefix length** instead of a dotted mask; there is **no ARP** (Neighbor Discovery finds the next hop\'s MAC); and you have a choice of next-hop address type — global or link-local — with one strict rule for link-local that we will cover shortly.',
+      'The same small topology is used throughout the deck so you can focus on what is new. R1 owns LAN **2001:db8:1::/64**, R2 owns LAN **2001:db8:2::/64**, and they share the Gigabit transit prefix **2001:db8:12::/64**, where R1 is ::1 and R2 is ::2. Both routers also have manually configured **link-local** addresses on the transit link — FE80::1 on R1 and FE80::2 on R2 — which makes link-local next hops easy to read. A serial link, 2001:db8:99::/64, is the backup path for the floating static later. The big differences from IPv4: IOS routers do **not** route IPv6 until you enable it; routes are written with a **prefix length** instead of a dotted mask; there is **no ARP** (Neighbor Discovery finds the next hop\'s MAC); and you have a choice of next-hop address type — global or link-local — with one strict rule for link-local that we will cover shortly.',
   },
   {
     kind: 'cli',
@@ -82,7 +82,7 @@ Serial0/1/1            [administratively down/down]
     ],
     caption: 'Syntax: ipv6 route prefix/length {next-hop | exit-interface [next-hop]} [AD]',
     notes:
-      'The IPv6 command is `ipv6 route`, followed by the prefix **with its length** in slash notation — there is no mask field. After the prefix you give a **next hop**, an **exit interface**, or **both** (interface first, then next hop), and optionally an AD from 1 to 255 (default 1). A global next hop triggers a recursive lookup exactly as in IPv4. An exit interface alone is fine on a **point-to-point** link such as serial; on Ethernet, prefer a next hop, because the router would otherwise have to treat every destination as on-link and resolve each one with Neighbor Discovery. When the next hop is **link-local**, the exit interface is not optional. The display differs from IPv4: each route takes **two lines** — code, prefix and [AD/metric] on the first, "via" details on the second — and even interface-only routes show their [1/0]. The default route is simply `S ::/0`; IPv6 has no "Gateway of last resort" line and no asterisk.',
+      'The IPv6 command is `ipv6 route`, followed by the prefix **with its length** in slash notation — there is no mask field. After the prefix you give a **next hop**, an **exit interface**, or **both** (interface first, then next hop), and optionally an administrative distance (default 1). A global next hop triggers a recursive lookup exactly as in IPv4. An exit interface alone is fine on a **point-to-point** link such as serial; on Ethernet, prefer a next hop, because the router would otherwise have to treat every destination as on-link and resolve each one with Neighbor Discovery. When the next hop is **link-local**, the exit interface is not optional. The display differs from IPv4: each route takes **two lines** — code, prefix and [AD/metric] on the first, "via" details on the second — and even interface-only routes show their [1/0]. The default route is simply `S ::/0`; IPv6 has no "Gateway of last resort" line and no asterisk.',
   },
   {
     kind: 'cli',
@@ -160,8 +160,10 @@ R2(config)# ipv6 route 2001:db8:1::/64 2001:db8:12::1`,
   },
   {
     kind: 'cli',
-    title: 'Configuring a link-local next hop',
-    code: `R1(config)# no ipv6 route 2001:db8:2::/64 2001:db8:12::2
+    title: 'The link-local rule, enforced',
+    code: `R1(config)# ipv6 route 2001:db8:2::/64 fe80::2
+% Interface has to be specified for a link-local nexthop
+R1(config)# no ipv6 route 2001:db8:2::/64 2001:db8:12::2
 R1(config)# ipv6 route 2001:db8:2::/64 GigabitEthernet0/0/1 fe80::2
 R1(config)# end
 R1# show ipv6 route static
@@ -176,10 +178,10 @@ Type escape sequence to abort.
 Sending 5, 100-byte ICMP Echos to FE80::2, timeout is 2 seconds:
 !!!!!
 Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms`,
-    highlight: ['GigabitEthernet0/0/1 fe80::2', 'via FE80::2, GigabitEthernet0/0/1', 'Output Interface:'],
-    caption: 'Interface first, then the link-local next hop. Pinging a link-local address also needs an interface.',
+    highlight: ['% Interface has to be specified for a link-local nexthop', 'GigabitEthernet0/0/1 fe80::2', 'via FE80::2, GigabitEthernet0/0/1', 'Output Interface:'],
+    caption: 'A bare link-local next hop is refused. Interface first, then the link-local address.',
     notes:
-      'To change a static route you remove the old one with `no ipv6 route` plus the same parameters, then add the new one; otherwise both would be installed and share traffic, because they have the same prefix and the same AD. The fully specified route lists the **exit interface first**, then the link-local next hop. In the table it reads **via FE80::2, GigabitEthernet0/0/1** — the interface on the "via" line is your visual cue that this is a fully specified route. `show ipv6 route static` filters the display to static routes only, while the header still reports the total number of entries in the table. The same "which link?" problem appears when you test: pinging a link-local address makes IOS ask for the **output interface**, because FE80::2 could exist on any link. If you omit the interface in the route itself, the command is refused rather than accepted with a hidden problem — one of the few IPv6 static mistakes that IOS catches for you.',
+      "Try to enter a static route with only a link-local next hop and IOS refuses it on the spot: **% Interface has to be specified for a link-local nexthop**. The route is not stored, so `show running-config` will not contain it — an important clue in troubleshooting exhibits. The correct form lists the **exit interface first**, then the link-local address. Because the older route to the same prefix through the global next hop still exists, the engineer removes it with `no ipv6 route` and the same parameters; otherwise both routes, with the same prefix and the same AD of 1, would be installed and share the traffic. In the table the new route reads **via FE80::2, GigabitEthernet0/0/1** — an interface on the via line is the visual cue of a fully specified route. `show ipv6 route static` filters the display to static routes, while its header still counts every entry in the table. The same 'which link?' problem appears when testing: pinging a link-local address makes IOS prompt for the **output interface**. On the exam, an FE80:: next hop without an interface in a configuration exhibit means that command failed.",
   },
   {
     kind: 'bullets',

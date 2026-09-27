@@ -1,0 +1,126 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Total number of IPv4 addresses', back: '2^32 = **4,294,967,296** (about 4.3 billion).' },
+  { id: 'f2', front: 'IANA', back: 'Internet Assigned Numbers Authority: manages the global IP address pool and allocates blocks to the five RIRs.' },
+  { id: 'f3', front: 'The five RIRs', back: 'ARIN, LACNIC, RIPE NCC, APNIC and AFRINIC.' },
+  { id: 'f4', front: 'When did IANA allocate its last free IPv4 /8 blocks?', back: 'February 2011: one final /8 to each of the five RIRs.' },
+  { id: 'f5', front: 'RFC 1918', back: 'The standard that reserves the private IPv4 ranges 10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16.' },
+  { id: 'f6', front: 'Range of 10.0.0.0/8', back: '10.0.0.0 to 10.255.255.255 (16,777,216 addresses).' },
+  { id: 'f7', front: 'Range of 172.16.0.0/12', back: '172.16.0.0 to **172.31.255.255** (1,048,576 addresses).' },
+  { id: 'f8', front: 'Range of 192.168.0.0/16', back: '192.168.0.0 to 192.168.255.255 (65,536 addresses).' },
+  { id: 'f9', front: 'Is 172.32.1.1 private?', back: 'No. 172.16.0.0/12 stops at 172.31.255.255, so 172.32.1.1 is public.' },
+  { id: 'f10', front: 'Is 192.169.10.1 private?', back: 'No. Only 192.168.x.x is private; 192.169 is public.' },
+  { id: 'f11', front: 'Are private addresses routed on the Internet?', back: 'No. ISPs do not route RFC 1918 space, so private hosts need NAT or PAT to reach the Internet.' },
+  { id: 'f12', front: 'PAT', back: 'Port Address Translation (NAT overload): many private hosts share one public address, told apart by port numbers.' },
+  { id: 'f13', front: 'Inside local vs inside global', back: 'Inside local = the private address of the inside host. Inside global = the public address it is translated to.' },
+  { id: 'f14', front: '`100.64.0.0/10`', back: 'Shared address space for carrier-grade NAT (RFC 6598): 100.64.0.0 to 100.127.255.255. **Not** RFC 1918.' },
+  { id: 'f15', front: '`169.254.0.0/16`', back: 'IPv4 link-local (APIPA). A host with this address failed to get a DHCP lease.' },
+  { id: 'f16', front: '`127.0.0.0/8`', back: 'Loopback. 127.0.0.1 tests the local TCP/IP stack; the packets never leave the host.' },
+  { id: 'f17', front: 'IPv4 documentation ranges', back: '192.0.2.0/24, 198.51.100.0/24 and 203.0.113.0/24 (TEST-NET-1, 2 and 3).' },
+  { id: 'f18', front: '`198.18.0.0/15`', back: 'Reserved for network benchmarking tests.' },
+  { id: 'f19', front: '`0.0.0.0`', back: 'This host on this network: the source address of a DHCP Discover. 0.0.0.0/0 is the default route.' },
+  { id: 'f20', front: '`255.255.255.255`', back: 'Limited broadcast: reaches all hosts on the local subnet and is never routed.' },
+  { id: 'f21', front: '`224.0.0.0/4` and `240.0.0.0/4`', back: 'Multicast (class D) and reserved (class E). Neither is used for unicast host addresses.' },
+  { id: 'f22', front: 'Carrier-grade NAT (NAT444)', back: 'The ISP translates customer traffic a second time, after the customer router, onto a shared pool of public addresses.' },
+  { id: 'f23', front: 'Bogon filtering', back: 'Dropping Internet traffic whose source is private or reserved address space, such as RFC 1918.' },
+  { id: 'f24', front: 'Why avoid 192.168.1.0/24 for corporate subnets?', back: 'Home routers use it widely, so remote-access VPN users would have overlapping networks.' },
+  { id: 'f25', front: 'RFC 1918 blocks in classful terms', back: '1 class A (10), 16 class B (172.16 to 172.31), 256 class C (192.168.0 to 192.168.255).' },
+  { id: 'f26', front: 'CIDR', back: 'Classless Inter-Domain Routing: prefixes of any length, replacing wasteful classful allocations and enabling summarization.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which address is an RFC 1918 private address?',
+    options: ['172.20.5.1', '172.32.5.1', '192.169.5.1', '100.64.5.1'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '172.20.5.1 falls inside **172.16.0.0/12** (second octet 16 to 31). 172.32 is past the block, 192.169 is not 192.168, and 100.64.5.1 is shared CGN space, which is not RFC 1918.',
+  },
+  {
+    id: 'q2',
+    type: 'input',
+    stem: 'What is the last address in the 172.16.0.0/12 private block?',
+    answers: ['172.31.255.255'],
+    placeholder: 'a.b.c.d',
+    difficulty: 2,
+    explanation: 'A /12 has a block size of 16 in the second octet, so the block runs from 172.16.0.0 to **172.31.255.255**.',
+  },
+  {
+    id: 'q3',
+    type: 'multi',
+    stem: 'Which two addresses are public addresses? (Choose two.)',
+    options: ['172.15.0.1', '11.0.0.1', '10.200.1.1', '192.168.50.5', '172.30.1.1'],
+    answers: [0, 1],
+    difficulty: 2,
+    explanation:
+      '**172.15.0.1** is just below 172.16.0.0/12 and **11.0.0.1** is outside 10.0.0.0/8, so both are public. 10.200.1.1, 192.168.50.5 and 172.30.1.1 all fall inside RFC 1918 ranges.',
+  },
+  {
+    id: 'q4',
+    type: 'categorize',
+    stem: 'Drag each address into the correct category.',
+    categories: ['RFC 1918 private', 'Public', 'Other special-purpose'],
+    items: [
+      { text: '10.1.1.1', category: 0 },
+      { text: '192.168.1.1', category: 0 },
+      { text: '172.31.0.1', category: 0 },
+      { text: '8.8.8.8', category: 1 },
+      { text: '172.32.0.1', category: 1 },
+      { text: '169.254.1.1', category: 2 },
+      { text: '100.64.0.1', category: 2 },
+      { text: '127.0.0.1', category: 2 },
+    ],
+    difficulty: 2,
+    explanation:
+      'The three RFC 1918 blocks cover 10.x, 172.16 to 172.31 and 192.168. 8.8.8.8 and 172.32.0.1 are public. 169.254.0.0/16 (link-local), 100.64.0.0/10 (shared CGN space) and 127.0.0.0/8 (loopback) are special-purpose, neither private nor public.',
+  },
+  {
+    id: 'q5',
+    type: 'single',
+    stem: 'Why does a host with the address 192.168.1.10 need NAT to browse websites on the Internet?',
+    options: [
+      'Private addresses are not routed on the Internet, so replies could not return to the host',
+      'Private addresses cannot carry TCP traffic',
+      'NAT encrypts the traffic before it enters the Internet',
+      'Routers drop all traffic from 192.168.x.x addresses, even inside the LAN',
+    ],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'Internet routers carry no routes for RFC 1918 space, so a packet with a private source could never get a reply. NAT/PAT swaps in a routable public address. Private addresses carry any protocol, NAT does not encrypt, and private addresses work normally inside the LAN.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'A PC reports the IPv4 address 169.254.33.7. What is the most likely cause?',
+    options: [
+      'It could not obtain an address from a DHCP server',
+      'It was assigned a private address by the edge router NAT',
+      'It is using the ISP carrier-grade NAT address space',
+      'It is configured with a documentation address',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '169.254.0.0/16 is the **APIPA** link-local range a host picks when DHCP fails. NAT does not assign host addresses, CGN uses 100.64.0.0/10, and the documentation ranges are 192.0.2.0/24, 198.51.100.0/24 and 203.0.113.0/24.',
+  },
+  {
+    id: 'q7',
+    type: 'match',
+    stem: 'Match each address block to its purpose.',
+    pairs: [
+      { left: '`100.64.0.0/10`', right: 'Shared space for carrier-grade NAT' },
+      { left: '`127.0.0.0/8`', right: 'Loopback' },
+      { left: '`192.0.2.0/24`', right: 'Documentation and examples' },
+      { left: '`169.254.0.0/16`', right: 'Link-local (APIPA)' },
+      { left: '`10.0.0.0/8`', right: 'RFC 1918 private addressing' },
+    ],
+    difficulty: 2,
+    explanation:
+      'Each special block has one job: CGN shared space, loopback, documentation (TEST-NET-1), link-local autoconfiguration and RFC 1918 private use.',
+  },
+];

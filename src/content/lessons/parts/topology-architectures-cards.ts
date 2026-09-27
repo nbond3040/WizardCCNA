@@ -1,0 +1,126 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Access layer role', back: 'Connects endpoints: PoE, VLAN assignment, port security, 802.1X and QoS marking (the trust boundary).' },
+  { id: 'f2', front: 'Distribution layer role', back: 'Aggregates access switches; the **Layer 2/Layer 3 boundary**: inter-VLAN routing, FHRP gateways, ACL policy, route summarization.' },
+  { id: 'f3', front: 'Core layer role', back: 'High-speed, highly available backbone between distribution blocks: fast forwarding and convergence, minimal policy.' },
+  { id: 'f4', front: 'Distribution block', back: 'A distribution switch pair plus the access switches that uplink to it, often one per building.' },
+  { id: 'f5', front: 'Two-tier (collapsed core) design', back: 'The **core and distribution** layers are combined in one switch pair, with the access layer below.' },
+  { id: 'f6', front: 'When to choose a two-tier design', back: 'A single building or small campus with one distribution block: fewer devices and lower cost.' },
+  { id: 'f7', front: 'When to choose a three-tier design', back: 'A large or multi-building campus: a dedicated core avoids meshing many distribution pairs together.' },
+  { id: 'f8', front: 'Why a dedicated core scales better', back: 'Each distribution pair links only to the core pair, instead of to every other distribution pair (no full mesh).' },
+  { id: 'f9', front: 'Spine-leaf rule: leaf connections', back: '**Every leaf connects to every spine.**' },
+  { id: 'f10', front: 'Spine-leaf rule: forbidden links', back: 'No **leaf-to-leaf** links and no **spine-to-spine** links.' },
+  { id: 'f11', front: 'Where endpoints attach in spine-leaf', back: 'Only to **leaf** switches, never to spines; WAN and Internet routers attach to a border leaf.' },
+  { id: 'f12', front: 'Number of fabric links in spine-leaf', back: '**Spines × leaves**, e.g. 4 spines × 10 leaves = 40 links.' },
+  { id: 'f13', front: 'Why spine-leaf latency is predictable', back: 'Every leaf-to-leaf path is leaf → spine → leaf: always the same number of hops.' },
+  { id: 'f14', front: 'East-west vs north-south traffic', back: 'East-west: server to server inside the data center. North-south: into or out of the data center.' },
+  { id: 'f15', front: 'Scaling a spine-leaf fabric', back: 'Add **leaves** for more ports; add **spines** for more bandwidth between leaves.' },
+  { id: 'f16', front: 'Star topology', back: 'All devices connect to one central device; simple and cheap, but the center is a single point of failure.' },
+  { id: 'f17', front: 'Extended star topology', back: 'Several stars joined through a central device: the typical campus LAN layout.' },
+  { id: 'f18', front: 'Links in a full mesh of n nodes', back: '**n(n − 1)/2**, e.g. 5 nodes need 10 links.' },
+  { id: 'f19', front: 'Partial mesh', back: 'Only some nodes are interconnected: redundancy where it matters at a lower cost than full mesh.' },
+  { id: 'f20', front: 'Hybrid (physical) topology', back: 'A combination of topologies, e.g. star-wired access switches with a partial-mesh core.' },
+  { id: 'f21', front: 'SOHO', back: 'Small office/home office: a few users served by one all-in-one device.' },
+  { id: 'f22', front: 'Functions of a SOHO wireless router', back: 'Router, built-in switch ports, wireless AP, firewall, DHCP server and NAT/PAT (sometimes a modem too).' },
+  { id: 'f23', front: 'Why all SOHO devices share one public IPv4 address', back: '**PAT** (NAT overload) translates private addresses and ports to the router\'s single public address.' },
+  { id: 'f24', front: 'On-premises', back: 'The organization owns and runs the infrastructure in its own facilities: full control, but up-front cost.' },
+  { id: 'f25', front: 'Public cloud', back: 'Provider-owned infrastructure shared by many tenants; elastic and pay-as-you-go; reached over the Internet, VPN or a private link.' },
+  { id: 'f26', front: 'Private cloud', back: 'Cloud-style self-service and automation on infrastructure dedicated to one organization.' },
+  { id: 'f27', front: 'Hybrid cloud', back: 'On-premises or private cloud resources combined with public cloud and connected, e.g. by VPN or a direct connection.' },
+  { id: 'f28', front: 'Single point of failure', back: 'A device or link whose failure cuts off connectivity; avoided with redundant devices and dual-homed uplinks.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which campus layer is normally the boundary between Layer 2 switching and Layer 3 routing?',
+    options: ['Access', 'Distribution', 'Core', 'Edge'],
+    answer: 1,
+    difficulty: 1,
+    explanation:
+      'The **distribution** layer hosts the default gateways and inter-VLAN routing, so it is where Layer 2 ends and Layer 3 begins. The access layer connects endpoints, and the core provides fast transport between distribution blocks.',
+  },
+  {
+    id: 'q2',
+    type: 'single',
+    stem: 'Which layers does a two-tier (collapsed core) campus design combine?',
+    options: ['Core and distribution', 'Access and distribution', 'Access and core', 'All three layers'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      'A collapsed core merges the **core and distribution** layers into one switch pair; the access layer stays separate. The access layer is never the one that collapses.',
+  },
+  {
+    id: 'q3',
+    type: 'multi',
+    stem: 'Which two statements describe a spine-leaf design? (Choose two.)',
+    options: [
+      'Every leaf connects to every spine',
+      'Servers connect to leaf switches',
+      'Spine switches connect to each other',
+      'Leaf switches connect to each other for redundancy',
+      'Servers connect to spines for lower latency',
+    ],
+    answers: [0, 1],
+    difficulty: 1,
+    explanation:
+      'Every leaf links to every spine, and endpoints such as servers attach only to leaves. Spine-to-spine and leaf-to-leaf links break the design, and connecting servers to spines would make path lengths unequal.',
+  },
+  {
+    id: 'q4',
+    type: 'input',
+    stem: 'How many links are needed to connect 6 routers in a full mesh?',
+    answers: ['15'],
+    placeholder: 'links',
+    difficulty: 2,
+    explanation: 'A full mesh needs n(n − 1)/2 links: 6 × 5 / 2 = **15**.',
+  },
+  {
+    id: 'q5',
+    type: 'match',
+    stem: 'Match each layer or role to its typical responsibility.',
+    pairs: [
+      { left: 'Access layer', right: 'Port security and PoE for endpoints' },
+      { left: 'Distribution layer', right: 'Inter-VLAN routing and ACL policy' },
+      { left: 'Core layer', right: 'Fast transport between distribution blocks' },
+      { left: 'Spine switch', right: 'Interconnects all leaf switches in a data center fabric' },
+    ],
+    difficulty: 2,
+    explanation:
+      'Endpoint features live at the access layer, routing and policy at distribution, high-speed transport at the core, and in a data center the spines exist only to interconnect the leaves.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'Why can many devices in a SOHO network reach the Internet through a single public IPv4 address?',
+    options: [
+      'The SOHO router performs PAT (NAT overload)',
+      'The DHCP server gives every device the same public address',
+      'The built-in switch forwards frames based on MAC addresses',
+      'The modem assigns each device its own public address',
+    ],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      '**PAT** translates each private address and source port to the router\'s one public address. DHCP hands out private addresses, MAC-based switching stays inside the LAN, and the ISP normally provides a single public address to the router.',
+  },
+  {
+    id: 'q7',
+    type: 'categorize',
+    stem: 'Classify each statement as describing on-premises infrastructure or the public cloud.',
+    categories: ['On-premises', 'Public cloud'],
+    items: [
+      { text: 'Capacity is bought up front for peak demand', category: 0 },
+      { text: 'The organization has full control of the hardware', category: 0 },
+      { text: 'The organization\'s own staff maintain the servers', category: 0 },
+      { text: 'Infrastructure is shared by many tenants', category: 1 },
+      { text: 'You pay only for the resources you use', category: 1 },
+      { text: 'Resources can be added within minutes', category: 1 },
+    ],
+    difficulty: 2,
+    explanation:
+      'On-premises means owning, buying and running the infrastructure yourself, with full control. Public cloud means renting shared provider infrastructure that is elastic and billed by use.',
+  },
+];

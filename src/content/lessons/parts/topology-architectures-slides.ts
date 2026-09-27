@@ -6,7 +6,7 @@ export const slides: Slide[] = [
     title: 'Topology Architectures',
     subtitle: 'Two-tier, three-tier, spine-leaf, SOHO — and on-premises vs cloud',
     notes:
-      "Knowing what each device does is only half the story; the other half is **how devices are arranged**. This deck covers the architectures the CCNA expects you to recognize and justify: the hierarchical campus with its **access, distribution and core** layers; the **two-tier (collapsed core)** and **three-tier** variants and when to choose each; the **spine-leaf** fabric used in modern data centers; the physical topologies underneath all of them (**star, extended star, full and partial mesh, hybrid**); the all-in-one **SOHO** network; and the choice between **on-premises and cloud** resources. Exam questions here are usually scenarios — 'a company with five buildings…', 'which link violates the design…' — so focus on the *rules* and the *reasons*. This lesson maps to v1.1 topics 1.2.a, 1.2.b, 1.2.c, 1.2.e and 1.2.f and to Domain 1 of v2.0; WAN architectures (topic 1.2.d) get their own lesson next.",
+      "Knowing what each device does is only half the story; the other half is **how devices are arranged**. This deck covers the architectures the CCNA expects you to recognize and justify: the hierarchical campus with its **access, distribution and core** layers; the **two-tier (collapsed core)** and **three-tier** variants and when to choose each; the **spine-leaf** fabric used in modern data centers; the physical topologies underneath all of them (**star, extended star, full and partial mesh, hybrid**); the all-in-one **SOHO** network; and the choice between **on-premises and cloud** resources. Exam questions here are usually scenarios — 'a company with five buildings…', 'which link violates the design…' — so focus on the *rules* and the *reasons*. This lesson maps to v1.1 topics 1.2.a, 1.2.b, 1.2.c, 1.2.e and 1.2.f and to Domain 1 of v2.0; WAN architectures (topic 1.2.d) are covered in their own lesson.",
   },
   {
     kind: 'bullets',
@@ -350,7 +350,7 @@ export const slides: Slide[] = [
         { id: 'pc', icon: 'pc', label: 'PC', x: 1.2, y: 3.4 },
         { id: 'prn', icon: 'printer', label: 'Printer', x: 3.2, y: 3.4 },
         { id: 'lap', icon: 'laptop', label: 'Laptop', x: 5.5, y: 3.4 },
-        { id: 'tab', icon: 'tablet', label: 'Phone', x: 7.6, y: 3.4 },
+        { id: 'tab', icon: 'tablet', label: 'Tablet', x: 7.6, y: 3.4 },
       ],
       links: [
         { from: 'rtr', to: 'modem', label: 'WAN port' },
@@ -377,7 +377,7 @@ export const slides: Slide[] = [
       ['Firewall', 'Blocks unsolicited inbound traffic', 'Stateful: replies to inside requests allowed'],
     ],
     notes:
-      "Take the all-in-one box apart logically and you find the same roles an enterprise spreads across many devices. The **router** function is the default gateway for the LAN and has a default route to the ISP. The built-in **switch** and **AP** usually belong to the same LAN, so wired and wireless devices share one subnet and one broadcast domain. The **DHCP server** means nothing needs manual configuration — plug in or join Wi-Fi and you are online. **PAT** (port address translation, also called NAT overload) is why dozens of devices can share one public IPv4 address: the router tracks each session by translating the source port as well as the address. The **firewall** is stateful: replies to connections started from inside are allowed back in, while connections started from the Internet are dropped unless you create a port-forwarding rule. The NAT lesson later in the course configures these same ideas on a Cisco router.",
+      "Take the all-in-one box apart logically and you find the same roles an enterprise spreads across many devices. The **router** function is the default gateway for the LAN and has a default route to the ISP. The built-in **switch** and **AP** usually belong to the same LAN, so wired and wireless devices share one subnet and one broadcast domain. The **DHCP server** means nothing needs manual configuration — plug in or join Wi-Fi and you are online. **PAT** (port address translation, also called NAT overload) is why dozens of devices can share one public IPv4 address: the router tracks each session by translating the source port as well as the address. The **firewall** is stateful: replies to connections started from inside are allowed back in, while connections started from the Internet are dropped unless you create a port-forwarding rule. Later lessons configure these same features, DHCP, NAT and ACLs, on Cisco routers.",
   },
   {
     kind: 'table',
@@ -482,6 +482,6 @@ export const slides: Slide[] = [
       'On-premises, public, private and **hybrid** cloud change where traffic flows',
     ],
     notes:
-      "Let us recap. The hierarchical campus gives each layer a job: the access layer connects and protects endpoints, the distribution layer aggregates access switches and applies routing and policy at the Layer 2/Layer 3 boundary, and the core moves traffic between distribution blocks as quickly and reliably as possible. Small campuses collapse the core and distribution layers into one pair (two-tier); large, multi-building campuses keep them separate (three-tier) so they scale without meshing every block together. Data centers use spine-leaf fabrics, whose strict wiring rules give every server-to-server path the same length. Underneath every design are physical topologies whose redundancy and cost rise together, from star to full mesh, and most networks are hybrids. At the small end, a SOHO router does everything in one box. Finally, resources can live on premises or in public, private or hybrid clouds, and that choice shapes the WAN and Internet paths — which is where the next lesson, WAN architectures, picks up.",
+      "Let us recap. The hierarchical campus gives each layer a job: the access layer connects and protects endpoints, the distribution layer aggregates access switches and applies routing and policy at the Layer 2/Layer 3 boundary, and the core moves traffic between distribution blocks as quickly and reliably as possible. Small campuses collapse the core and distribution layers into one pair (two-tier); large, multi-building campuses keep them separate (three-tier) so they scale without meshing every block together. Data centers use spine-leaf fabrics, whose strict wiring rules give every server-to-server path the same length. Underneath every design are physical topologies whose redundancy and cost rise together, from star to full mesh, and most networks are hybrids. At the small end, a SOHO router does everything in one box. Finally, resources can live on premises or in public, private or hybrid clouds, and that choice shapes the WAN and Internet paths between sites, which the separate WAN architectures lesson explores.",
   },
 ];

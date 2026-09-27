@@ -2,7 +2,7 @@
 import { a, k, num, type Node } from '../cli/grammar';
 import type { Ctx } from '../cli/session';
 import type { ChMode, IfCfg } from '../model/state';
-import { ifDyn } from '../model/state';
+import { ifDyn, newOspfCfg } from '../model/state';
 import { parentOf, shortIf, typeOfName } from '../model/ifname';
 import { ensureIf, isPhysical } from '../engine/topo';
 import { bcastOf, inNet, ipStr, isMask, maskLen, netOf } from '../util/ip';
@@ -160,6 +160,17 @@ function ospfIf(v6: boolean) {
       } else {
         o.pid = c.a.opid as number;
         o.area = c.a.oarea !== undefined ? String(c.a.oarea) : c.a.oareaip !== undefined ? ipStr(c.a.oareaip as number) : '0';
+        // IOS creates the routing process on first reference from an interface
+        const table = v6 ? c.dev.st.cfg.ospf6 : c.dev.st.cfg.ospf;
+        if (!table[String(o.pid)]) {
+          if (v6 && !c.dev.st.cfg.v6Routing && c.s.via !== 'nvram') {
+            c.out.push('% IPv6 routing not enabled');
+            o.pid = undefined;
+            o.area = undefined;
+            return;
+          }
+          table[String(o.pid)] = newOspfCfg(o.pid);
+        }
       }
       return;
     }
