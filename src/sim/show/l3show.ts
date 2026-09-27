@@ -83,7 +83,7 @@ export function renderRoutes(c: Ctx, routes: Route[], all: Route[]): string[] {
     if (header) {
       const masks = new Set(full.map((r) => r.len));
       if (masks.size > 1) out.push(`      ${ipStr(g.net)}/${g.len} is variably subnetted, ${full.length} subnets, ${masks.size} masks`);
-      else out.push(`      ${ipStr(g.net)}/${[...masks][0]} is subnetted, ${full.length} subnet${full.length === 1 ? '' : 's'}`);
+      else out.push(`      ${ipStr(g.net)}/${[...masks][0]} is subnetted, ${full.length} subnets`);
     }
     for (const r of g.routes) {
       const code = r.proto === 'dhcp' ? 'S*' : r.code;
