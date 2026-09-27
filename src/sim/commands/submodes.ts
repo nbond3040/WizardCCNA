@@ -171,15 +171,37 @@ function blockLine(c: Ctx): void {
   if (!b) return;
   const blk = c.dev.st.cfg.blocks[b.idx];
   if (!blk) return;
-  const line = (c.a.text as string).trim();
+  const text = (c.a.text as string).trim().replace(/\s+/g, ' ');
+  // key chain → key N → key-string: the key's own lines are nested one level deeper
+  const inKey = b.prompt === 'config-keychain-key' && b.key !== undefined;
+  const line = inKey ? ` ${text}` : text;
   if (c.neg) {
-    blk.lines = blk.lines.filter((x) => x !== line);
+    const at = blk.lines.indexOf(line);
+    if (at >= 0) blk.lines.splice(at, /^key \d+$/.test(text) ? 1 + subCount(blk.lines, at) : 1);
     return;
   }
-  if (/^key \d+$/.test(line)) {
+  if (!inKey && /^key \d+$/.test(text) && blk.header.startsWith('key chain')) {
     b.prompt = 'config-keychain-key';
+    b.key = text;
+    if (!blk.lines.includes(text)) blk.lines.push(text);
+    return;
+  }
+  if (inKey) {
+    const at = blk.lines.indexOf(b.key!);
+    const end = at + 1 + subCount(blk.lines, at);
+    const word = line.trim().split(' ')[0];
+    const same = blk.lines.slice(at + 1, end).findIndex((x) => x.trim().split(' ')[0] === word);
+    if (same >= 0) blk.lines[at + 1 + same] = line;
+    else blk.lines.splice(end, 0, line);
+    return;
   }
   if (!blk.lines.includes(line)) blk.lines.push(line);
+}
+
+function subCount(lines: string[], at: number): number {
+  let n = 0;
+  while (at + 1 + n < lines.length && lines[at + 1 + n].startsWith(' ')) n++;
+  return n;
 }
 
 let bRoots: Node[] | null = null;

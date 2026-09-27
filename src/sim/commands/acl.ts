@@ -92,26 +92,35 @@ const ICMP_HELP: Record<string, string> = {
 
 type EntryRun = (c: Ctx) => void;
 
-const memo = new Map<string, Node[]>();
+/** grammar nodes are memoized per entry handler (numbered vs named ACLs run different handlers) */
+const memos = new WeakMap<EntryRun, Map<string, Node[]>>();
+function memoFor(run: EntryRun): Map<string, Node[]> {
+  let m = memos.get(run);
+  if (!m) memos.set(run, (m = new Map()));
+  return m;
+}
 
-function portNodes(proto: string, key: string, next: () => Node[]): Node[] {
+function portNodes(proto: string, key: string, next: () => Node[], run?: EntryRun): Node[] {
   const table = proto === 'udp' ? UDP_PORTS : TCP_PORTS;
   const names = Object.keys(table).sort();
-  const mk = (k2: string): Node[] => [
-    num(0, 65535, 'Port number', { key: k2 }, next),
-    ...names.map((n) => k(n, PORT_HELP[n] ?? n, { key: `${k2}#${n}` }, next)),
+  // destination ports may end the command (`run`); source ports are always followed by the destination
+  const mk = (k2: string, end: boolean, sub: () => Node[]): Node[] => [
+    num(0, 65535, 'Port number', { key: k2, run: end ? run : undefined }, sub),
+    ...names.map((n) => k(n, PORT_HELP[n] ?? n, { key: `${k2}#${n}`, run: end ? run : undefined }, sub)),
   ];
+  const one = () => mk(`${key}p1`, true, next);
   return [
-    k('eq', 'Match only packets on a given port number', { key: `${key}op=eq` }, () => mk(`${key}p1`)),
-    k('gt', 'Match only packets with a greater port number', { key: `${key}op=gt` }, () => mk(`${key}p1`)),
-    k('lt', 'Match only packets with a lower port number', { key: `${key}op=lt` }, () => mk(`${key}p1`)),
-    k('neq', 'Match only packets not on a given port number', { key: `${key}op=neq` }, () => mk(`${key}p1`)),
-    k('range', 'Match only packets in the range of port numbers', { key: `${key}op=range` }, () => mk(`${key}p1`).map((n) => ({ ...n, sub: () => mk(`${key}p2`).map((m) => ({ ...m, sub: next })) }))),
+    k('eq', 'Match only packets on a given port number', { key: `${key}op=eq` }, one),
+    k('gt', 'Match only packets with a greater port number', { key: `${key}op=gt` }, one),
+    k('lt', 'Match only packets with a lower port number', { key: `${key}op=lt` }, one),
+    k('neq', 'Match only packets not on a given port number', { key: `${key}op=neq` }, one),
+    k('range', 'Match only packets in the range of port numbers', { key: `${key}op=range` }, () => mk(`${key}p1`, false, () => mk(`${key}p2`, true, next))),
   ];
 }
 
 function tailNodes(proto: string, run: EntryRun): Node[] {
   const id = `tail:${proto}`;
+  const memo = memoFor(run);
   const hit = memo.get(id);
   if (hit) return hit;
   const nodes: Node[] = [];
@@ -128,9 +137,10 @@ function tailNodes(proto: string, run: EntryRun): Node[] {
 
 function dstNodes(proto: string, run: EntryRun): Node[] {
   const id = `dst:${proto}`;
+  const memo = memoFor(run);
   const hit = memo.get(id);
   if (hit) return hit;
-  const after = (): Node[] => [...(proto === 'tcp' || proto === 'udp' ? portNodes(proto, 'd', () => tailNodes(proto, run)) : []), ...tailNodes(proto, run)];
+  const after = (): Node[] => [...(proto === 'tcp' || proto === 'udp' ? portNodes(proto, 'd', () => tailNodes(proto, run), run) : []), ...tailNodes(proto, run)];
   const nodes: Node[] = [
     a('ipv4', 'A.B.C.D', 'Destination address', { key: 'daddr' }, [a('ipv4', 'A.B.C.D', 'Destination wildcard bits', { key: 'dwc', run }, after)]),
     k('any', 'Any destination host', { key: 'dany', run }, after),
@@ -142,6 +152,7 @@ function dstNodes(proto: string, run: EntryRun): Node[] {
 
 function srcNodes(proto: string, run: EntryRun): Node[] {
   const id = `src:${proto}`;
+  const memo = memoFor(run);
   const hit = memo.get(id);
   if (hit) return hit;
   const after = (): Node[] => [...(proto === 'tcp' || proto === 'udp' ? portNodes(proto, 's', () => dstNodes(proto, run)) : []), ...dstNodes(proto, run)];

@@ -29,7 +29,7 @@ export interface Session {
   vlans?: number[];
   pool?: string;
   acl?: string;
-  block?: { idx: number; prompt: string };
+  block?: { idx: number; prompt: string; key?: string };
   via: 'console' | 'vty' | 'internal' | 'nvram';
   user?: string;
   peerIp?: number;
@@ -39,6 +39,8 @@ export interface Session {
   monitor: boolean;
   hist: string[];
   termLength?: number;
+  /** sim clock of the last command typed in this session (show users idle time) */
+  lastActive?: number;
   /** pending `vlan` sub-mode changes, committed when the mode is left */
   vlanPend?: { ids: number[]; name?: string; shut?: boolean; suspend?: boolean };
 }

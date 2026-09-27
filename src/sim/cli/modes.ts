@@ -21,6 +21,9 @@ function exitNode(to: 'config' | 'priv'): Node {
       if (to === 'priv') {
         c.s.mode = 'priv';
         configExitMessage(c);
+      } else if (c.s.mode === 'block' && c.s.block?.prompt === 'config-keychain-key') {
+        c.s.block.prompt = 'config-keychain';
+        c.s.block.key = undefined;
       } else {
         c.s.mode = 'config';
         c.s.ifs = [];

@@ -83,6 +83,20 @@ export function computeAddrs(net: Net): Map<string, Addr4[]> {
       if (list.length) out.set(ek(dev.id, name), list);
     }
   }
+  // clouds without explicit addressing borrow the subnet of the attached router interface
+  for (const dev of net.allDevices()) {
+    if (dev.t !== 'host' || dev.kind !== 'cloud') continue;
+    dev.cloudAuto = undefined;
+    const ip = dev.st.cfg.ip ? parseIp(dev.st.cfg.ip) ?? undefined : dev.cloudIp;
+    if (ip === undefined) continue;
+    for (const p of dev.hw.ifaces) {
+      const peer = net.peerOf(dev.id, p.name);
+      const a = peer ? out.get(ek(peer.dev, peer.ifName))?.[0] : undefined;
+      if (!a) continue;
+      dev.cloudAuto = { mask: inNet(ip, a.ip, a.mask) ? a.mask : 0xffffffff, gw: a.ip };
+      break;
+    }
+  }
   return out;
 }
 
@@ -100,7 +114,9 @@ export function hostEffective(dev: Device): HostEff {
   const c = dev.st.cfg;
   if (dev.kind === 'cloud') {
     const ip = c.ip ? parseIp(c.ip) ?? undefined : dev.cloudIp;
-    return { ip, mask: c.mask ? parseIp(c.mask) ?? undefined : undefined, gw: c.gateway ? parseIp(c.gateway) ?? undefined : undefined, dhcp: false, apipa: false };
+    const mask = c.mask ? parseIp(c.mask) ?? undefined : dev.cloudAuto?.mask;
+    const gw = c.gateway ? parseIp(c.gateway) ?? undefined : dev.cloudAuto?.gw;
+    return { ip, mask, gw, dhcp: false, apipa: false };
   }
   if (c.dhcp) {
     const l = dev.st.lease;

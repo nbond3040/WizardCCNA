@@ -117,11 +117,11 @@ describe('NAT', () => {
     run(sim, 'PC1', 'ping 192.168.2.100');
     // pool of one address is exhausted for the second host
     expect(sim.check({ type: 'ping', from: 'PC2', to: '192.168.2.100' }).pass).toBe(false);
-    expect(show(sim, 'R1', 'show ip nat translations')).toMatch(/^--- 203\.0\.113\.10 +192\.168\.1\.10 +--- +---$/m);
+    expect(show(sim, 'R1', 'show ip nat translations')).toMatch(/^--- +203\.0\.113\.10 +192\.168\.1\.10 +--- +---$/m);
     // static NAT makes PC2 reachable from the outside
     cfg(sim, 'R1', 'ip nat inside source static 192.168.1.20 203.0.113.20');
     expect(sim.check({ type: 'ping', from: 'SRV', to: '203.0.113.20' }).pass).toBe(true);
-    expect(show(sim, 'R1', 'show ip nat translations')).toMatch(/^--- 203\.0\.113\.20 +192\.168\.1\.20 +--- +---$/m);
+    expect(show(sim, 'R1', 'show ip nat translations')).toMatch(/^--- +203\.0\.113\.20 +192\.168\.1\.20 +--- +---$/m);
   });
 });
 
@@ -143,7 +143,8 @@ describe('DHCP', () => {
     cfg(sim, 'R1', 'no ip dhcp pool LAN');
     cfg(sim, 'R2', ['ip dhcp excluded-address 192.168.1.1 192.168.1.49', 'ip dhcp pool BRANCH', 'network 192.168.1.0 255.255.255.0', 'default-router 192.168.1.1']);
     sim.setHostConfig('PC2', { dhcp: true });
-    expect(sim.hostConfig('PC2').assigned).toBeUndefined();
+    // no server reachable yet: Windows falls back to APIPA
+    expect(sim.hostConfig('PC2').assigned?.ip).toMatch(/^169\.254\./);
     expect(sim.check({ type: 'host', device: 'PC2', inSubnet: '192.168.1.0/24' }).detail).toMatch(/APIPA/);
     cfg(sim, 'R1', ['interface g0/0/0', 'ip helper-address 10.0.12.2']);
     expect(sim.hostConfig('PC2').assigned?.ip).toBe('192.168.1.50');
@@ -154,11 +155,11 @@ describe('DHCP', () => {
     cfg(sim, 'R1', ['ip dhcp pool LAN', 'network 192.168.1.0 255.255.255.0', 'default-router 192.168.1.1']);
     cfg(sim, 'SW1', ['ip dhcp snooping', 'ip dhcp snooping vlan 1']);
     sim.setHostConfig('PC1', { dhcp: true });
-    // the uplink is untrusted: the OFFER is dropped
-    expect(sim.hostConfig('PC1').assigned).toBeUndefined();
+    // the uplink is untrusted: the OFFER is dropped (APIPA)
+    expect(sim.hostConfig('PC1').assigned?.ip).toMatch(/^169\.254\./);
     cfg(sim, 'SW1', ['interface g0/1', 'ip dhcp snooping trust']);
     // trusted now, but option 82 with giaddr 0 is rejected by the IOS server
-    expect(sim.hostConfig('PC1').assigned).toBeUndefined();
+    expect(sim.hostConfig('PC1').assigned?.ip).toMatch(/^169\.254\./);
     cfg(sim, 'SW1', 'no ip dhcp snooping information option');
     expect(sim.hostConfig('PC1').assigned?.ip).toMatch(/^192\.168\.1\./);
     expect(show(sim, 'SW1', 'show ip dhcp snooping binding')).toMatch(/dhcp-snooping +1 +FastEthernet0\/1/);
@@ -191,7 +192,9 @@ describe('remote access', () => {
     expect(t.isSecretInput()).toBe(true);
     t.execute('S3cret!');
     expect(t.prompt()).toBe('R2#');
-    expect(t.execute('show users').output).toMatch(/vty 0 +admin +idle +00:00:03 10\.0\.12\.1/);
+    const users = t.execute('show users').output;
+    expect(users).toMatch(/^\*  2 vty 0     admin      idle                 00:00:00 10\.0\.12\.1$/m);
+    expect(users).toMatch(/^   0 con 0 {16}idle {17}\d\d:\d\d:\d\d$/m);
     expect(t.execute('exit').output).toMatch(/\[Connection to 192\.168\.2\.1 closed by foreign host\]/);
     expect(t.prompt()).toBe('R1#');
     // from a PC

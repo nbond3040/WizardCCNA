@@ -49,7 +49,7 @@ export class Net {
   private tickCount = 0;
   /** hooks installed by the simulator core (avoids import cycles with the CLI layer) */
   applyConfigText?: (dev: IosDevice, text: string) => string[];
-  sessionsOn?: (devId: string) => { line: string; user: string; host: string; idle: string; location: string; self: boolean }[];
+  sessionsOn?: (devId: string, current?: unknown) => { num: number; line: string; user: string; host: string; idle: string; location: string; self: boolean }[];
 
   constructor(devices: LabDevice[], links: LabLink[]) {
     const macs = new Set<string>();

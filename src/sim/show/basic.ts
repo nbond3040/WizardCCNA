@@ -436,8 +436,8 @@ export function showHistory(c: Ctx): void {
 
 export function showUsers(c: Ctx): void {
   c.out.push('    Line       User       Host(s)              Idle       Location');
-  const list = c.net.sessionsOn?.(c.dev.id) ?? [];
-  for (const s of list) c.out.push(`${s.self ? '*' : ' '}${pad(s.line, 15)}${pad(s.user, 11)}${pad(s.host, 21)}${pad(s.idle, 11)}${s.location}`);
+  const list = c.net.sessionsOn?.(c.dev.id, c.s) ?? [];
+  for (const s of list) c.out.push(`${s.self ? '*' : ' '}${padL(s.num, 3)} ${pad(s.line, 10)}${pad(s.user, 11)}${pad(s.host, 21)}${s.idle} ${s.location}`.trimEnd());
   c.out.push('', '  Interface    User               Mode         Idle     Peer Address', '');
 }
 

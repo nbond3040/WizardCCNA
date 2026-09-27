@@ -126,12 +126,20 @@ describe('public API', () => {
       'transport input ssh',
     ]);
     cfg(sim, 'SW1', ['vtp mode transparent', 'vlan 10', 'name USERS', 'exit', 'interface fa0/1', 'switchport mode access', 'switchport access vlan 10', 'switchport port-security', 'switchport port-security maximum 2', 'spanning-tree portfast', 'interface g0/1', 'switchport mode trunk', 'switchport trunk native vlan 99', 'switchport trunk allowed vlan 10,99', 'exit', 'spanning-tree mode rapid-pvst', 'spanning-tree vlan 10 priority 4096']);
+    const strip = (s: string) =>
+      s
+        .split('\n')
+        .filter((l) => !/^(Current configuration|! Last configuration change|! NVRAM config)/.test(l))
+        .join('\n')
+        .replace(/(^!\n)+/gm, '!\n');
     for (const id of ['R1', 'SW1']) {
       const text = sim.runningConfig(id);
+      // as a lab's initial configuration: every line parses
       const fresh = new NetworkSim({ devices: devices.map((d) => (d.id === id ? { ...d, config: text } : d)), links });
-      const strip = (s: string) => s.split('\n').filter((l) => !/^(Current configuration|! Last configuration change|! NVRAM config)/.test(l)).join('\n');
-      expect(strip(fresh.runningConfig(id))).toBe(strip(text));
       expect(fresh.configErrors()).toEqual([]);
+      // as startup-config after a reload: the identical running-config (interfaces come back up)
+      run(sim, id, ['end', 'copy running-config startup-config', '', 'reload', '']);
+      expect(strip(sim.runningConfig(id))).toBe(strip(text));
     }
   });
 });

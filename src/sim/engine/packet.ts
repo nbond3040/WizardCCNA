@@ -287,8 +287,8 @@ export function forward4(net: Net, origin: Device, pkt0: Pkt, opts: FwdOpts = {}
   let inIf: string | null = null;
   for (let step = 0; step < 48; step++) {
     const pkt = w.pkt;
-    // local delivery
-    if (inIf !== null || step === 0) {
+    // local delivery (IOS checks it after the inbound ACL and NAT outside→inside, below)
+    if ((inIf !== null && cur.t === 'host') || step === 0) {
       const own = ownerIf(net, d, cur, pkt.dst);
       if (own) {
         w.ok = true;
@@ -349,13 +349,15 @@ export function forward4(net: Net, origin: Device, pkt0: Pkt, opts: FwdOpts = {}
           if (r.text) {
             w.pkt = r.pkt as Pkt;
             w.hops.push({ device: dev.id, iface: shortIf(inIf), action: r.text, ok: true });
-            const own = ownerIf(net, d, dev, w.pkt.dst);
-            if (own) {
-              w.ok = true;
-              w.to = { dev: dev.id, ifName: inIf };
-              return w;
-            }
           }
+        }
+        const own = ownerIf(net, d, dev, w.pkt.dst);
+        if (own) {
+          w.ok = true;
+          w.to = { dev: dev.id, ifName: inIf };
+          w.hops.push({ device: dev.id, iface: shortIf(inIf), action: `Delivered to ${devName(dev)} (${ipStr(w.pkt.dst)})`, ok: true });
+          countIf(dev, inIf, 'in', w.pkt.size);
+          return w;
         }
         if (!routingOn(dev)) {
           w.fail = { dev: dev.id, kind: 'norouting', text: `${devName(dev)} is not routing (no ip routing)` };

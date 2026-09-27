@@ -124,7 +124,10 @@ export class TerminalImpl implements Terminal {
           }
         }
         if (f.kind === 'host') hostExecute(this.hostIO(f.dev), line);
-        else runLine(net, f.s, line, this.io(f, promptLen), this.buf);
+        else {
+          f.s.lastActive = net.clock;
+          runLine(net, f.s, line, this.io(f, promptLen), this.buf);
+        }
       }
     } catch (e) {
       this.buf.push(`% Simulator error: ${(e as Error).message}`);
@@ -435,5 +438,11 @@ export class TerminalImpl implements Terminal {
   isTopSession(s: Session): boolean {
     const f = this.top();
     return f.kind === 'ios' && f.s === s;
+  }
+
+  /** the console session of this terminal's own device (undefined for hosts) */
+  consoleSession(): Session | undefined {
+    const base = this.frames[0];
+    return base.kind === 'ios' ? base.s : undefined;
   }
 }

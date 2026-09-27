@@ -474,6 +474,8 @@ export interface HostDevice extends DeviceBase {
   st: HostState;
   services?: ServerServices;
   cloudIp?: number;
+  /** derived: mask/gateway a cloud uses when none is configured (from its attached router interface) */
+  cloudAuto?: { mask: number; gw: number };
 }
 
 export type Device = IosDevice | HostDevice;

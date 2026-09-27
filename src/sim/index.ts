@@ -15,7 +15,7 @@ import { hostEffective } from './engine/l3';
 import { roundTrip4, roundTrip6 } from './engine/packet';
 import { ipStr, parseIp } from './util/ip';
 import { parseV6, v6Str } from './util/ipv6';
-import { logStamp } from './util/format';
+import { hms, logStamp } from './util/format';
 
 export type {
   CheckResult,
@@ -64,7 +64,7 @@ export class NetworkSim {
     const net = new Net(lab.devices, lab.links);
     this.net = net;
     net.applyConfigText = (dev, text) => applyConfigText(net, dev, text);
-    net.sessionsOn = (id) => this.sessionsOn(id);
+    net.sessionsOn = (id, cur) => this.sessionsOn(id, cur);
     this.core = {
       net,
       reload: (dev, from) => this.reloadDevice(dev, from),
@@ -200,16 +200,19 @@ export class NetworkSim {
     return n;
   }
 
-  private sessionsOn(devId: string) {
-    const out: { line: string; user: string; host: string; idle: string; location: string; self: boolean }[] = [];
+  private sessionsOn(devId: string, current?: unknown) {
+    const out: { num: number; line: string; user: string; host: string; idle: string; location: string; self: boolean }[] = [];
+    const idle = (t?: number) => hms(Math.max(0, Math.floor((this.net.clock - (t ?? this.net.clock)) / 1000)));
     const con = this.terms.get(devId);
-    if (!con || con.sessionsFor(devId).console) out.push({ line: '  0 con 0', user: '', host: 'idle', idle: '00:00:00', location: '', self: true });
+    const conS = con?.consoleSession();
+    if (!con || con.sessionsFor(devId).console) out.push({ num: 0, line: 'con 0', user: '', host: 'idle', idle: conS === current ? '00:00:00' : idle(conS?.lastActive), location: '', self: !!conS && conS === current });
     const dev = this.net.ios(devId);
     const base = dev && dev.kind === 'router' ? 2 : 1;
     for (const t of this.terms.values()) {
       for (const f of t.sessionsFor(devId).vty) {
         const n = f.s.vtyLine ?? 0;
-        out.push({ line: `${String(base + n).padStart(3)} vty ${n}`, user: f.s.user ?? '', host: 'idle', idle: '00:00:03', location: f.s.peerIp !== undefined ? ipStr(f.s.peerIp) : '', self: t.isTopSession(f.s) });
+        const self = f.s === current;
+        out.push({ num: base + n, line: `vty ${n}`, user: f.s.user ?? '', host: 'idle', idle: self ? '00:00:00' : idle(f.s.lastActive), location: f.s.peerIp !== undefined ? ipStr(f.s.peerIp) : '', self });
       }
     }
     return out;
@@ -235,7 +238,7 @@ export class NetworkSim {
     const reg = nextReg ?? old.cfg.confReg;
     const ignoreStartup = (reg & 0x40) !== 0;
     net.silent = true;
-    if (old.startup && !ignoreStartup) applyConfigText(net, dev, old.startup);
+    if (old.startup && !ignoreStartup) applyConfigText(net, dev, old.startup, { boot: true });
     dev.st.cfg.confReg = reg;
     dev.st.cfg.nextConfReg = undefined;
     dyn.cfgChanged = null;
