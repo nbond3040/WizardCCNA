@@ -240,7 +240,7 @@ export function interfaceDetail(c: Ctx, name: string): string[] {
   const t = typeOfName(name)?.name;
   const out: string[] = [];
   const line = !st ? 'down' : st.line === 'admin-down' ? 'administratively down' : st.line;
-  let proto = st?.proto ?? 'down';
+  let proto: string = st?.proto ?? 'down';
   if (cfg.sw || (dev.kind !== 'router' && isPhysical(dev, name))) {
     const why = st?.errdis ? 'err-disabled' : st?.status === 'connected' ? 'connected' : st?.line === 'admin-down' ? 'disabled' : st?.status === 'suspended' ? 'suspended' : 'notconnect';
     proto = `${proto} (${why})`;

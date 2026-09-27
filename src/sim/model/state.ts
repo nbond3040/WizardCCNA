@@ -445,6 +445,8 @@ export interface HostState {
   apipa?: number;
   arp: Record<string, { mac: string; t: number }>;
   dhcpTried?: boolean;
+  /** `ipconfig /release` was issued: do not auto-retry DHCP until /renew */
+  dhcpReleased?: boolean;
   counters: { inPkts: number; outPkts: number };
 }
 

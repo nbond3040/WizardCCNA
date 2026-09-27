@@ -1,0 +1,122 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Interface status up/up (connected)', back: 'Layer 1 and Layer 2 are both working.' },
+  { id: 'f2', front: 'administratively down / down (disabled)', back: 'The interface has the `shutdown` command; fix it with `no shutdown`.' },
+  { id: 'f3', front: 'down / down (notconnect)', back: 'No link: no or bad cable, wrong cable type, far end off or shut, or a speed mismatch.' },
+  { id: 'f4', front: 'up / down', back: 'Physical layer up, data-link protocol down. Typical of serial links (encapsulation mismatch, keepalives); not expected on LAN switch ports.' },
+  { id: 'f5', front: 'down / down (err-disabled)', back: 'A feature such as port security, BPDU guard, UDLD or link-flap detection shut the port.' },
+  { id: 'f6', front: 'Runt', back: 'A frame shorter than **64 bytes**, usually a collision fragment (for example on the full-duplex side of a duplex mismatch).' },
+  { id: 'f7', front: 'Giant', back: 'A frame longer than the maximum (**1518 bytes**, 1522 with 802.1Q), usually from an MTU or jumbo-frame mismatch.' },
+  { id: 'f8', front: 'CRC error', back: 'A received frame whose FCS does not match: corrupted by a bad cable, EMI or a duplex mismatch.' },
+  { id: 'f9', front: 'Frame error (show interfaces)', back: 'A frame with a CRC error and a non-whole number of bytes (alignment error).' },
+  { id: 'f10', front: 'Input errors', back: 'The total of receive errors: runts, giants, CRC, frame, overrun, ignored and similar.' },
+  { id: 'f11', front: 'Collisions counter', back: 'Transmissions retried after a collision; normal only on half duplex, always 0 on full duplex.' },
+  { id: 'f12', front: 'Late collision', back: 'A collision detected after the first **64 bytes** were sent. Causes: duplex mismatch (half side) or a cable that is too long.' },
+  { id: 'f13', front: 'Duplex mismatch: counters on the half-duplex side', back: '**Collisions** and **late collisions** (plus deferred frames).' },
+  { id: 'f14', front: 'Duplex mismatch: counters on the full-duplex side', back: '**CRC errors** and **runts** (input errors), with zero collisions.' },
+  { id: 'f15', front: 'Symptom of a speed mismatch', back: 'The link never comes up: down/down, notconnect on both ends.' },
+  { id: 'f16', front: 'Default speed and duplex on Cisco switch ports', back: '`speed auto` and `duplex auto`.' },
+  { id: 'f17', front: 'Autonegotiation fails: how is speed chosen?', back: 'The port senses the neighbor\'s speed (parallel detection); if it cannot, it uses its slowest supported speed.' },
+  { id: 'f18', front: 'Autonegotiation fails: how is duplex chosen?', back: '10 or 100 Mbps: **half** duplex. 1000 Mbps or faster: **full** duplex.' },
+  { id: 'f19', front: 'Effect of configuring both speed and duplex on a Cisco switch port', back: 'Autonegotiation is disabled on that port, so the neighbor must be configured to match.' },
+  { id: 'f20', front: 'Side A hard-coded 100/full, side B on auto', back: 'B senses 100 Mbps but falls back to **half** duplex: a duplex mismatch.' },
+  { id: 'f21', front: '`show interfaces status`: a-full and a-100', back: 'The **a-** prefix means autonegotiated; values without it are hard-coded.' },
+  { id: 'f22', front: 'Commands that set speed and duplex', back: 'Interface mode: `speed` 10, 100, 1000 or auto, and `duplex` half, full or auto.' },
+  { id: 'f23', front: 'Manually recover an err-disabled port', back: 'Remove the cause, then enter `shutdown` and `no shutdown` on the interface.' },
+  { id: 'f24', front: 'Automatic err-disable recovery', back: '`errdisable recovery cause` + reason; `errdisable recovery interval` defaults to **300 s**. Disabled by default.' },
+  { id: 'f25', front: 'List err-disabled ports and their reasons', back: '`show interfaces status err-disabled`.' },
+  { id: 'f26', front: 'Maximum UTP copper segment length', back: '**100 meters**.' },
+  { id: 'f27', front: 'Effect of EMI on copper links', back: 'Corrupted frames and rising **CRC** errors; fix with re-routing, shielded cable or fiber.' },
+  { id: 'f28', front: 'reliability 255/255 in show interfaces', back: 'Reliability as a fraction of 255 (five-minute average); 255/255 means no recent errors.' },
+  { id: 'f29', front: 'Reset interface statistics', back: '`clear counters` (optionally with an interface name), then watch whether errors keep increasing.' },
+  { id: 'f30', front: '%CDP-4-DUPLEX_MISMATCH', back: 'Log message raised when CDP learns that the neighbor\'s port uses a different duplex.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'An interface shows "administratively down, line protocol is down". What is the cause?',
+    options: [
+      'The `shutdown` command is configured on the interface',
+      'The cable is unplugged',
+      'Port security disabled the port',
+      'The two ends have a duplex mismatch',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '**Administratively down** always means `shutdown` is configured. An unplugged cable gives down/down (notconnect), port security gives err-disabled, and a duplex mismatch leaves the link up/up.',
+  },
+  {
+    id: 'q2',
+    type: 'single',
+    stem: 'Which counter increments on the half-duplex side of a duplex mismatch?',
+    options: ['Giants', 'Late collisions', 'Runts', 'CRC'],
+    answer: 1,
+    difficulty: 1,
+    explanation:
+      'The half-duplex side detects collisions whenever the full-duplex side transmits, many of them after the first 64 bytes: **late collisions**. Runts and CRC errors appear on the full-duplex side, and giants come from MTU problems.',
+  },
+  {
+    id: 'q3',
+    type: 'multi',
+    stem: 'Which two counters typically increase on the full-duplex side of a duplex mismatch? (Choose two.)',
+    options: ['CRC', 'Late collisions', 'Runts', 'Giants', 'Collisions'],
+    answers: [0, 2],
+    difficulty: 2,
+    explanation:
+      'The full-duplex side receives frames the half-duplex side cut short, counted as **runts** and **CRC** errors. A full-duplex port never counts collisions or late collisions, and giants are caused by oversized frames, not by duplex problems.',
+  },
+  {
+    id: 'q4',
+    type: 'input',
+    stem: 'What is the minimum valid Ethernet frame size, in bytes (destination MAC through FCS)?',
+    answers: ['64', '64 bytes'],
+    placeholder: 'bytes',
+    difficulty: 1,
+    explanation: 'The minimum is **64 bytes**; anything shorter is counted as a runt. The standard maximum is 1518 bytes (1522 with an 802.1Q tag).',
+  },
+  {
+    id: 'q5',
+    type: 'single',
+    stem: 'A switch port is configured with `speed 100` and `duplex full`. The PC connected to it autonegotiates. Which duplex does the PC use?',
+    options: ['Full duplex', 'Half duplex', 'It matches the switch automatically', 'None: the link stays down'],
+    answer: 1,
+    difficulty: 2,
+    explanation:
+      'Hard-coding both values disables autonegotiation on the switch port. The PC senses 100 Mbps but, receiving no negotiation, falls back to **half duplex**, creating a duplex mismatch. It cannot learn the switch\'s duplex, and the link does come up because the speeds match.',
+  },
+  {
+    id: 'q6',
+    type: 'match',
+    stem: 'Match each interface status to its most likely cause.',
+    pairs: [
+      { left: 'administratively down / down', right: '`shutdown` is configured' },
+      { left: 'down / down (notconnect)', right: 'Cable unplugged' },
+      { left: 'down / down (err-disabled)', right: 'Port security violation' },
+      { left: 'up / up (connected)', right: 'Interface working at Layers 1 and 2' },
+    ],
+    difficulty: 2,
+    explanation:
+      'Administratively down is the shutdown command; notconnect means no physical link; err-disabled means a feature such as port security shut the port; up/up is a working interface.',
+  },
+  {
+    id: 'q7',
+    type: 'categorize',
+    stem: 'Classify each finding as a physical/cabling problem or a speed/duplex configuration problem.',
+    categories: ['Physical / cabling', 'Speed / duplex configuration'],
+    items: [
+      { text: 'CRC errors rise whenever a nearby motor runs', category: 0 },
+      { text: 'A UTP run of 130 m', category: 0 },
+      { text: 'A dirty fiber connector', category: 0 },
+      { text: 'Both ends hard-coded to different speeds', category: 1 },
+      { text: 'a-half on one end, full on the other', category: 1 },
+      { text: 'An auto port facing a port hard-coded to 100/full', category: 1 },
+    ],
+    difficulty: 2,
+    explanation:
+      'Interference, excessive length and dirty optics are physical problems. Different fixed speeds, and duplex disagreements caused by hard-coding one side, are configuration problems that are fixed by making both ends agree.',
+  },
+];

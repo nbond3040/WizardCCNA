@@ -375,6 +375,7 @@ export function showIpOspf(c: Ctx, v6 = false): void {
       const loops = ifs.filter((i) => i.type === 'loopback').length;
       const lsas = p.lsdb.filter((l) => l.area === a).length;
       c.out.push(`    Area ${areaNum(a) === 0 ? 'BACKBONE(0)' : a}`, `        Number of interfaces in this area is ${ifs.length}${loops ? ` (${loops} loopback)` : ''}`, '        Area has no authentication', `        SPF algorithm last executed ${hms(10 + (c.net.clock / 1000) % 50)}.123 ago`, `        SPF algorithm executed ${spf} times`, '        Area ranges are', `        Number of LSA ${lsas}. Checksum Sum 0x${(lsas * 0x2f3a1).toString(16).toUpperCase().padStart(6, '0')}`, '        Number of opaque link LSA 0. Checksum Sum 0x000000', '        Number of DCbitless LSA 0', '        Number of indication LSA 0', '        Number of DoNotAge LSA 0', '        Flood list length 0');
+    }
     c.out.push('');
   }
 }

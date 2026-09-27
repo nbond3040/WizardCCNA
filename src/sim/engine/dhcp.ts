@@ -235,7 +235,7 @@ export function retryDhcpClients(net: Net): boolean {
   let changed = false;
   for (const dev of net.allDevices()) {
     if (dev.t === 'host') {
-      if (dev.kind !== 'host' || !dev.st.cfg.dhcp || dev.st.lease) continue;
+      if (dev.kind !== 'host' || !dev.st.cfg.dhcp || dev.st.lease || dev.st.dhcpReleased) continue;
       const r = dhcpExchange(net, dev, dev.hw.ifaces[0].name);
       if (r.ok) {
         dev.st.lease = { ip: r.lease.ip, mask: r.lease.mask, gw: r.lease.gw, dns: r.lease.dns, server: r.lease.server, t: net.now(), expires: net.now() + r.lease.leaseSec * 1000 };

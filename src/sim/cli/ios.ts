@@ -127,12 +127,15 @@ export function caretLines(promptLen: number, pos: number): string[] {
 }
 
 /** Execute one line in a session; returns output lines. */
-export function runLine(net: Net, s: Session, rawLine: string, io: TermIO): string[] {
-  const out: string[] = [];
+export function runLine(net: Net, s: Session, rawLine: string, io: TermIO, out: string[] = []): string[] {
+  const start = out.length;
   const line = rawLine.replace(/\t/g, ' ').replace(/\s+$/, '');
   if (!line.trim()) return out;
   if (line.trim().startsWith('!')) return out;
-  if (line.endsWith('?')) return helpText(s, line.slice(0, -1), io.promptLen).split('\n');
+  if (line.endsWith('?')) {
+    out.push(...helpText(s, line.slice(0, -1), io.promptLen).split('\n'));
+    return out;
+  }
   const sp = splitPipe(line);
   if (sp.error) {
     if (sp.error.startsWith('% Invalid')) out.push(...caretLines(io.promptLen, line.indexOf('|') + 1));
@@ -192,8 +195,7 @@ export function runLine(net: Net, s: Session, rawLine: string, io: TermIO): stri
   }
   if (s.mode !== 'vlan') flushVlanMode(net, s);
   if (sp.pipe) {
-    const filtered = applyPipe(out, sp.pipe);
-    out.length = 0;
+    const filtered = applyPipe(out.splice(start), sp.pipe);
     out.push(...filtered);
   }
   return out;
