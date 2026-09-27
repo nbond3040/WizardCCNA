@@ -35,7 +35,7 @@ describe('OSPF adjacencies', () => {
     expect(nb).toMatch(/^2\.2\.2\.2 {11}1 {3}FULL\/(DR {6}|BDR {5}) {3}00:00:\d\d {4}10\.0\.12\.2 {7}GigabitEthernet0\/0\/0$/m);
     expect(sim.check({ type: 'route', device: 'R2', prefix: '192.168.1.0/24', source: 'O', nextHop: '10.0.12.1' }).pass).toBe(true);
     expect(sim.check({ type: 'route', device: 'R2', prefix: '1.1.1.1/32', source: 'O' }).pass).toBe(true);
-    expect(show(sim, 'R2', 'show ip route ospf')).toMatch(/^O {8}192\.168\.1\.0 \[110\/2\] via 10\.0\.12\.1, \d\d:\d\d:\d\d, GigabitEthernet0\/0\/0$/m);
+    expect(show(sim, 'R2', 'show ip route ospf')).toMatch(/^O {5}192\.168\.1\.0\/24 \[110\/2\] via 10\.0\.12\.1, \d\d:\d\d:\d\d, GigabitEthernet0\/0\/0$/m);
     expect(sim.check({ type: 'ospfRouterId', device: 'R1', rid: '1.1.1.1' }).pass).toBe(true);
   });
 
@@ -156,7 +156,7 @@ describe('DR/BDR election', () => {
     expect(sim.check({ type: 'ospfNeighbor', device: 'R1', neighbor: '3.3.3.3', role: 'DR' }).pass).toBe(true);
     expect(sim.check({ type: 'ospfNeighbor', device: 'R1', neighbor: '2.2.2.2', role: 'BDR' }).pass).toBe(true);
     expect(sim.check({ type: 'ospfNeighbor', device: 'R1', neighbor: '4.4.4.4', state: '2WAY' }).pass).toBe(true);
-    expect(show(sim, 'R4', 'show ip ospf interface brief')).toMatch(/DROTH +3\/3/);
+    expect(show(sim, 'R4', 'show ip ospf interface brief')).toMatch(/DROTH +2\/3/);
     expect(show(sim, 'R1', 'show ip ospf neighbor')).toMatch(/^4\.4\.4\.4 {11}0 {3}2WAY\/DROTHER/m);
   });
 });

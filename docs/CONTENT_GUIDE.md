@@ -8,7 +8,7 @@ Content must therefore be **exhaustive, precise and exam-realistic**.
 
 - One file per lesson: `src/content/lessons/<lessonId>.ts`, where `<lessonId>` is an `id` from
   `src/content/curriculum.ts`. The file default-exports a `LessonContent` (`src/content/types.ts`).
-- Start the file with `import type { LessonContent } from '../types';` — import nothing else.
+- Start the file with `import type { LessonContent } from '../types';`. Large lessons may be split into typed arrays in `src/content/lessons/parts/<id>-*.ts` (importing types from `'../../types'`) and assembled in the lesson file — import nothing else.
 - Read the lesson's `focus` list in `curriculum.ts`: **every focus item must be taught on the slides and
   tested by flashcards and questions.** You may add closely related, exam-relevant material.
 - The reference example showing every slide kind, diagram type and question type:
@@ -52,7 +52,8 @@ exam traps → summary.**
 The renderer draws clean monoline SVG. You describe structure; it handles style.
 
 - **topology** — devices and links. Grid units: default 10×5 canvas (`width`/`height` to change).
-  Keep ≥ 1.6 units between nodes and ≥ 0.6 from edges. Put interface names in `fromLabel`/`toLabel`,
+  Keep ≥ 1.6 units between nodes and ≥ 0.6 from edges. Multiple links between the same two nodes are drawn
+  side by side automatically (EtherChannel bundles, redundant uplinks). Put interface names in `fromLabel`/`toLabel`,
   subnets/VLANs in `label`, IPs/roles in node `sub`. Use `groups` for VLANs, areas, sites.
 - **sequence** — protocol exchanges (DORA, handshake, ARP, OSPF states, REST calls). 3–8 steps.
 - **header** — packet/frame formats (`rows` with 32 bits per row for IPv4/TCP/UDP; `line` for frames).

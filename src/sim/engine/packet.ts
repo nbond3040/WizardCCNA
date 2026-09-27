@@ -573,7 +573,7 @@ export function pingSeries(net: Net, origin: Device, dst: number, count: number,
       out.push({ ...rt, symbol: '.', ok: false, detail: 'first packet dropped while ARP resolved' });
       continue;
     }
-    if (rt.symbol === 'U' && i % 2 === 1) {
+    if (rt.symbol === 'U' && isIos && i % 2 === 1) {
       out.push({ ...rt, symbol: '.' });
       continue;
     }
