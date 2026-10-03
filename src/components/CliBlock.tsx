@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { clamp, useWidth } from '../features/diagrams/util';
+import { useWidth } from '../features/diagrams/util';
 
 const PROMPT_RES: RegExp[] = [
   /^([A-Za-z0-9_.\-]+(?:\([A-Za-z0-9_.\-]+\))?[>#])(.*)$/, // IOS: R1#, SW1(config-if)#
@@ -48,14 +48,21 @@ function highlightText(text: string, highlights: string[] | undefined, keyBase: 
 
 export function CliBlock({ code, highlight, title, className }: { code: string; highlight?: string[]; title?: string; className?: string }) {
   const lines = code.replace(/\s+$/, '').split('\n');
-  // Shrink the text just enough that the longest line fits (JetBrains Mono advances 0.6em); never below 10.5px.
+  // Shrink the text just enough that the longest line fits. Some platforms round glyph advances up to whole
+  // pixels, so assume the wider of the exact (0.6em) and rounded advance. Below 10.5px it gets hard to
+  // read, so very long lines wrap instead (like a real terminal) and the text stays at 11.5px.
   const [ref, width] = useWidth<HTMLDivElement>(640);
   const longest = Math.max(1, ...lines.map((l) => l.length));
-  const fontSize = clamp((width - 38) / (longest * 0.602), 10.5, 12.5);
+  const avail = width - 38;
+  const fits = (fs: number) => longest * Math.max(0.6 * fs, Math.round(0.6 * fs)) <= avail;
+  let fontSize = 12.5;
+  while (fontSize > 10.5 && !fits(fontSize)) fontSize -= 0.25;
+  const wrap = !fits(fontSize);
+  if (wrap) fontSize = 11.5;
   return (
     <div ref={ref} className={`cli ${className ?? ''}`}>
       {title && <div className="cli-title">{title}</div>}
-      <pre className="cli-body" style={{ fontSize }}>
+      <pre className={`cli-body${wrap ? ' cli-wrap' : ''}`} style={{ fontSize }}>
         {lines.map((line, i) => {
           const p = splitPrompt(line);
           return (

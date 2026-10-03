@@ -39,7 +39,7 @@ export function Header({ d }: { d: HeaderDiagram }) {
                   {sizeText(f.size)}
                 </text>
                 {f.sub && (
-                  <text x={fitCenter(x0 + w / 2, svgText(f.sub).length * 6.6, W)} y={h + 33} textAnchor="middle" className="dg-sub faint-text">
+                  <text x={fitCenter(x0 + w / 2, svgText(f.sub).length * 7, W)} y={h + 33} textAnchor="middle" className="dg-sub faint-text">
                     {svgText(f.sub)}
                   </text>
                 )}

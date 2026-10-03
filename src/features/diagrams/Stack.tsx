@@ -11,7 +11,7 @@ export function Stack({ d }: { d: StackDiagram }) {
 
   // Wrap every label to its column width first, then size the rows to the tallest wrapped text.
   const labelCap = Math.max(6, Math.floor((colW - 12) / 7.6));
-  const subCap = Math.max(8, Math.floor((colW - 14) / 6.6));
+  const subCap = Math.max(8, Math.floor((colW - 14) / 7));
   const wrapped = d.columns.map((c) =>
     c.layers.map((l) => ({
       label: wrapText(svgText(l.label), labelCap, 2),

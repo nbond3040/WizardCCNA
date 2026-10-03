@@ -96,7 +96,7 @@ const lab: Lab = {
       checks: [
         { type: 'config', device: 'R2', pattern: '^access-list 10 deny\\s+(host\\s+)?192\\.168\\.1\\.50$' },
         { type: 'config', device: 'R2', pattern: '^access-list 10 deny\\s+192\\.168\\.3\\.0 0\\.0\\.0\\.255$' },
-        { type: 'config', device: 'R2', pattern: '^access-list 10 permit\\s+any$' },
+        { type: 'config', device: 'R2', pattern: '^access-list 10 permit\\s+(any|0\\.0\\.0\\.0 255\\.255\\.255\\.255)$' },
         { type: 'show', device: 'R2', command: 'show access-lists', pattern: 'Standard IP access list 10' },
       ],
     },
@@ -129,7 +129,7 @@ const lab: Lab = {
       checks: [
         { type: 'config', device: 'R2', section: 'ip access-list standard GUEST-BLOCK', pattern: '^ remark\\s+\\S+' },
         { type: 'config', device: 'R2', section: 'ip access-list standard GUEST-BLOCK', pattern: '^ deny\\s+192\\.168\\.3\\.0 0\\.0\\.0\\.255$' },
-        { type: 'config', device: 'R2', section: 'ip access-list standard GUEST-BLOCK', pattern: '^ permit\\s+any$' },
+        { type: 'config', device: 'R2', section: 'ip access-list standard GUEST-BLOCK', pattern: '^ permit\\s+(any|0\\.0\\.0\\.0 255\\.255\\.255\\.255)$' },
         { type: 'show', device: 'R2', command: 'show access-lists', pattern: 'Standard IP access list GUEST-BLOCK' },
       ],
     },

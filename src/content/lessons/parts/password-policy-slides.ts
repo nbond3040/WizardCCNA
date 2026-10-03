@@ -386,8 +386,8 @@ R1(config-line)# login local
 R1(config-line)# exec-timeout 5 0
 R1(config-line)# end
 R1# show running-config | include username|enable secret
-enable secret 9 $9$6uQ0Y5mY4n7HkE$kz8mOjG2p3Qw7Pq1rZ5vXc0dT9eLhBsN4yAaUiF6RgM
-username admin privilege 15 secret 9 $9$Hd3NqP8wX2cT5r$Fv7yLm0sZk1BtQe9uJo4RaGcW6nXiD2hY8pUlK3ExVA`,
+enable secret 9 $9$<salt>$<hash>
+username admin privilege 15 secret 9 $9$<salt>$<hash>`,
     highlight: ['security passwords min-length', 'login block-for', 'algorithm-type scrypt', 'login local', 'exec-timeout'],
     caption: 'Hash types: 5 = salted MD5, 8 = PBKDF2-SHA256, 9 = scrypt. Type 7 is reversible obfuscation.',
     notes:

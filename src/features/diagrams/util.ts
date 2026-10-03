@@ -129,4 +129,4 @@ export function labelLayout(side: LabelSide, cx: number, cy: number, icon: numbe
 }
 
 /** Approximate rendered width (px) of a node's label block, for side-room checks. */
-export const labelWidth = (label?: string, sub?: string) => Math.max((label?.length ?? 0) * 7.6, (sub?.length ?? 0) * 6.7);
+export const labelWidth = (label?: string, sub?: string) => Math.max((label?.length ?? 0) * 7.6, (sub?.length ?? 0) * 7);

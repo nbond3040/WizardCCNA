@@ -96,20 +96,20 @@ export const exam: Question[] = [
   {
     id: 'e6',
     type: 'single',
-    stem: 'Refer to the exhibit. An attacker obtains a copy of this configuration file. Which credentials can be recovered almost instantly with a freely available decoder, without cracking a hash?',
+    stem: 'Refer to the exhibit. Which stored credentials use a reversible encoding instead of a one-way hash?',
     exhibit: {
       kind: 'cli',
       text: `R1# show running-config
 ...
 service password-encryption
 !
-enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0
+enable secret 5 $1$<salt>$<hash>
 !
-username admin privilege 15 secret 9 $9$6uQ0Y5mY4n7HkE$kz8mOjG2p3Qw7Pq1rZ5vXc0dT9eLhBsN4yAaUiF6RgM
-username helpdesk password 7 0822455D0A16
+username admin privilege 15 secret 9 $9$<salt>$<hash>
+username helpdesk password 7 <encoded-string>
 !
 line vty 0 4
- password 7 070C285F4D06
+ password 7 <encoded-string>
  login`,
     },
     options: [
@@ -121,7 +121,7 @@ line vty 0 4
     answer: 3,
     difficulty: 3,
     explanation:
-      'Type 7 is a simple reversible obfuscation applied by `service password-encryption` to clear-text passwords such as `username ... password` and line passwords, so public decoders recover them in an instant. The `secret` entries are one-way hashes (type 5 salted MD5, type 9 scrypt) that an attacker must crack rather than decode. `service password-encryption` does not hash anything; it only obscures passwords that were entered with the `password` keyword.',
+      'Type 7 is a simple reversible obfuscation applied by `service password-encryption` to clear-text passwords such as `username ... password` and line passwords, so those values can be decoded directly. The `secret` entries are one-way hashes (type 5 salted MD5, type 9 scrypt) that cannot be reversed. `service password-encryption` does not hash anything; it only obscures passwords that were entered with the `password` keyword.',
   },
   {
     id: 'e7',

@@ -85,7 +85,8 @@
 .cli-prompt { color: var(--term-accent); }
 .cli-cmd { color: var(--term-cmd); font-weight: 600; }
 .cli-out { color: var(--term-text); opacity: 0.86; }
-.cli-mark { background: rgba(143, 166, 255, 0.22); color: #fff; border-radius: 3px; padding: 0 2px; }
+.cli-body.cli-wrap { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; }
+.cli-mark { background: rgba(143, 166, 255, 0.22); color: #fff; border-radius: 3px; box-shadow: 0 0 0 2px rgba(143, 166, 255, 0.22); }
 
 /* ---------- Deck chrome ---------- */
 .deck-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }

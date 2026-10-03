@@ -1,0 +1,255 @@
+import type { Lab, LabCheck } from '../labTypes';
+
+const DEVICES = ['R1', 'SW1'] as const;
+/** VTY blocks: the 4321 router has 5 lines, the 2960 prints 0-4 and 5-15 separately. */
+const VTY_SECTIONS: Record<string, string[]> = { R1: ['line vty 0 4'], SW1: ['line vty 0 4', 'line vty 5 15'] };
+
+const forBoth = (make: (device: string) => LabCheck[]): LabCheck[] => DEVICES.flatMap((d) => make(d));
+
+const lab: Lab = {
+  id: 'lab-device-hardening',
+  title: 'Hardening a Router and a Switch',
+  summary: 'Fix the findings of a security audit on R1 and SW1: enable secret and password encryption, console login, legal banner, idle timeouts, SSH-only VTY lines, HTTPS instead of HTTP, and unused switch ports parked in an unused VLAN.',
+  difficulty: 2,
+  minutes: 50,
+  lessons: ['device-access-control', 'device-management-access'],
+  scenario:
+    'A security audit of the Riverside wiring closet flagged router **R1** (192.168.1.1) and access switch **SW1** (management address 192.168.1.2). Both devices accept Telnet with the shared password `cisco`, privileged mode is guarded only by a clear-text `enable password cisco`, the console has no password, there is no legal banner, idle sessions never time out, and every typo at the prompt triggers a slow DNS lookup. R1 also serves its management web page over plain HTTP. On SW1, every port except Fa0/1 (the ADMIN workstation) and Gi0/1 (the uplink to R1) is enabled in VLAN 1 with nothing plugged in.\n\n' +
+    'Work from the ADMIN workstation and the device consoles. Use the existing `cisco` enable password to get into privileged mode, then harden **both** devices. The passwords to use are given in the tasks so that the checks can log in: privileged mode **Str0ng#Enable**, console **C0nsole#Pass**, and the local administrator **admin / Adm1n#Secret**.\n\n' +
+    'When you are done, ADMIN must still be able to manage R1 and SW1, but only over SSH.',
+  devices: [
+    { id: 'ADMIN', model: 'pc', x: 1.2, y: 3.4, label: 'ADMIN', host: { ip: '192.168.1.10', mask: '255.255.255.0', gateway: '192.168.1.1' } },
+    {
+      id: 'SW1',
+      model: 'c2960',
+      x: 5,
+      y: 3.4,
+      config: [
+        'enable password cisco',
+        'interface Vlan1',
+        ' ip address 192.168.1.2 255.255.255.0',
+        ' no shutdown',
+        'ip default-gateway 192.168.1.1',
+        'interface FastEthernet0/1',
+        ' description ADMIN workstation',
+        'interface GigabitEthernet0/1',
+        ' description Uplink to R1',
+        'line vty 0 15',
+        ' password cisco',
+        ' login',
+        ' transport input all',
+      ].join('\n'),
+    },
+    {
+      id: 'R1',
+      model: 'isr4321',
+      x: 9,
+      y: 3.4,
+      config: [
+        'enable password cisco',
+        'interface GigabitEthernet0/0/0',
+        ' description LAN',
+        ' ip address 192.168.1.1 255.255.255.0',
+        ' no shutdown',
+        'ip http server',
+        'no ip http secure-server',
+        'line vty 0 4',
+        ' password cisco',
+        ' login',
+        ' transport input all',
+      ].join('\n'),
+    },
+  ],
+  links: [
+    { a: 'ADMIN:fa0', b: 'SW1:fa0/1' },
+    { a: 'SW1:g0/1', b: 'R1:g0/0/0' },
+  ],
+  tasks: [
+    {
+      id: 'secrets',
+      title: 'On R1 and SW1 set the enable secret to **Str0ng#Enable**, delete the clear-text enable password and turn on service password-encryption',
+      details:
+        '`enable secret` stores a one-way hash, while `enable password` is kept in clear text (and ignored once a secret exists). `service password-encryption` obscures the other passwords in the configuration as type 7. Type 7 is trivially reversible, so it only protects against shoulder surfing: the secret is the real protection. Look at the result in `show running-config`.',
+      hint: 'Remove the old password with the `no` form of the command that created it.',
+      checks: forBoth((d) => [
+        { type: 'config', device: d, pattern: '^enable secret\\s+\\S+' },
+        { type: 'config', device: d, pattern: '^enable password', expect: false },
+        { type: 'config', device: d, pattern: '^service password-encryption$' },
+      ]),
+    },
+    {
+      id: 'console-banner',
+      title: 'On R1 and SW1 protect the console with the password **C0nsole#Pass** and `login`, add a banner motd that warns about unauthorized access, and disable DNS lookups of mistyped commands',
+      details:
+        'Console and VTY lines only ask for a password if `login` is configured under them. A legal banner should warn intruders (say "authorized" or "unauthorized access") and must not welcome them. `no ip domain-lookup` stops the router from broadcasting a DNS query every time you mistype a command. The console password is only requested for new console sessions, so you will meet it the next time you open the console.',
+      hint: 'Lines are configured with `line console 0`; `banner motd` takes a delimiter character before and after the text.',
+      checks: forBoth((d) => [
+        { type: 'config', device: d, section: 'line con 0', pattern: '^ password\\s+\\S+' },
+        { type: 'config', device: d, section: 'line con 0', pattern: '^ login$' },
+        { type: 'config', device: d, pattern: '^banner motd\\s+\\S[\\s\\S]*?authori[sz]ed' },
+        { type: 'config', device: d, pattern: '^banner motd\\s+\\S[\\s\\S]*?welcome', expect: false },
+        { type: 'config', device: d, pattern: '^no ip domain[- ]lookup$' },
+      ]),
+    },
+    {
+      id: 'timeouts',
+      title: 'Disconnect idle sessions after 5 minutes: set `exec-timeout 5 0` on the console and on all VTY lines of R1 and SW1',
+      details:
+        'The default idle timeout is 10 minutes, and `exec-timeout 0 0` disables it altogether, which leaves a logged-in session open for anyone who walks past. R1 has VTY lines 0-4; the switch has lines 0-15, which `show running-config` prints as two blocks, so configure all of them.',
+      hint: '`exec-timeout <minutes> <seconds>` is a line subcommand. The switch accepts `line vty 0 15`.',
+      checks: forBoth((d) => [
+        { type: 'config', device: d, section: 'line con 0', pattern: '^ exec-timeout 5 0$' },
+        ...VTY_SECTIONS[d].map((section): LabCheck => ({ type: 'config', device: d, section, pattern: '^ exec-timeout 5 0$' })),
+      ]),
+    },
+    {
+      id: 'ssh-prereq',
+      title: 'Prepare SSH version 2 on R1 and SW1: domain name **wizard.local**, local user **admin** (privilege 15, secret **Adm1n#Secret**), a 2048-bit RSA key pair and `ip ssh version 2`',
+      details:
+        'SSH needs a hostname other than the default, a domain name (the key pair is named hostname.domain), an RSA key of at least 768 bits for version 2, and a local account to authenticate with. Generate the keys with `crypto key generate rsa modulus 2048` after the domain name is set. `show ip ssh` must report **SSH Enabled - version 2.0**.',
+      hint: 'Order matters: `ip domain-name` before `crypto key generate rsa`.',
+      checks: forBoth((d) => [
+        { type: 'config', device: d, pattern: '^ip domain[- ]name wizard\\.local$' },
+        { type: 'config', device: d, pattern: '^username admin privilege 15 secret\\s+\\S+' },
+        { type: 'show', device: d, command: 'show ip ssh', pattern: 'SSH Enabled - version 2\\.0' },
+      ]),
+    },
+    {
+      id: 'vty-ssh-only',
+      title: 'Make SSH the only way in on every VTY line of R1 and SW1: `login local`, `transport input ssh` and no shared line password',
+      details:
+        '`login local` makes the line authenticate against the local user database instead of one shared password, and `transport input ssh` makes the router refuse Telnet connections. Remove the old `password cisco` from the VTY lines: it is no longer used and only invites mistakes. Test from ADMIN with `ssh -l admin 192.168.1.1` and `telnet 192.168.1.1` (the second must fail), and do not forget lines 5-15 on the switch.',
+      hint: 'The switch prints its VTY lines in two blocks (0-4 and 5-15); `line vty 0 15` reaches both.',
+      checks: [
+        { type: 'login', from: 'ADMIN', to: '192.168.1.1', protocol: 'ssh', username: 'admin', password: 'Adm1n#Secret' },
+        { type: 'login', from: 'ADMIN', to: '192.168.1.2', protocol: 'ssh', username: 'admin', password: 'Adm1n#Secret' },
+        { type: 'login', from: 'ADMIN', to: '192.168.1.1', protocol: 'telnet', password: 'cisco', expect: false },
+        { type: 'login', from: 'ADMIN', to: '192.168.1.2', protocol: 'telnet', password: 'cisco', expect: false },
+        ...forBoth((d) =>
+          VTY_SECTIONS[d].flatMap((section): LabCheck[] => [
+            { type: 'config', device: d, section, pattern: '^ login local$' },
+            { type: 'config', device: d, section, pattern: '^ transport input ssh$' },
+            { type: 'config', device: d, section, pattern: '^ password\\s', expect: false },
+          ]),
+        ),
+      ],
+    },
+    {
+      id: 'https',
+      title: 'Replace plain HTTP with HTTPS for web management: R1 serves only `ip http secure-server`, and SW1 must stop answering on HTTP',
+      details:
+        'The built-in web interface sends credentials in clear text over `ip http server` (TCP 80). `ip http secure-server` serves the same pages over TLS (TCP 443). Verify from ADMIN: port 80 must be refused and port 443 answered on both devices.',
+      hint: 'Both servers have their own on/off command; the `no` form turns one off.',
+      checks: [
+        { type: 'traffic', from: 'ADMIN', to: '192.168.1.1', proto: 'tcp', port: 80, expect: false },
+        { type: 'traffic', from: 'ADMIN', to: '192.168.1.1', proto: 'tcp', port: 443 },
+        { type: 'traffic', from: 'ADMIN', to: '192.168.1.2', proto: 'tcp', port: 80, expect: false },
+        { type: 'traffic', from: 'ADMIN', to: '192.168.1.2', proto: 'tcp', port: 443 },
+      ],
+    },
+    {
+      id: 'parking',
+      title: 'On SW1 create VLAN **999** named **PARKING** and park every unused port in it: Fa0/2-24 and Gi0/2 as access ports in VLAN 999, administratively shut down',
+      details:
+        'An enabled, unused port in a production VLAN is an open door for anyone with a patch cable. Put such ports in a VLAN that has no SVI and no gateway, set them to access mode so they cannot negotiate a trunk, and shut them down. `interface range` saves a lot of typing. Fa0/1 (ADMIN) and Gi0/1 (uplink) must stay up. `show interfaces status` should list no `notconnect` ports afterwards.',
+      hint: 'A range such as `interface range fa0/2 - 24` takes the same subcommands as a single port.',
+      checks: [
+        { type: 'vlan', device: 'SW1', vlan: 999, name: 'PARKING' },
+        { type: 'switchport', device: 'SW1', iface: 'Fa0/2', mode: 'access', accessVlan: 999 },
+        { type: 'switchport', device: 'SW1', iface: 'Fa0/13', mode: 'access', accessVlan: 999 },
+        { type: 'switchport', device: 'SW1', iface: 'Fa0/24', mode: 'access', accessVlan: 999 },
+        { type: 'switchport', device: 'SW1', iface: 'Gi0/2', mode: 'access', accessVlan: 999 },
+        { type: 'interface', device: 'SW1', iface: 'Fa0/2', status: 'admin-down' },
+        { type: 'interface', device: 'SW1', iface: 'Fa0/24', status: 'admin-down' },
+        { type: 'interface', device: 'SW1', iface: 'Gi0/2', status: 'admin-down' },
+        { type: 'show', device: 'SW1', command: 'show interfaces status', pattern: 'notconnect', expect: false },
+        { type: 'interface', device: 'SW1', iface: 'Fa0/1', status: 'up' },
+        { type: 'interface', device: 'SW1', iface: 'Gi0/1', status: 'up' },
+      ],
+    },
+    {
+      id: 'save',
+      title: 'Save the configuration on R1 and SW1',
+      details: 'The key pairs, secrets and port changes only survive a reload if they are written to the startup configuration.',
+      hint: '`copy running-config startup-config` or `write memory`',
+      checks: [
+        { type: 'saved', device: 'R1' },
+        { type: 'saved', device: 'SW1' },
+      ],
+    },
+  ],
+  solution: {
+    R1: [
+      'enable',
+      'cisco',
+      'configure terminal',
+      'enable secret Str0ng#Enable',
+      'no enable password',
+      'service password-encryption',
+      'line console 0',
+      ' password C0nsole#Pass',
+      ' login',
+      ' exec-timeout 5 0',
+      ' exit',
+      'banner motd #Authorized access only. Violators will be prosecuted.#',
+      'no ip domain-lookup',
+      'ip domain-name wizard.local',
+      'username admin privilege 15 secret Adm1n#Secret',
+      'crypto key generate rsa modulus 2048',
+      'ip ssh version 2',
+      'line vty 0 4',
+      ' no password',
+      ' login local',
+      ' transport input ssh',
+      ' exec-timeout 5 0',
+      ' exit',
+      'no ip http server',
+      'ip http secure-server',
+      'do write memory',
+      'end',
+    ].join('\n'),
+    SW1: [
+      'enable',
+      'cisco',
+      'configure terminal',
+      'enable secret Str0ng#Enable',
+      'no enable password',
+      'service password-encryption',
+      'line console 0',
+      ' password C0nsole#Pass',
+      ' login',
+      ' exec-timeout 5 0',
+      ' exit',
+      'banner motd #Authorized access only. Violators will be prosecuted.#',
+      'no ip domain-lookup',
+      'ip domain-name wizard.local',
+      'username admin privilege 15 secret Adm1n#Secret',
+      'crypto key generate rsa modulus 2048',
+      'ip ssh version 2',
+      'line vty 0 15',
+      ' no password',
+      ' login local',
+      ' transport input ssh',
+      ' exec-timeout 5 0',
+      ' exit',
+      'no ip http server',
+      'vlan 999',
+      ' name PARKING',
+      ' exit',
+      'interface range fa0/2 - 24',
+      ' switchport mode access',
+      ' switchport access vlan 999',
+      ' shutdown',
+      ' exit',
+      'interface gi0/2',
+      ' switchport mode access',
+      ' switchport access vlan 999',
+      ' shutdown',
+      ' exit',
+      'do write memory',
+      'end',
+    ].join('\n'),
+  },
+};
+
+export default lab;
