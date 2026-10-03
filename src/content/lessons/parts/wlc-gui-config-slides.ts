@@ -118,7 +118,7 @@ export const slides: Slide[] = [
     rows: [
       ['Interface Name', '`corp`', 'Name you select on the WLAN General tab'],
       ['VLAN Id', '`10`', '802.1Q tag used on the trunk'],
-      ['Port Number', '`1` (not shown with LAG)', 'Physical port that carries the VLAN'],
+      ['Port Number', '`1` (not needed with LAG)', 'Physical port that carries the VLAN'],
       ['IP Address / Netmask', '`10.10.10.5` / `255.255.255.0`', 'WLC address in the client subnet'],
       ['Gateway', '`10.10.10.1`', 'Router or SVI for that subnet'],
       ['Primary DHCP Server', '`10.1.100.30`', 'Where the WLC relays client DHCP requests'],
@@ -183,7 +183,7 @@ export const slides: Slide[] = [
     ],
     caption: 'The General tab also summarizes security, for example [WPA2][Auth(PSK)].',
     notes:
-      "Clicking **Create New** and **Go** on the WLANs page opens a short form: the **type** (WLAN for a normal SSID), a **profile name**, the **SSID** and a **WLAN ID**. The profile name is how the controller and administrators refer to the WLAN; the SSID is the network name that clients see in beacons and probe responses. They are often identical, but they do not have to be, and exam exhibits sometimes use different values to test whether you know which one clients see. After Apply, the edit page opens on the **General** tab. The **Status** checkbox must be checked, because a new WLAN starts disabled. The **Interface/Interface Group(G)** drop-down maps the WLAN to a VLAN and defaults to the management interface, a frequent mistake. **Broadcast SSID** is enabled by default; unchecking it hides the SSID from beacons, which is not real security because the name still appears in client probes and association requests. **Radio Policy** restricts the WLAN to particular bands. The WLAN ID matters too: on AireOS only WLAN IDs 1–16 are automatically advertised by APs in the default AP group.",
+      "Clicking **Create New** and **Go** on the WLANs page opens a short form: the **type** (WLAN for a normal SSID), a **profile name**, the **SSID** and a **WLAN ID**. The profile name is how the controller and administrators refer to the WLAN; the SSID is the network name that clients see in beacons and probe responses. They are often identical, but they do not have to be, and exam exhibits sometimes use different values to test whether you know which one clients see. After Apply, the edit page opens on the **General** tab. The **Status** checkbox must be checked, because a disabled WLAN is never broadcast by any AP. The **Interface/Interface Group(G)** drop-down maps the WLAN to a VLAN and defaults to the management interface, a frequent mistake. **Broadcast SSID** is enabled by default; unchecking it hides the SSID from beacons, which is not real security because the name still appears in client probes and association requests. **Radio Policy** restricts the WLAN to particular bands. The WLAN ID matters too: on AireOS only WLAN IDs 1–16 are automatically advertised by APs in the default AP group.",
   },
   {
     kind: 'table',
@@ -387,7 +387,7 @@ ID   Profile Name                     SSID                             Status Se
     title: 'Exam traps: WLC GUI configuration',
     body: 'Read GUI exhibits field by field: most wrong answers change one checkbox or put a setting on the wrong tab.',
     bullets: [
-      'New WLAN defaults: **802.1X** AKM, Silver QoS, status disabled, management interface',
+      'New WLAN defaults: **802.1X** AKM, Silver QoS, management interface',
       'PSK needs 802.1X **unchecked**, PSK enabled and AES',
       'The profile name is local; the **SSID** is what clients see',
       'VLAN mapping = Interface field on the **General** tab (9800: policy profile)',
@@ -396,7 +396,7 @@ ID   Profile Name                     SSID                             Status Se
       '9800: a WLAN not in a policy tag on an AP is never broadcast',
     ],
     notes:
-      "These are the recurring traps in WLC questions. First, **defaults**: a new AireOS WLAN starts disabled, with WPA2, AES and 802.1X key management, Silver QoS and the management interface, so an exhibit that looks untouched tells you exactly what will happen. Second, **PSK configuration**: if the requirement is a passphrase, 802.1X must be replaced by PSK, and choosing TKIP instead of AES is always the weaker answer. Third, **names**: the profile name is internal, while clients see the SSID. Fourth, **tabs**: VLAN mapping lives on the General tab, QoS on its own tab, and AAA override, session timeout, client exclusion, DHCP required and FlexConnect local switching on the Advanced tab; RADIUS servers are defined under SECURITY and selected on the WLAN's AAA Servers tab. Fifth, **QoS**: the profile is a ceiling, so a voice WLAN left on Silver degrades calls. Sixth, **AAA override**: RADIUS-assigned VLANs are ignored while it is disabled. Finally, on the **9800**, a WLAN that no policy tag references, or a tag that no AP carries, is never broadcast even though the WLAN shows UP.",
+      "These are the recurring traps in WLC questions. First, **defaults**: a new AireOS WLAN starts with WPA2, AES and 802.1X key management, Silver QoS and the management interface, and it is broadcast only once Status is Enabled, so an exhibit that looks untouched tells you exactly what will happen. Second, **PSK configuration**: if the requirement is a passphrase, 802.1X must be replaced by PSK, and choosing TKIP instead of AES is always the weaker answer. Third, **names**: the profile name is internal, while clients see the SSID. Fourth, **tabs**: VLAN mapping lives on the General tab, QoS on its own tab, and AAA override, session timeout, client exclusion, DHCP required and FlexConnect local switching on the Advanced tab; RADIUS servers are defined under SECURITY and selected on the WLAN's AAA Servers tab. Fifth, **QoS**: the profile is a ceiling, so a voice WLAN left on Silver degrades calls. Sixth, **AAA override**: RADIUS-assigned VLANs are ignored while it is disabled. Finally, on the **9800**, a WLAN that no policy tag references, or a tag that no AP carries, is never broadcast even though the WLAN shows UP.",
   },
   {
     kind: 'bullets',

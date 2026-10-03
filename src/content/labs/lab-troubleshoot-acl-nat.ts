@@ -128,7 +128,7 @@ const lab: Lab = {
       id: 'dns-permit',
       title: 'Let the staff resolve names again: PC1 must resolve **www.example.com** to 198.51.100.10',
       details: 'Pings and web requests by IP address now work, but name lookups time out. DNS answers come back from UDP port 53, and WAN-IN ends with an implicit `deny ip any any` that quietly drops them. `show access-lists` shows which lines match; a permit that should exist but does not is invisible there. Add the missing permit for the DNS replies.',
-      hint: '`nslookup www.example.com` on PC1, then add a line to `ip access-list extended WAN-IN` that permits `udp` with source port `eq 53`.',
+      hint: '`nslookup www.example.com` on PC1, then ask yourself which direction DNS answers travel, which port they come from and which ACL line would let them in.',
       checks: [
         { type: 'resolve', from: 'PC1', name: 'www.example.com', ip: '198.51.100.10' },
         { type: 'resolve', from: 'PC2', name: 'www.example.com', ip: '198.51.100.10' },

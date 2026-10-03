@@ -21,6 +21,10 @@ export function FlashcardsHome() {
   const cards = versionCards(content, version);
   const stats = computeStats(cards, cardState, lessons, missed);
   const todayQueue = buildQueue({ kind: 'today' }, cards, cardState, lessons, missed, newLimit);
+  const missedSet = new Set(missed);
+  const qMissed = todayQueue.filter((c) => missedSet.has(c.key)).length;
+  const qNew = todayQueue.filter((c) => !cardState[c.key]).length;
+  const qReviews = todayQueue.length - qMissed - qNew;
 
   return (
     <div className="page">
@@ -36,7 +40,7 @@ export function FlashcardsHome() {
         <div className="card stat">
           <div className="k">Due today</div>
           <div className="v">{todayQueue.length}</div>
-          <div className="s">{stats.due} reviews · {Math.max(0, todayQueue.length - stats.due - stats.missed)} new</div>
+          <div className="s">{qMissed} missed · {qReviews} reviews · {qNew} new</div>
         </div>
         <div className="card stat">
           <div className="k">Missed queue</div>

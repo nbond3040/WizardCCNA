@@ -466,7 +466,7 @@ Gi1/0/13  auto   power-deny 0.0     n/a                 n/a   30.0`,
       'Dynamic interface maps a WLAN to a VLAN; the virtual interface is **not routable**',
       'AP-manager is legacy; the **management** interface now terminates CAPWAP',
       'WLC LAG bundles **all** distribution ports; the switch uses **mode on**',
-      'PoE: af 15.4 W, at 30 W, bt 60 or 90 W; the budget limits the AP count',
+      'PoE: af 15.4 W, at 30 W, bt 60/90 W; the budget caps the AP count',
       'Many client MACs on an AP port means FlexConnect or autonomous, not local mode',
     ],
     notes:
