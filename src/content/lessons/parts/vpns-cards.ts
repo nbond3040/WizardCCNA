@@ -1,0 +1,127 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'The four goals of a VPN', back: '**Confidentiality**, **integrity**, **authentication** and **anti-replay** protection.' },
+  { id: 'f2', front: 'IPsec confidentiality mechanism', back: 'Symmetric **encryption**, normally **AES**. DES and 3DES are obsolete.' },
+  { id: 'f3', front: 'IPsec integrity mechanism', back: 'A keyed hash (**HMAC**), preferably SHA-256 or stronger. MD5 and SHA-1 are considered weak.' },
+  { id: 'f4', front: 'How does IPsec provide anti-replay protection?', back: 'A **sequence number** in every ESP/AH packet; the receiver drops duplicates and packets outside its window.' },
+  { id: 'f5', front: 'Site-to-site VPN', back: 'Tunnel between two **VPN gateways** (routers or firewalls); **transparent** to the hosts behind them.' },
+  { id: 'f6', front: 'Remote-access VPN', back: 'One user device connects to a headend using **client software** (or only a browser for clientless access).' },
+  { id: 'f7', front: 'Cisco Secure Client', back: 'The current name of **AnyConnect**: Cisco\'s full-client remote-access VPN software (TLS/DTLS or IPsec IKEv2).' },
+  { id: 'f8', front: 'Transport used by IKE', back: '**UDP 500**; **UDP 4500** when NAT traversal is in use.' },
+  { id: 'f9', front: 'ESP protocol number', back: 'IP protocol **50** (a protocol number, not a TCP/UDP port).' },
+  { id: 'f10', front: 'AH protocol number', back: 'IP protocol **51**.' },
+  { id: 'f11', front: 'GRE protocol number', back: 'IP protocol **47**.' },
+  { id: 'f12', front: 'What does ESP provide?', back: 'Confidentiality (encryption), integrity, authentication and anti-replay.' },
+  { id: 'f13', front: 'What does AH provide?', back: 'Integrity, authentication and anti-replay only: **no encryption**. It also breaks when NAT rewrites the IP header.' },
+  { id: 'f14', front: 'IPsec tunnel mode', back: 'Encrypts the **entire original packet** and adds a **new IP header**. Used between gateways (site-to-site, remote access).' },
+  { id: 'f15', front: 'IPsec transport mode', back: 'Keeps the original IP header and protects only the **payload**. Typical for host-to-host and **GRE over IPsec**.' },
+  { id: 'f16', front: 'IKEv1 phases', back: '**Phase 1** builds the IKE (ISAKMP) SA; **Phase 2** (quick mode) negotiates the IPsec SAs.' },
+  { id: 'f17', front: 'IKEv2 exchanges', back: '**IKE_SA_INIT** and **IKE_AUTH**: four messages create the IKE SA and the first IPsec (child) SA.' },
+  { id: 'f18', front: 'Diffie-Hellman', back: 'Lets two peers derive the same **shared secret** over an untrusted network without ever sending it.' },
+  { id: 'f19', front: 'Recommended Diffie-Hellman groups', back: 'Group **14** (2048-bit) or the elliptic-curve groups **19/20**. Groups 1, 2 and 5 are obsolete.' },
+  { id: 'f20', front: 'IPsec peer authentication methods', back: '**Pre-shared key** or **digital certificates**.' },
+  { id: 'f21', front: 'Security association (SA)', back: 'A one-way agreement on algorithms and keys. IPsec needs a **pair** of SAs for each tunnel.' },
+  { id: 'f22', front: 'SPI', back: 'Security Parameter Index: a value in the ESP/AH header that tells the receiver which SA to use.' },
+  { id: 'f23', front: 'GRE', back: 'Generic Routing Encapsulation: carries multicast and other protocols through a tunnel, but provides **no encryption**.' },
+  { id: 'f24', front: 'Why combine GRE with IPsec?', back: 'Plain IPsec carries only unicast IP. GRE adds multicast and routing-protocol support; IPsec encrypts it.' },
+  { id: 'f25', front: 'IPsec mode normally used for GRE over IPsec', back: '**Transport mode**, because the GRE packet already has the outer IP header between the two routers.' },
+  { id: 'f26', front: 'DMVPN', back: '**mGRE + NHRP + IPsec**: hub-and-spoke with dynamic, on-demand spoke-to-spoke tunnels.' },
+  { id: 'f27', front: 'NHRP in DMVPN', back: 'Maps a spoke\'s tunnel address to its public address so spokes can build direct tunnels.' },
+  { id: 'f28', front: 'Clientless SSL VPN', back: 'A browser connects to an **HTTPS portal** (TCP 443) and reaches selected internal web apps. Nothing is installed.' },
+  { id: 'f29', front: 'Full tunnel vs split tunnel', back: 'Full tunnel sends **all** client traffic through the VPN. Split tunnel sends only corporate subnets; the rest goes direct.' },
+  { id: 'f30', front: 'NAT traversal (NAT-T)', back: 'Wraps ESP in **UDP 4500** so that IPsec can cross NAT devices.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which IPsec protocol provides encryption of the payload?',
+    options: ['ESP', 'AH', 'GRE', 'IKE'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '**ESP** (IP protocol 50) encrypts and authenticates. AH authenticates only, GRE has no security at all, and IKE only negotiates keys and security associations.',
+  },
+  {
+    id: 'q2',
+    type: 'multi',
+    stem: 'Which two statements describe a site-to-site VPN? (Choose two.)',
+    options: [
+      'The tunnel ends on routers or firewalls',
+      'End hosts need no VPN software',
+      'Each user starts Cisco Secure Client before connecting',
+      'It is accessed from a browser portal on TCP 443',
+      'Each tunnel serves exactly one user device',
+    ],
+    answers: [0, 1],
+    difficulty: 1,
+    explanation:
+      'In a site-to-site VPN the **gateways** are the endpoints and the tunnel is **transparent** to hosts. Starting a client, using a browser portal and serving one user device describe remote-access VPNs.',
+  },
+  {
+    id: 'q3',
+    type: 'input',
+    stem: 'What IP protocol number identifies AH? (Enter the number.)',
+    answers: ['51', 'protocol 51', 'ip protocol 51'],
+    placeholder: 'number',
+    difficulty: 1,
+    explanation: 'AH is IP protocol **51**; ESP is 50 and GRE is 47. IKE is different again: it runs over UDP 500.',
+  },
+  {
+    id: 'q4',
+    type: 'match',
+    stem: 'Match each technology to its role.',
+    pairs: [
+      { left: 'IKE', right: 'Negotiates algorithms and keys (UDP 500)' },
+      { left: 'ESP', right: 'Encrypts and authenticates data (IP protocol 50)' },
+      { left: 'AH', right: 'Authenticates only (IP protocol 51)' },
+      { left: 'GRE', right: 'Carries multicast but does not encrypt (IP protocol 47)' },
+    ],
+    difficulty: 1,
+    explanation:
+      'IKE sets up the security associations, ESP protects the data with encryption, AH protects it with authentication only, and GRE just encapsulates traffic (including multicast) without any security.',
+  },
+  {
+    id: 'q5',
+    type: 'single',
+    stem: 'Which IPsec mode encrypts the original IP header and adds a new one?',
+    options: ['Tunnel mode', 'Transport mode', 'Aggressive mode', 'Quick mode'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '**Tunnel mode** protects the whole original packet and prepends a new IP header between the gateways. Transport mode keeps the original header; aggressive and quick mode are IKEv1 negotiation modes, not IPsec modes.',
+  },
+  {
+    id: 'q6',
+    type: 'categorize',
+    stem: 'Classify each IPsec building block by the VPN goal it supports.',
+    categories: ['Confidentiality', 'Integrity', 'Key exchange', 'Peer authentication'],
+    items: [
+      { text: 'AES', category: 0 },
+      { text: 'SHA-256 HMAC', category: 1 },
+      { text: 'Diffie-Hellman group 14', category: 2 },
+      { text: 'Pre-shared key', category: 3 },
+      { text: 'Digital certificate', category: 3 },
+    ],
+    difficulty: 2,
+    explanation:
+      'AES encrypts (confidentiality), the HMAC detects tampering (integrity), Diffie-Hellman agrees keys over an untrusted network, and a pre-shared key or certificate proves the peer\'s identity.',
+  },
+  {
+    id: 'q7',
+    type: 'single',
+    stem: 'Why is GRE combined with IPsec between two branch routers that run OSPF?',
+    options: [
+      'GRE carries the OSPF multicast hellos, which plain IPsec cannot, and IPsec encrypts the GRE packets',
+      'GRE encrypts the OSPF updates and IPsec compresses them',
+      'GRE replaces IKE so that no keys are needed',
+      'GRE makes the IPsec tunnel work through NAT without UDP 4500',
+    ],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'Plain IPsec carries unicast IP only, so OSPF neighbors cannot form across it. **GRE** supplies a tunnel interface that carries multicast; **IPsec** then protects it. GRE itself has no encryption, does not replace IKE, and does not solve NAT traversal.',
+  },
+];

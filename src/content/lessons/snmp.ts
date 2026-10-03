@@ -1,4 +1,6 @@
 import type { LessonContent } from '../types';
+import { flashcards, quiz } from './parts/snmp-cards';
+import { exam } from './parts/snmp-exam';
 
 const lesson: LessonContent = {
   id: 'snmp',
@@ -8,7 +10,7 @@ const lesson: LessonContent = {
       title: 'SNMP: Monitoring and Managing Devices',
       subtitle: 'Managers and agents, MIBs and OIDs, Get/Set/Trap/Inform and SNMP versions',
       notes:
-        'How does a network operations center know that a core switch is running at 95% CPU, that an uplink is dropping packets, or that a router rebooted at 03:12? For decades the answer has been the **Simple Network Management Protocol (SNMP)**. In this deck you will learn the SNMP building blocks — **manager**, **agent**, **MIB** and **OID** — the operations a manager and an agent exchange (Get, GetNext, GetBulk, Set, Trap and Inform) and the UDP ports they use, how **SNMPv1**, **v2c** and **v3** differ in features and security, and the IOS commands you need to recognize: `snmp-server community`, `snmp-server location`, `snmp-server contact`, `snmp-server host`, `snmp-server enable traps` and the SNMPv3 group and user commands. Finally you will compare SNMP with syslog and with modern **streaming telemetry**. On v1.1 this lesson covers topic 4.4 (explain the function of SNMP in network operations); on v2.0 SNMP sits in the AI and Network Operations domain.',
+        'How does a network operations center know that a core switch is running at 95% CPU, that an uplink is dropping packets, or that a router rebooted at 03:12? For decades the answer has been the **Simple Network Management Protocol (SNMP)**. In this deck you will learn the SNMP building blocks — **manager**, **agent**, **MIB** and **OID** — the operations a manager and an agent exchange (Get, GetNext, GetBulk, Set, Trap and Inform) and the UDP ports they use, how **SNMPv1**, **v2c** and **v3** differ in features and security, and the IOS commands you need to recognize: `snmp-server community`, `snmp-server location`, `snmp-server contact`, `snmp-server host`, `snmp-server enable traps` and the SNMPv3 group and user commands. Finally you will compare SNMP with syslog and with modern **streaming telemetry**. On v1.1 this lesson covers topic 4.4 (explain the function of SNMP in network operations); on v2.0 SNMP falls under domain 5.',
     },
     {
       kind: 'bullets',
@@ -311,7 +313,7 @@ user: Wiz-R3ad  security model: v2c`,
         ],
       },
       notes:
-        'SNMP\'s pull model has limits at modern scale. If an NMS polls every five minutes, a 30-second burst that saturates a link can vanish into the average, and polling thousands of OIDs across thousands of devices costs CPU on both ends. **Streaming telemetry** (model-driven telemetry) turns the model around: a collector subscribes once, and the device then **pushes** data continuously — either **periodically**, every few seconds if needed, or **on-change**, only when a value such as an interface state actually changes. The data is structured according to **YANG** data models (the same models used by NETCONF and RESTCONF), encoded efficiently (Google Protocol Buffers or JSON) and carried over TCP-based transports such as **gRPC** (gNMI) or NETCONF. That high-resolution, structured stream is what AI-driven analytics and AIOps platforms consume. SNMP is not going away — it is universal and simple — but for high-frequency operational data, telemetry is the modern answer. Streaming telemetry is not named in the v1.1 blueprint; this course treats it as v2.0 material (AI and Network Operations), so the related flashcards and questions are tagged v2.0.',
+        'SNMP\'s pull model has limits at modern scale. If an NMS polls every five minutes, a 30-second burst that saturates a link can vanish into the average, and polling thousands of OIDs across thousands of devices costs CPU on both ends. **Streaming telemetry** (model-driven telemetry) turns the model around: a collector subscribes once, and the device then **pushes** data continuously — either **periodically**, every few seconds if needed, or **on-change**, only when a value such as an interface state actually changes. The data is structured according to **YANG** data models (the same models used by NETCONF and RESTCONF), encoded efficiently (Google Protocol Buffers or JSON) and carried over TCP-based transports such as **gRPC** (gNMI) or NETCONF. That high-resolution, structured stream is what AI-driven analytics and AIOps platforms consume. SNMP is not going away — it is universal and simple — but for high-frequency operational data, telemetry is the modern answer. Streaming telemetry is not named in the v1.1 blueprint; this course treats it as v2.0 material, so the related flashcards and questions are tagged `v2.0`.',
     },
     {
       kind: 'table',
@@ -372,9 +374,9 @@ user: Wiz-R3ad  security model: v2c`,
         'SNMP is the long-standing standard for monitoring network devices. A manager (the NMS) talks to agents on managed devices; each agent exposes a MIB of objects identified by hierarchical OIDs, with standard objects under 1.3.6.1.2.1 and vendor objects under 1.3.6.1.4.1 — Cisco is enterprise 9. The manager reads with Get, GetNext and GetBulk and writes with Set, all sent to UDP 161 on the agent; the agent reports events with unacknowledged Traps or acknowledged Informs sent to UDP 162 on the manager. SNMPv1 and v2c rely on clear-text community strings with read-only or read-write access, and v2c added GetBulk, Inform and 64-bit counters; SNMPv3 adds users, groups, authentication and encryption through the noAuthNoPriv, authNoPriv and authPriv levels. On IOS, know the `snmp-server` commands for communities, location, contact, notification hosts, traps and v3 groups and users. In daily operations SNMP works alongside syslog and, increasingly, streaming telemetry. Next up: syslog, the text-based event stream every device produces.',
     },
   ],
-  flashcards: [],
-  quiz: [],
-  exam: [],
+  flashcards,
+  quiz,
+  exam,
 };
 
 export default lesson;

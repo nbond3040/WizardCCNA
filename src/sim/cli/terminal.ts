@@ -337,12 +337,12 @@ export class TerminalImpl implements Terminal {
     const from = this.fromDevice();
     const lbl = label ?? ipStr(ip);
     const isHost = from.t === 'host';
-    if (proto === 'telnet') this.buf.push(`Trying ${lbl === ipStr(ip) ? lbl : `${lbl} (${ipStr(ip)})`} ...`);
+    if (proto === 'telnet') this.buf.push(isHost ? `Connecting To ${lbl}...` : `Trying ${lbl === ipStr(ip) ? lbl : `${lbl} (${ipStr(ip)})`} ...`);
     const r = loginReach(net, from, ip, proto, 0);
     if (!r.ok || !r.target) {
       if (isHost && proto === 'ssh') this.buf.push(`ssh: connect to host ${ipStr(ip)} port 22: ${r.msg?.includes('refused') ? 'Connection refused' : 'Connection timed out'}`);
-      else if (proto === 'telnet') this.buf[this.buf.length - 1] += '';
-      if (!(isHost && proto === 'ssh')) this.buf.push(r.msg ?? '% Connection timed out; remote host not responding');
+      else if (isHost) this.buf[this.buf.length - 1] += 'Could not open connection to the host, on port 23: Connect failed';
+      else this.buf.push(r.msg ?? '% Connection timed out; remote host not responding');
       return;
     }
     const target = r.target;
@@ -356,7 +356,7 @@ export class TerminalImpl implements Terminal {
     const auth = authMode(target, line);
     const cfg = target.st.cfg;
     if (proto === 'telnet') {
-      this.buf[this.buf.length - 1] += ' Open';
+      if (!isHost) this.buf[this.buf.length - 1] += ' Open';
       if (cfg.bannerMotd !== undefined) this.buf.push(...bannerLines(cfg.bannerMotd));
       if (auth !== 'none') this.buf.push('', 'User Access Verification', '');
     } else if (cfg.bannerLogin !== undefined) this.buf.push(...bannerLines(cfg.bannerLogin));

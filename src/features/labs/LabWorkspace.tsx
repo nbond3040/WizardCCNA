@@ -6,7 +6,7 @@ import type { HostConfig, Lab } from '../../content/labTypes';
 import { useLab } from '../../content/registry';
 import { NetworkSim, type CheckResult, type PacketTrace, type SimSnapshot } from '../../sim';
 import { clearLabSnapshot, loadLabSnapshot, saveLabSnapshot, useProgress } from '../../store/progress';
-import { Rich } from '../../lib/rich';
+import { RichParas } from '../../lib/rich';
 import { CliBlock } from '../../components/CliBlock';
 import { TopologyCanvas } from './TopologyCanvas';
 import { Console } from './Console';
@@ -204,7 +204,7 @@ function LabRunner({ lab }: { lab: Lab }) {
           {showBrief && (
             <div className="card">
               <div className="card-title">Scenario</div>
-              <Rich as="div" className="small mt-s lab-scenario" text={lab.scenario} />
+              <RichParas className="small mt-s lab-scenario" text={lab.scenario.replace(/\n+/g, "\n\n")} />
               <div className="tiny muted mt">
                 Reinforces: {lab.lessons.map((l, i) => (
                   <span key={l}>{i > 0 && ', '}<Link to={`/learn/${l}`} style={{ textDecoration: 'underline' }}>{LESSON_BY_ID[l]?.title ?? l}</Link></span>

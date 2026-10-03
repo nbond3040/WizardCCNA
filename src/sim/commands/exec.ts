@@ -5,7 +5,7 @@ import type { Net } from '../engine/net';
 import type { Device } from '../model/state';
 import { ipHostAddr } from '../model/state';
 import { verifySecret } from '../util/crypto';
-import { chunk, monthIndex, EPOCH_MS } from '../util/format';
+import { chunk, iosClock, monthIndex, EPOCH_MS } from '../util/format';
 import { ipStr, parseIp } from '../util/ip';
 import { parseV6, v6Ios } from '../util/ipv6';
 import { pingSeries, roundTrip6, traceroute4, type RoundTrip } from '../engine/packet';
@@ -371,9 +371,13 @@ function clockSet(c: Ctx): void {
   const target = Date.UTC(year, mon, day, hh, mm, ss || 0);
   const tz = c.dev.st.cfg.tz;
   const off = tz ? (tz.h * 60 + (tz.h < 0 ? -tz.m : tz.m)) * 60000 : 0;
+  const zone = tz?.name ?? 'UTC';
+  const before = iosClock(c.net.devClock(c.dev), zone, off / 60000).replace(/\.\d+/, '');
   c.dev.st.dyn.clockOffset = target - off - c.net.now();
   c.dev.st.dyn.clockSet = true;
-  c.net.log(c.dev.id, `%SYS-6-CLOCKUPDATE: System clock has been updated from ${new Date(c.net.now()).toISOString()} to ${time} UTC ${day} ${String(c.a.mon1 ?? c.a.mon2)} ${year}, configured from console by console.`);
+  const after = iosClock(c.net.devClock(c.dev), zone, off / 60000).replace(/\.\d+/, '');
+  const who = c.s.via === 'vty' ? `vty${c.s.vtyLine ?? 0}${c.s.peerIp !== undefined ? ` (${ipStr(c.s.peerIp)})` : ''}` : 'console';
+  c.net.log(c.dev.id, `%SYS-6-CLOCKUPDATE: System clock has been updated from ${before} to ${after}, configured from console by ${who}.`);
 }
 
 const DEBUG_TEXT: Record<string, string> = {

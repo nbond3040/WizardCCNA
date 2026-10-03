@@ -210,7 +210,7 @@ describe('remote access', () => {
     const sim = net();
     cfg(sim, 'R2', ['line vty 0 4', 'password T3lnet', 'login']);
     const t = sim.terminal('PC1');
-    expect(t.execute('telnet 10.0.12.2').output).toMatch(/Trying 10\.0\.12\.2 \.\.\. Open[\s\S]*User Access Verification/);
+    expect(t.execute('telnet 10.0.12.2').output).toMatch(/Connecting To 10\.0\.12\.2\.\.\.[\s\S]*User Access Verification/);
     t.execute('T3lnet');
     expect(t.prompt()).toBe('R2>');
     expect(t.execute('enable').output).toBe('% No password set');

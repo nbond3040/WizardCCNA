@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import type { TopologyDiagram } from '../../content/types';
 import { DeviceIcon } from './icons';
-import { clamp, svgText, tone, toneSoft, useWidth } from './util';
+import { clamp, labelLayout, labelSide, labelWidth, svgText, tone, toneSoft, useWidth } from './util';
 
 type Pt = { x: number; y: number };
 
@@ -15,6 +15,7 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
   const H = gh * unit;
   const icon = clamp(unit * 0.52, 26, 46);
   const pad = 14;
+  const topPad = 34;
   const labelSpace = 30;
 
   const pos: Record<string, Pt> = {};
@@ -33,8 +34,8 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
     <div ref={ref} className="dg dg-topology">
       <svg
         width={W + pad * 2}
-        height={H + pad * 2 + labelSpace}
-        viewBox={`${-pad} ${-pad} ${W + pad * 2} ${H + pad * 2 + labelSpace}`}
+        height={H + pad * 2 + labelSpace + topPad}
+        viewBox={`${-pad} ${-pad - topPad} ${W + pad * 2} ${H + pad * 2 + labelSpace + topPad}`}
         role="img"
         aria-label="Network topology diagram"
       >
@@ -143,21 +144,28 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
           );
         })}
 
-        {d.nodes.map((n) => (
-          <g key={n.id}>
-            <DeviceIcon icon={n.icon} size={icon} x={n.x * unit} y={n.y * unit} color={tone(n.tone)} />
-            {n.label && (
-              <text x={n.x * unit} y={n.y * unit + icon / 2 + 15} className="dg-node-label" textAnchor="middle" fill={n.tone && n.tone !== 'default' ? tone(n.tone) : undefined}>
-                {svgText(n.label)}
-              </text>
-            )}
-            {n.sub && (
-              <text x={n.x * unit} y={n.y * unit + icon / 2 + (n.label ? 29 : 15)} className="dg-node-sub" textAnchor="middle">
-                {svgText(n.sub)}
-              </text>
-            )}
-          </g>
-        ))}
+        {d.nodes.map((n) => {
+          const neighbors = d.links.filter((l) => l.from === n.id || l.to === n.id).map((l) => (l.from === n.id ? l.to : l.from));
+          const tw = labelWidth(svgText(n.label), svgText(n.sub));
+          const fits = { right: n.x * unit + icon / 2 + 10 + tw <= W + pad - 4, left: n.x * unit - icon / 2 - 10 - tw >= -pad + 4 };
+          const side = labelSide(n.id, pos, neighbors, fits);
+          const L = labelLayout(side, n.x * unit, n.y * unit, icon, !!n.label, !!n.sub);
+          return (
+            <g key={n.id}>
+              <DeviceIcon icon={n.icon} size={icon} x={n.x * unit} y={n.y * unit} color={tone(n.tone)} />
+              {n.label && (
+                <text x={L.lx} y={L.ly} className="dg-node-label" textAnchor={L.anchor} fill={n.tone && n.tone !== 'default' ? tone(n.tone) : undefined}>
+                  {svgText(n.label)}
+                </text>
+              )}
+              {n.sub && (
+                <text x={L.sx} y={L.sy} className="dg-node-sub" textAnchor={L.anchor}>
+                  {svgText(n.sub)}
+                </text>
+              )}
+            </g>
+          );
+        })}
 
         {d.annotations?.map((a, i) => (
           <text key={`an${i}`} x={a.x * unit} y={a.y * unit} className="dg-annot" textAnchor="middle" fill={a.tone ? tone(a.tone) : undefined}>

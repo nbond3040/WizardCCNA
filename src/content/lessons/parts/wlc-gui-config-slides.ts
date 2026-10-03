@@ -335,6 +335,7 @@ WLC1(config-wlan)# security wpa psk set-key ascii 0 Str0ngPassphrase26
 WLC1(config-wlan)# no shutdown
 WLC1(config-wlan)# exit
 WLC1(config)# wireless profile policy CORP-POLICY
+WLC1(config-wireless-policy)# central switching
 WLC1(config-wireless-policy)# vlan 10
 WLC1(config-wireless-policy)# no shutdown
 WLC1(config-wireless-policy)# exit
@@ -354,7 +355,7 @@ ID   Profile Name                     SSID                             Status Se
     highlight: ['security wpa akm psk', 'vlan 10', 'wlan CORP-PSK policy CORP-POLICY', '[WPA2][PSK][AES]'],
     caption: 'WLAN profile, policy profile, policy tag, AP: the same objects the GUI builds.',
     notes:
-      "The CCNA tests the GUI, but seeing the same configuration as IOS XE commands makes the 9800 model concrete, and the GUI simply generates these lines. The `wlan` command creates the **WLAN profile** with a profile name, WLAN ID and SSID. Like a new GUI WLAN, it starts with WPA2, AES and 802.1X key management, so for a pre-shared key you remove the dot1x AKM, add the **PSK** AKM and set the key; `no shutdown` then enables the WLAN. `wireless profile policy` creates the **policy profile**, where `vlan 10` places the clients, and it also needs `no shutdown`. `wireless tag policy` creates the **policy tag**, and the `wlan ... policy ...` line is the pairing itself. Finally, the tag is assigned to an AP identified by its Ethernet MAC address. The `show wlan summary` output confirms the result: WLAN 10 is **UP** with security [WPA2][PSK][AES]. If the tag were never assigned to any AP, the WLAN would be up on the controller but no AP would broadcast it, a very common real-world and exam troubleshooting scenario.",
+      "The CCNA tests the GUI, but seeing the same configuration as IOS XE commands makes the 9800 model concrete, and the GUI simply generates these lines. The `wlan` command creates the **WLAN profile** with a profile name, WLAN ID and SSID. Like a new GUI WLAN, it starts with WPA2, AES and 802.1X key management, so for a pre-shared key you remove the dot1x AKM, add the **PSK** AKM and set the key; `no shutdown` then enables the WLAN. `wireless profile policy` creates the **policy profile**, where `central switching` keeps client traffic tunneled to the controller for local-mode APs, `vlan 10` places the clients, and `no shutdown` enables it. `wireless tag policy` creates the **policy tag**, and the `wlan ... policy ...` line is the pairing itself. Finally, the tag is assigned to an AP identified by its Ethernet MAC address. The `show wlan summary` output confirms the result: WLAN 10 is **UP** with security [WPA2][PSK][AES]. If the tag were never assigned to any AP, the WLAN would be up on the controller but no AP would broadcast it, a very common real-world and exam troubleshooting scenario.",
   },
   {
     kind: 'steps',

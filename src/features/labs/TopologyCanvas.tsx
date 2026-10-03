@@ -3,7 +3,7 @@ import type { NodeIcon } from '../../content/types';
 import type { DeviceModel } from '../../content/labTypes';
 import type { SimDeviceInfo, SimLinkInfo } from '../../sim';
 import { DeviceIcon } from '../diagrams/icons';
-import { clamp, useWidth } from '../diagrams/util';
+import { clamp, labelLayout, labelSide, labelWidth, useWidth } from '../diagrams/util';
 
 export const MODEL_ICON: Record<DeviceModel, NodeIcon> = {
   isr4321: 'router',
@@ -55,7 +55,7 @@ export function TopologyCanvas({ devices, links, selected, onSelect, path, pathO
 
   return (
     <div ref={ref} className="lab-canvas">
-      <svg width={W} height={H + 20} viewBox={`0 -6 ${W} ${H + 20}`}>
+      <svg width={W} height={H + 56} viewBox={`0 -34 ${W} ${H + 56}`}>
         {links.map((l) => {
           const a = pos[l.a.device];
           const b = pos[l.b.device];
@@ -113,12 +113,18 @@ export function TopologyCanvas({ devices, links, selected, onSelect, path, pathO
         {devices.map((d) => {
           const p = pos[d.id];
           const sel = d.id === selected;
+          const neighbors = links.filter((l) => l.a.device === d.id || l.b.device === d.id).map((l) => (l.a.device === d.id ? l.b.device : l.a.device));
+          const sub = d.label !== d.hostname && d.label !== d.id ? d.label : MODEL_NAME[d.model];
+          const tw = labelWidth(d.hostname, sub);
+          const fits = { right: p.x + icon / 2 + 10 + tw <= W - 4, left: p.x - icon / 2 - 10 - tw >= 4 };
+          const side = labelSide(d.id, pos, neighbors, fits);
+          const L = labelLayout(side, p.x, p.y, icon, true, true);
           return (
             <g key={d.id} className={`lab-node ${sel ? 'sel' : ''}`} onClick={() => onSelect(d.id)} role="button" aria-label={`Open ${d.hostname}`}>
               <circle cx={p.x} cy={p.y} r={icon * 0.78} className="lab-node-halo" />
               <DeviceIcon icon={MODEL_ICON[d.model]} size={icon} x={p.x} y={p.y} color={sel ? 'var(--accent)' : 'var(--d-ink)'} />
-              <text x={p.x} y={p.y + icon / 2 + 16} textAnchor="middle" className="lab-node-label">{d.hostname}</text>
-              <text x={p.x} y={p.y + icon / 2 + 29} textAnchor="middle" className="lab-node-sub">{d.label !== d.hostname && d.label !== d.id ? d.label : MODEL_NAME[d.model]}</text>
+              <text x={L.lx} y={L.ly} textAnchor={L.anchor} className="lab-node-label">{d.hostname}</text>
+              <text x={L.sx} y={L.sy} textAnchor={L.anchor} className="lab-node-sub">{sub}</text>
             </g>
           );
         })}
