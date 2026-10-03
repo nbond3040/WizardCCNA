@@ -243,14 +243,7 @@ R1(dhcp-config)# default-router 10.10.100.1
 R1(dhcp-config)# domain-name corp.local
 R1(dhcp-config)# dns-server 10.10.10.53
 R1(dhcp-config)# option 43 hex f104.0a0a.0a05
-R1(dhcp-config)# end
-R1# show running-config | section dhcp pool
-ip dhcp pool AP-MGMT
- network 10.10.100.0 255.255.255.0
- default-router 10.10.100.1
- domain-name corp.local
- dns-server 10.10.10.53
- option 43 hex f104.0a0a.0a05`,
+R1(dhcp-config)# end`,
     highlight: ['option 43 hex f104.0a0a.0a05'],
     caption: 'f1 = type, 04 = length (4 bytes per WLC), 0a0a0a05 = 10.10.10.5.',
     bullets: [

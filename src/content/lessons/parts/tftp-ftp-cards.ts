@@ -1,0 +1,126 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'TFTP transport and port', back: '**UDP 69** for the initial request; the data then moves to ephemeral ports.' },
+  { id: 'f2', front: 'TFTP authentication and encryption', back: 'None. Anyone who can reach the server and knows the file name can read it.' },
+  { id: 'f3', front: 'How TFTP achieves reliability over UDP', back: 'Stop-and-wait: each **512-byte** block is acknowledged before the next is sent.' },
+  { id: 'f4', front: 'FTP ports', back: '**TCP 21** for control; **TCP 20** for data in active mode.' },
+  { id: 'f5', front: 'FTP authentication', back: 'Username and password, sent in **cleartext**.' },
+  { id: 'f6', front: 'FTP active mode', back: 'The client sends `PORT`; the **server** opens the data connection from TCP 20 to the client.' },
+  { id: 'f7', front: 'FTP passive mode', back: 'The client sends `PASV`; the server picks a high port and the **client** opens the data connection.' },
+  { id: 'f8', front: 'Which FTP mode works behind a client firewall or NAT?', back: '**Passive** mode: every connection is outbound from the client.' },
+  { id: 'f9', front: 'SFTP transport', back: 'SSH File Transfer Protocol on **TCP 22**: authenticated and encrypted. Not the same as FTPS.' },
+  { id: 'f10', front: 'SCP transport', back: 'Secure Copy over SSH on **TCP 22**: encrypted, copy only (no directory listing).' },
+  { id: 'f11', front: 'FTPS', back: 'Ordinary FTP wrapped in TLS. A different protocol from SFTP.' },
+  { id: 'f12', front: 'Command that lists every IOS file system', back: '`show file systems`: size, free space, type, flags and prefixes.' },
+  { id: 'f13', front: 'Asterisk in the first column of `show file systems`', back: 'Marks the **default** file system.' },
+  { id: 'f14', front: '`flash:`', back: 'Internal flash memory holding the IOS image (and `vlan.dat` / `config.text` on switches).' },
+  { id: 'f15', front: '`nvram:`', back: 'Non-volatile RAM; holds the startup-config on routers.' },
+  { id: 'f16', front: 'Where is the running-config stored?', back: 'In RAM, reachable as `system:running-config`.' },
+  { id: 'f17', front: '`usbflash0:`', back: 'The USB flash drive file system on many platforms (`usb0:` on some IOS XE routers).' },
+  { id: 'f18', front: '`dir flash:`', back: 'Lists files with size, date and name, then total and free bytes. Check free space before copying an image.' },
+  { id: 'f19', front: '`copy tftp: flash:`', back: 'Copies a file from a TFTP server into flash. IOS prompts for host, source file name and destination file name.' },
+  { id: 'f20', front: '`copy running-config tftp:`', back: 'Backs up the running configuration to a TFTP server. The default file name is `hostname-confg`.' },
+  { id: 'f21', front: 'Effect of `copy tftp: running-config`', back: 'The file is **merged** into the running configuration; commands missing from the file are not removed.' },
+  { id: 'f22', front: 'Effect of `copy tftp: startup-config`', back: 'The saved configuration is **replaced**; it takes effect after `reload`.' },
+  { id: 'f23', front: '`ip ftp username` and `ip ftp password`', back: 'Global configuration commands that set the login the router uses for `ftp:` copies.' },
+  { id: 'f24', front: '`boot system flash:filename`', back: 'Sets which IOS image loads at the next boot. Save the configuration before you reload.' },
+  { id: 'f25', front: '`verify /md5 flash:filename`', back: 'Calculates the MD5 hash of the file; compare it with the checksum published by Cisco.' },
+  { id: 'f26', front: 'Length of an MD5 hash', back: '128 bits, displayed as **32 hexadecimal digits**.' },
+  { id: 'f27', front: 'Command that confirms an upgrade worked', back: '`show version`: the IOS release and the `System image file` the device booted from.' },
+  { id: 'f28', front: 'Exclamation point and dot in `copy` output', back: '`!` means data was transferred successfully; `.` means a timeout.' },
+  { id: 'f29', front: 'Error "Not enough space on device"', back: 'Flash is too full for the image. Delete an old image (after verifying the new one) and copy again.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which transport protocol and port does TFTP use for its initial request?',
+    options: ['TCP 69', 'UDP 69', 'UDP 21', 'TCP 20'],
+    answer: 1,
+    difficulty: 1,
+    explanation:
+      'TFTP runs over UDP and the first request goes to **port 69**. TCP 20 and 21 belong to FTP, and TFTP is not defined over TCP.',
+  },
+  {
+    id: 'q2',
+    type: 'multi',
+    stem: 'Which two statements about FTP are true? (Choose two.)',
+    options: [
+      'It uses TCP 21 for the control connection',
+      'It requires no authentication',
+      'It encrypts the transfer by default',
+      'It uses a username and password',
+      'It runs over UDP 69',
+    ],
+    answers: [0, 3],
+    difficulty: 1,
+    explanation:
+      'FTP uses TCP 21 for control and requires a username and password, sent in cleartext. It does not encrypt, and UDP 69 with no authentication describes TFTP.',
+  },
+  {
+    id: 'q3',
+    type: 'input',
+    stem: 'Which TCP port does the FTP control connection use?',
+    answers: ['21', 'tcp 21', 'tcp/21'],
+    placeholder: 'port number',
+    difficulty: 1,
+    explanation: 'The FTP control connection uses **TCP 21**. TCP 20 is the server source port for data in active mode.',
+  },
+  {
+    id: 'q4',
+    type: 'match',
+    stem: 'Match each IOS file system to what it holds or reaches.',
+    pairs: [
+      { left: '`flash:`', right: 'IOS image files' },
+      { left: '`nvram:`', right: 'Startup configuration on a router' },
+      { left: '`system:`', right: 'Running configuration in RAM' },
+      { left: '`tftp:`', right: 'Remote TFTP server' },
+    ],
+    difficulty: 1,
+    explanation:
+      '`flash:` stores the IOS image, `nvram:` stores the router startup-config, `system:` is RAM where the running-config lives, and `tftp:` is the prefix for a remote TFTP server.',
+  },
+  {
+    id: 'q5',
+    type: 'order',
+    stem: 'Put the IOS image upgrade steps in the correct order.',
+    items: [
+      'Check free space with `dir flash:`',
+      'Copy the image with `copy tftp: flash:`',
+      'Check the hash with `verify /md5`',
+      'Set the image with `boot system flash:`',
+      'Save the configuration and `reload`',
+      'Confirm the release with `show version`',
+    ],
+    difficulty: 2,
+    explanation:
+      'Check space first, copy the image, verify its hash before trusting it, point the boot variable at it, save and reload, and finally prove the result with `show version`.',
+  },
+  {
+    id: 'q6',
+    type: 'single',
+    stem: 'An engineer enters `copy tftp: running-config`. What happens to the file?',
+    options: [
+      'The running configuration is erased and replaced',
+      'The startup configuration is replaced',
+      'The file is merged into the running configuration',
+      'The device reloads and boots from the file',
+    ],
+    answer: 2,
+    difficulty: 2,
+    explanation:
+      'Copying into `running-config` **merges** the file with the live configuration. Existing commands that are not in the file stay. Only `copy tftp: startup-config` replaces the saved file, and no copy causes a reload by itself.',
+  },
+  {
+    id: 'q7',
+    type: 'single',
+    stem: 'In which FTP mode does the server open the data connection to the client?',
+    options: ['Active mode', 'Passive mode', 'Both modes', 'Neither mode'],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'In **active** mode the client announces a port with `PORT` and the server connects to it from TCP 20. In passive mode the client opens the data connection to a port the server offers.',
+  },
+];

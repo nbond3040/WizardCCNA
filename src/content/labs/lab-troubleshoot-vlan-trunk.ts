@@ -118,7 +118,7 @@ const lab: Lab = {
     {
       id: 'native-vlan',
       title: 'Fix the native VLAN mismatch: **both ends** of the SW1–SW2 trunk must use native VLAN **99**',
-      details: 'Tagged traffic for VLANs 10 and 20 is not affected, which is why this fault hides so well. Compare the *Native vlan* column of `show interfaces trunk` on both switches; CDP also complains about the mismatch in the log.',
+      details: 'Tagged traffic for VLANs 10 and 20 is not affected, which is why this fault hides so well. Compare the *Native vlan* column of `show interfaces trunk` on both switches: untagged frames must land in the same VLAN at both ends of the link.',
       hint: '`show interfaces trunk` — the Native vlan column must be identical on both ends.',
       checks: [
         { type: 'switchport', device: 'SW1', iface: 'Gi0/1', mode: 'trunk', nativeVlan: 99 },
@@ -148,6 +148,8 @@ const lab: Lab = {
         { type: 'ping', from: 'PC5', to: '192.168.20.1' },
         { type: 'ping', from: 'PC5', to: '192.168.20.12' },
         { type: 'ping', from: 'PC4', to: '192.168.10.11' },
+        { type: 'ping', from: 'PC3', to: '192.168.10.11' },
+        { type: 'show', device: 'SW1', command: 'show interfaces trunk', pattern: '^Gi0/1\\s+on\\s+802\\.1q\\s+trunking\\s+99$' },
         { type: 'show', device: 'SW2', command: 'show interfaces trunk', pattern: 'not pruned\\s*\\nGi0/1\\s+10,20,99' },
       ],
     },

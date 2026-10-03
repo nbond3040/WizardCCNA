@@ -1,0 +1,198 @@
+import type { Lab } from '../labTypes';
+
+const segmentConfig = (host: number, extra: string[] = []): string =>
+  [
+    'interface GigabitEthernet0/0/0',
+    ' description Core segment via SW1',
+    ` ip address 10.10.0.${host} 255.255.255.0`,
+    ' no shutdown',
+    ...extra,
+  ].join('\n');
+
+const lab: Lab = {
+  id: 'lab-ospf-dr-bdr',
+  title: 'OSPF DR/BDR Election and Point-to-Point Links',
+  summary: 'Control the DR/BDR election on a four-router Ethernet segment with router IDs and priorities, then remove the pointless election on a two-router circuit with ip ospf network point-to-point.',
+  difficulty: 2,
+  minutes: 45,
+  lessons: ['ospf-network-types', 'ospf-concepts'],
+  scenario:
+    'The campus core is four routers on one Ethernet segment, **10.10.0.0/24**, through switch SW1: R1 (.1), R2 (.2), R3 (.3) and R4 (.4). R4 also reaches the remote-site router R5 over a dedicated Ethernet circuit, **10.20.45.0/30**. Every interface is addressed and enabled, but OSPF is not running anywhere yet.\n\n' +
+    'Roll out **OSPF process 1 in area 0** without leaving the DR election to chance. R2 is the strongest router and must be the **DR**, R1 the **BDR**, and R3 (an old box with a small CPU) must **never** become DR or BDR. R4 keeps the default priority. Pin predictable router IDs (1.1.1.1 to 5.5.5.5) instead of letting IOS derive them from interface addresses.\n\n' +
+    'The election is **non-preemptive**: the first eligible routers on the segment keep the DR and BDR roles, even when a router with a better priority arrives later. Set the priorities before OSPF starts on the interface, or run `clear ip ospf process` afterwards to force a new election. Finally, the R4-R5 circuit only ever connects two routers, so turn it into a point-to-point network and drop the election there.',
+  devices: [
+    { id: 'SW1', model: 'c2960', x: 6, y: 1.2 },
+    { id: 'R1', model: 'isr4321', x: 1.5, y: 4, config: segmentConfig(1) },
+    { id: 'R2', model: 'isr4321', x: 4.5, y: 4, config: segmentConfig(2) },
+    { id: 'R3', model: 'isr4321', x: 7.5, y: 4, config: segmentConfig(3) },
+    {
+      id: 'R4',
+      model: 'isr4321',
+      x: 10.5,
+      y: 4,
+      config: segmentConfig(4, [
+        'interface GigabitEthernet0/0/1',
+        ' description Circuit to R5',
+        ' ip address 10.20.45.1 255.255.255.252',
+        ' no shutdown',
+      ]),
+    },
+    {
+      id: 'R5',
+      model: 'isr4321',
+      x: 10.5,
+      y: 6.4,
+      config: [
+        'interface GigabitEthernet0/0/0',
+        ' description Circuit to R4',
+        ' ip address 10.20.45.2 255.255.255.252',
+        ' no shutdown',
+      ].join('\n'),
+    },
+  ],
+  links: [
+    { a: 'R1:g0/0/0', b: 'SW1:fa0/1' },
+    { a: 'R2:g0/0/0', b: 'SW1:fa0/2' },
+    { a: 'R3:g0/0/0', b: 'SW1:fa0/3' },
+    { a: 'R4:g0/0/0', b: 'SW1:fa0/4' },
+    { a: 'R4:g0/0/1', b: 'R5:g0/0/0' },
+  ],
+  tasks: [
+    {
+      id: 'router-ids',
+      title: 'Create OSPF process 1 on all five routers with explicit router IDs: R1 **1.1.1.1**, R2 **2.2.2.2**, R3 **3.3.3.3**, R4 **4.4.4.4**, R5 **5.5.5.5**',
+      details: 'Without a `router-id` IOS uses the highest loopback address, or else the highest active interface address. A pinned router ID survives interface changes, and it is the tie-breaker in the DR election. Verify with `show ip protocols` or `show ip ospf`.',
+      hint: '`router ospf 1` → `router-id 1.1.1.1`',
+      checks: [
+        { type: 'ospfRouterId', device: 'R1', rid: '1.1.1.1' },
+        { type: 'ospfRouterId', device: 'R2', rid: '2.2.2.2' },
+        { type: 'ospfRouterId', device: 'R3', rid: '3.3.3.3' },
+        { type: 'ospfRouterId', device: 'R4', rid: '4.4.4.4' },
+        { type: 'ospfRouterId', device: 'R5', rid: '5.5.5.5' },
+      ],
+    },
+    {
+      id: 'priorities',
+      title: 'Set the OSPF priority on the segment interface G0/0/0: R2 **200**, R1 **100**, R3 **0**, and leave R4 at the default of 1',
+      details: 'The router with the highest priority wins the DR election and the runner-up becomes BDR; equal priorities are settled by the highest router ID. Priority **0** makes a router ineligible for both roles. Priorities only matter while an election runs, so set them before the interface joins OSPF (or reset OSPF afterwards).',
+      hint: '`interface g0/0/0` → `ip ospf priority 200`',
+      checks: [
+        { type: 'config', device: 'R2', section: 'interface GigabitEthernet0/0/0', pattern: '^ ip ospf priority 200$' },
+        { type: 'config', device: 'R1', section: 'interface GigabitEthernet0/0/0', pattern: '^ ip ospf priority 100$' },
+        { type: 'config', device: 'R3', section: 'interface GigabitEthernet0/0/0', pattern: '^ ip ospf priority 0$' },
+      ],
+    },
+    {
+      id: 'segment',
+      title: 'Enable OSPF in **area 0** on the shared segment **10.10.0.0/24** on R1, R2, R3 and R4 so that all four routers discover each other',
+      details: 'A `network 10.10.0.0 0.0.0.255 area 0` statement under `router ospf 1` is enough. On a broadcast segment the DR and BDR become FULL with everybody, while two DROTHER routers stay in 2WAY with each other. `show ip ospf neighbor` on R1 should list three neighbors.',
+      hint: '`router ospf 1` → `network 10.10.0.0 0.0.0.255 area 0`',
+      checks: [
+        { type: 'ospfNeighbor', device: 'R1', neighbor: '2.2.2.2' },
+        { type: 'ospfNeighbor', device: 'R1', neighbor: '3.3.3.3' },
+        { type: 'ospfNeighbor', device: 'R1', neighbor: '4.4.4.4' },
+        { type: 'ospfNeighbor', device: 'R3', neighbor: '4.4.4.4' },
+      ],
+    },
+    {
+      id: 'election',
+      title: 'Verify the election: R2 must be the **DR**, R1 the **BDR**, and R3 and R4 **DROTHER**',
+      details: 'Read the role after the slash in `show ip ospf neighbor` (FULL/DR, FULL/BDR, 2WAY/DROTHER) and the local role in `show ip ospf interface g0/0/0`. If another router grabbed the DR role because OSPF started on it first, correct the priorities and then run `clear ip ospf process` on the current DR and BDR (and on the router that should take over) to trigger a new election.',
+      hint: '`show ip ospf interface g0/0/0` on R3 must say State DROTHER, Priority 0.',
+      checks: [
+        { type: 'ospfNeighbor', device: 'R1', neighbor: '2.2.2.2', state: 'FULL', role: 'DR' },
+        { type: 'ospfNeighbor', device: 'R3', neighbor: '2.2.2.2', state: 'FULL', role: 'DR' },
+        { type: 'ospfNeighbor', device: 'R4', neighbor: '2.2.2.2', state: 'FULL', role: 'DR' },
+        { type: 'ospfNeighbor', device: 'R3', neighbor: '1.1.1.1', state: 'FULL', role: 'BDR' },
+        { type: 'ospfNeighbor', device: 'R4', neighbor: '1.1.1.1', state: 'FULL', role: 'BDR' },
+        { type: 'ospfNeighbor', device: 'R2', neighbor: '3.3.3.3', state: 'FULL', role: 'DROTHER' },
+        { type: 'ospfNeighbor', device: 'R4', neighbor: '3.3.3.3', state: '2WAY', role: 'DROTHER' },
+        { type: 'show', device: 'R3', command: 'show ip ospf interface GigabitEthernet0/0/0', pattern: 'State DROTHER, Priority 0' },
+      ],
+    },
+    {
+      id: 'point-to-point',
+      title: 'Advertise the circuit **10.20.45.0/30** in area 0 and set `ip ospf network point-to-point` on R4 G0/0/1 and R5 G0/0/0',
+      details: 'Ethernet interfaces default to the broadcast network type, so even this two-router circuit holds a DR/BDR election (look at `show ip ospf neighbor` on R4 before you convert it). On a point-to-point network there is no election, the neighbor is shown as `FULL/  -`, and both ends must use the same network type.',
+      hint: '`interface g0/0/1` → `ip ospf network point-to-point`, then `show ip ospf interface g0/0/1`',
+      checks: [
+        { type: 'ospfNeighbor', device: 'R4', neighbor: '5.5.5.5', state: 'FULL' },
+        { type: 'ospfNeighbor', device: 'R5', neighbor: '4.4.4.4', state: 'FULL' },
+        { type: 'show', device: 'R4', command: 'show ip ospf interface GigabitEthernet0/0/1', pattern: 'Network Type POINT_TO_POINT' },
+        { type: 'show', device: 'R5', command: 'show ip ospf interface GigabitEthernet0/0/0', pattern: 'Network Type POINT_TO_POINT' },
+        { type: 'show', device: 'R4', command: 'show ip ospf neighbor', pattern: '5\\.5\\.5\\.5\\s+\\d+\\s+FULL/\\s*-' },
+      ],
+    },
+    {
+      id: 'verify',
+      title: 'Verify that the core and the remote site learn each other\'s networks and can ping across the circuit',
+      details: 'R1 must learn the R4-R5 circuit through the DR segment, and R5 must learn 10.10.0.0/24 through the point-to-point link. Use `show ip route ospf`.',
+      checks: [
+        { type: 'route', device: 'R1', prefix: '10.20.45.0/30', source: 'O', nextHop: '10.10.0.4' },
+        { type: 'route', device: 'R5', prefix: '10.10.0.0/24', source: 'O', nextHop: '10.20.45.1' },
+        { type: 'ping', from: 'R1', to: '10.20.45.2' },
+        { type: 'ping', from: 'R5', to: '10.10.0.1' },
+      ],
+    },
+  ],
+  solution: {
+    R2: [
+      'enable',
+      'configure terminal',
+      'interface GigabitEthernet0/0/0',
+      ' ip ospf priority 200',
+      ' exit',
+      'router ospf 1',
+      ' router-id 2.2.2.2',
+      ' network 10.10.0.0 0.0.0.255 area 0',
+      ' end',
+    ].join('\n'),
+    R1: [
+      'enable',
+      'configure terminal',
+      'interface GigabitEthernet0/0/0',
+      ' ip ospf priority 100',
+      ' exit',
+      'router ospf 1',
+      ' router-id 1.1.1.1',
+      ' network 10.10.0.0 0.0.0.255 area 0',
+      ' end',
+    ].join('\n'),
+    R3: [
+      'enable',
+      'configure terminal',
+      'interface GigabitEthernet0/0/0',
+      ' ip ospf priority 0',
+      ' exit',
+      'router ospf 1',
+      ' router-id 3.3.3.3',
+      ' network 10.10.0.0 0.0.0.255 area 0',
+      ' end',
+    ].join('\n'),
+    R4: [
+      'enable',
+      'configure terminal',
+      'router ospf 1',
+      ' router-id 4.4.4.4',
+      ' network 10.10.0.0 0.0.0.255 area 0',
+      ' network 10.20.45.0 0.0.0.3 area 0',
+      ' exit',
+      'interface GigabitEthernet0/0/1',
+      ' ip ospf network point-to-point',
+      ' end',
+    ].join('\n'),
+    R5: [
+      'enable',
+      'configure terminal',
+      'router ospf 1',
+      ' router-id 5.5.5.5',
+      ' network 10.20.45.0 0.0.0.3 area 0',
+      ' exit',
+      'interface GigabitEthernet0/0/0',
+      ' ip ospf network point-to-point',
+      ' end',
+    ].join('\n'),
+  },
+};
+
+export default lab;
