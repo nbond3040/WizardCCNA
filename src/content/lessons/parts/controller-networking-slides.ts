@@ -223,7 +223,7 @@ export const slides: Slide[] = [
     diagram: {
       type: 'topology',
       width: 10,
-      height: 6,
+      height: 6.5,
       nodes: [
         { id: 'dnac', icon: 'controller', label: 'Catalyst Center', x: 2.8, y: 0.8, tone: 'accent' },
         { id: 'ise', icon: 'server', label: 'ISE', sub: 'identity and policy', x: 6.6, y: 0.8 },
@@ -310,8 +310,6 @@ export const slides: Slide[] = [
     kind: 'definitions',
     title: 'Catalyst Center capabilities',
     terms: [
-      { term: 'Intent-based networking', def: 'You state the desired outcome; the controller translates, activates and then verifies it.' },
-      { term: 'Discovery and inventory', def: 'Finds devices using CDP, LLDP or an IP range and keeps a network-wide inventory.' },
       { term: 'Plug and Play (PnP)', def: 'Zero-touch onboarding: a new device receives its site configuration and image automatically.' },
       { term: 'Templates', def: 'Reusable configuration with variables, pushed consistently to many devices.' },
       { term: 'SWIM', def: 'Software Image Management: golden images, distribution, pre-checks, activation and rollback.' },
@@ -321,7 +319,7 @@ export const slides: Slide[] = [
       { term: 'Intent API', def: 'Northbound REST API that lets scripts and other systems read data and request changes.' },
     ],
     notes:
-      "Match these capabilities to their one-line purpose. **Discovery** builds the inventory using protocols such as CDP and LLDP or an IP range plus the device credentials you provide. **Plug and Play** onboards new devices with no manual console work. **Templates** keep configuration consistent, using variables for per-device values such as hostnames and IP addresses. **SWIM** manages software images so that every switch of a model runs the same approved release, and it can pre-check, distribute and activate upgrades across many devices. **LAN Automation** builds the underlay of a new fabric. **Assurance** turns telemetry into health scores and actionable issues, replacing hours of manual correlation, and **Path Trace** shows exactly where a flow is dropped or blocked. The **Intent API** is the northbound REST interface that lets automation tools drive all of this. Exam questions often describe a task, such as upgrading many switches consistently, and ask which feature solves it; treat each term here as a tool for one job.",
+      "Match these capabilities to their one-line purpose. Before any of them can work, Catalyst Center discovers devices using CDP, LLDP or an IP range plus the credentials you provide, and builds the inventory. **Plug and Play** onboards new devices with no manual console work. **Templates** keep configuration consistent, using variables for per-device values such as hostnames and IP addresses. **SWIM** manages software images so that every switch of a model runs the same approved release, and it can pre-check, distribute and activate upgrades across many devices. **LAN Automation** builds the underlay of a new fabric. **Assurance** turns telemetry into health scores and actionable issues, replacing hours of manual correlation, and **Path Trace** shows exactly where a flow is dropped or blocked. The **Intent API** is the northbound REST interface that lets automation tools drive all of this. Exam questions often describe a task, such as upgrading many switches consistently, and ask which feature solves it; treat each term here as a tool for one job.",
   },
   {
     kind: 'diagram',
@@ -342,7 +340,7 @@ export const slides: Slide[] = [
         { note: 'The switch reloads and shows up as managed in the inventory' },
       ],
     },
-    caption: 'Other discovery methods: a DNS name pnpserver.<domain>, or Cisco Plug and Play Connect cloud redirection.',
+    caption: 'Other discovery methods: a DNS lookup of pnpserver plus your domain (for example pnpserver.example.com), or Cisco Plug and Play Connect cloud redirection.',
     notes:
       "Plug and Play removes the need to pre-stage devices. A new switch with no configuration boots into its PnP agent and tries to find a controller. The most common method is **DHCP**: the offer includes **option 43**, a vendor-specific option that carries the address of the PnP server, which is Catalyst Center. The device can also resolve a DNS name of the form pnpserver followed by the local domain, or be redirected by the Cisco Plug and Play Connect cloud service. Once it reaches the controller, the device is listed as unclaimed; an administrator, or an automatic rule, claims it and assigns it to a site, and the controller sends a **day-0 configuration** built from a template, plus the golden software image if the device runs a different version. The device reloads and appears in the inventory as managed. The benefit is zero-touch deployment at scale: installers just rack, cable and power on. For the exam, remember that DHCP option 43 and DNS are discovery methods and that the day-0 configuration comes from templates.",
   },

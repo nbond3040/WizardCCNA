@@ -133,7 +133,7 @@ export const slides: Slide[] = [
         { id: 's', label: 'Catalyst Center', icon: 'controller' },
       ],
       steps: [
-        { from: 'c', to: 's', label: 'GET /dna/intent/api/v1/network-device', sub: 'Accept: application/json · X-Auth-Token: eyJ...' },
+        { from: 'c', to: 's', label: 'GET /dna/intent/api/v1/network-device', sub: 'Accept: application/json · X-Auth-Token: <token>' },
         { from: 's', to: 'c', label: '200 OK', sub: 'Content-Type: application/json + JSON body', tone: 'good' },
         { from: 'c', to: 's', label: 'POST /dna/intent/api/v1/network-device', sub: 'Content-Type: application/json + JSON body' },
         { from: 's', to: 'c', label: '202 Accepted', sub: 'body holds a taskId to track the job', tone: 'accent' },
@@ -149,8 +149,8 @@ export const slides: Slide[] = [
     rows: [
       ['`Content-Type`', 'Request and response', 'Format of **this** message body', '`application/json`'],
       ['`Accept`', 'Request', 'Format the client **wants back**', '`application/xml`'],
-      ['`Authorization`', 'Request', 'Credentials: Basic or Bearer', '`Bearer eyJhbGciOi...`'],
-      ['`X-Auth-Token`', 'Request', 'Catalyst Center token header', '`eyJhbGciOi...`'],
+      ['`Authorization`', 'Request', 'Credentials: Basic or Bearer', '`Bearer {token}`'],
+      ['`X-Auth-Token`', 'Request', 'Catalyst Center token header', '`{token}`'],
       ['`Location`', 'Response', 'URI of a new or moved resource', 'sent with `201` or `301`'],
     ],
     notes:
@@ -202,7 +202,7 @@ export const slides: Slide[] = [
     rows: [
       ['**HTTP Basic**', '`Authorization: Basic` + Base64(user:password)', 'Encoding, **not encryption** — HTTPS only'],
       ['**API key**', 'Static key in a header (e.g. `X-API-Key`) or query parameter', 'Tied to an app; valid until revoked'],
-      ['**Bearer token**', '`Authorization: Bearer <token>` (Catalyst Center: `X-Auth-Token`)', 'Obtained by logging in; expires'],
+      ['**Bearer token**', '`Authorization: Bearer {token}` (Catalyst Center: `X-Auth-Token`)', 'Obtained by logging in; expires'],
       ['**OAuth 2.0**', 'Access token issued by an authorization server', 'Delegated, scoped access; app never sees the password'],
     ],
     notes:
@@ -218,9 +218,9 @@ export const slides: Slide[] = [
         { id: 'cc', label: 'Catalyst Center', icon: 'controller' },
       ],
       steps: [
-        { from: 'c', to: 'cc', label: 'POST /dna/system/api/v1/auth/token', sub: 'Authorization: Basic YWRtaW46...' },
-        { from: 'cc', to: 'c', label: '200 OK', sub: '{"Token": "eyJhbGciOi..."}', tone: 'good' },
-        { from: 'c', to: 'cc', label: 'GET /dna/intent/api/v1/network-device', sub: 'X-Auth-Token: eyJhbGciOi...' },
+        { from: 'c', to: 'cc', label: 'POST /dna/system/api/v1/auth/token', sub: 'Authorization: Basic <base64-credentials>' },
+        { from: 'cc', to: 'c', label: '200 OK', sub: '{"Token": "<token>"}', tone: 'good' },
+        { from: 'c', to: 'cc', label: 'GET /dna/intent/api/v1/network-device', sub: 'X-Auth-Token: <token>' },
         { from: 'cc', to: 'c', label: '200 OK + device list (JSON)', tone: 'good' },
         { note: 'Token missing or expired: 401 Unauthorized, so request a new token', tone: 'warn' },
       ],
@@ -232,11 +232,11 @@ export const slides: Slide[] = [
   {
     kind: 'cli',
     title: 'curl: requesting a token',
-    code: `$ curl -k -s -X POST https://catc.example.com/dna/system/api/v1/auth/token -u admin:C1sco12345
-{"Token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWE0..."}
-$ curl -k -s -o /dev/null -w "%{http_code}\\n" -X POST https://catc.example.com/dna/system/api/v1/auth/token -u admin:WrongPass
+    code: `$ curl -k -s -X POST https://catc.example.com/dna/system/api/v1/auth/token -u <username>:<password>
+{"Token":"<token>"}
+$ curl -k -s -o /dev/null -w "%{http_code}\\n" -X POST https://catc.example.com/dna/system/api/v1/auth/token -u <username>:<wrong-password>
 401`,
-    highlight: ['-X POST', '-u admin:C1sco12345', '"Token"', '401'],
+    highlight: ['-X POST', '-u <username>:<password>', '"Token"', '401'],
     caption: 'Right password: a token. Wrong password: 401 and no token.',
     notes:
       '`curl` is the command-line HTTP client used in most exam exhibits, so learn its common options. `-X POST` sets the method; without `-X`, curl sends a GET, or a POST if you supply a body with `-d`. `-u user:password` makes curl build an **HTTP Basic** Authorization header for you by Base64-encoding the pair, which is exactly what the token endpoint expects. `-k` skips certificate validation, acceptable only in a lab with a self-signed certificate, and `-s` hides the progress meter. The first command succeeds and the controller returns a JSON object containing the `Token` key. The second command uses a wrong password; the options `-o /dev/null` and `-w` discard the body and print only the status code, and the result is **401** because authentication failed. It is not 403, because the server never learned who the caller was. Other options worth recognizing are `-H` to add a header, `-d` to supply a request body, and `-i` to include the response status line and headers in the output.',
@@ -244,7 +244,7 @@ $ curl -k -s -o /dev/null -w "%{http_code}\\n" -X POST https://catc.example.com/
   {
     kind: 'cli',
     title: 'Reading a Catalyst Center response',
-    code: `$ curl -k -s "https://catc.example.com/dna/intent/api/v1/network-device?hostname=SW1" -H "X-Auth-Token: eyJhbGciOi..." -H "Accept: application/json" | python3 -m json.tool
+    code: `$ curl -k -s "https://catc.example.com/dna/intent/api/v1/network-device?hostname=SW1" -H "X-Auth-Token: <token>" -H "Accept: application/json" | python3 -m json.tool
 {
     "response": [
         {
@@ -255,7 +255,7 @@ $ curl -k -s -o /dev/null -w "%{http_code}\\n" -X POST https://catc.example.com/
             "role": "ACCESS",
             "reachabilityStatus": "Reachable",
             "upTime": "41 days, 3:12:08.00",
-            "id": "6a1c2f3e-8b4d-4c1e-9f7a-2d5b8e0c1a34"
+            "id": "11111111-2222-3333-4444-555555555555"
         }
     ],
     "version": "1.0"
@@ -276,6 +276,22 @@ $ curl -k -s -o /dev/null -w "%{http_code}\\n" -X POST https://catc.example.com/
     ],
     notes:
       'Data encoding, also called serialization, turns structured data into text so it can cross the network. The CCNA names three formats. **JSON** (JavaScript Object Notation) uses curly braces for objects, square brackets for arrays and `"key": value` pairs; it is compact and is the default payload of REST APIs, Catalyst Center included. **XML** (eXtensible Markup Language) wraps every value in opening and closing tags; it is more verbose, and it is the only encoding **NETCONF** uses. RESTCONF can use either JSON or XML. **YAML** (YAML Ain\'t Markup Language) replaces brackets with indentation, puts a colon between key and value and marks list items with a dash; it is the easiest to read and write by hand, which is why **Ansible playbooks** are YAML files. All three can express the same data, so a question may show one device in each format and ask you to name them. In an API exchange the format is announced by the Content-Type or Accept header, such as `application/json` or `application/xml`.',
+  },
+  {
+    kind: 'table',
+    title: 'Reading JSON',
+    columns: ['JSON type', 'Syntax', 'Example', 'Watch for'],
+    rows: [
+      ['**Object**', 'Curly braces holding `"key": value` pairs', '`{"hostname": "SW1", "role": "ACCESS"}`', 'Keys are strings in double quotes'],
+      ['**Array**', 'Square brackets with comma-separated items', '`[10, 20, 30]`', 'Positions start at 0'],
+      ['**String**', 'Text in double quotes', '`"GigabitEthernet1/0/1"`', 'Single quotes are invalid'],
+      ['**Number**', 'Digits with no quotes', '`1500`', 'A quoted number is a string'],
+      ['**Boolean**', 'Lowercase `true` or `false`', '`"enabled": true`', 'No quotes, never capitalized'],
+      ['**null**', 'Lowercase `null` means no value', '`"description": null`', 'Not the same as an empty string'],
+    ],
+    caption: 'Nested example: `{"response": [{"hostname": "SW1"}]}` reads as key response, then item 0, then key hostname.',
+    notes:
+      'JSON is the format you will read most often on the exam, so know its six building blocks. An **object** is a set of key-value pairs inside curly braces; every key is a string in double quotes, followed by a colon and a value. An **array** is an ordered list inside square brackets, with items separated by commas, and its positions are counted from zero. A value can be a string, a number, a boolean written as lowercase true or false, null, or another object or array, which is how JSON nests. Exam items love syntax errors: single quotes, a trailing comma after the last item, a missing closing brace or an unquoted key all make the document invalid, and a server that receives it usually answers **400 Bad Request**. To extract a value, follow the path one level at a time. In the caption example the key response holds an array, item 0 is an object, and its hostname key holds SW1. In Python that path is written `data["response"][0]["hostname"]`, with one pair of brackets for each level you descend.',
   },
   {
     kind: 'bullets',

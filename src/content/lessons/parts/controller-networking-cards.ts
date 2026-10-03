@@ -26,7 +26,7 @@ export const flashcards: Flashcard[] = [
   { id: 'f23', front: 'Intermediate node', back: 'Underlay-only switch that routes IP between fabric nodes; it takes no part in the overlay.' },
   { id: 'f24', front: 'Cisco Catalyst Center', back: 'Formerly **Cisco DNA Center**: the controller for design, policy, provisioning and assurance of campus and branch networks. Not in the data path.' },
   { id: 'f25', front: 'Catalyst Center workflow areas', back: '**Design, Policy, Provision, Assurance** (plus Platform for APIs and integrations).' },
-  { id: 'f26', front: 'Plug and Play discovery methods', back: '**DHCP option 43**, a DNS name (pnpserver.<domain>), or Cisco Plug and Play Connect cloud redirection.' },
+  { id: 'f26', front: 'Plug and Play discovery methods', back: '**DHCP option 43**, a DNS name such as pnpserver.example.com, or Cisco Plug and Play Connect cloud redirection.' },
   { id: 'f27', front: 'SWIM and templates', back: '**SWIM** manages golden software images and upgrades; **templates** push reusable configuration with variables.' },
   { id: 'f28', front: 'Assurance and Path Trace', back: 'Assurance turns telemetry into health scores and issues; Path Trace shows the hop-by-hop path, including ACL results, between two endpoints.' },
   { id: 'f29', front: 'Cisco SD-WAN components', back: 'SD-WAN **Manager** (vManage, management), **Controller** (vSmart, control), **Validator** (vBond, orchestration), **WAN Edge** (vEdge or cEdge, data).' },

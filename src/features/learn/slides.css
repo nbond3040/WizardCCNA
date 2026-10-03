@@ -111,3 +111,6 @@
 .sl-bullets.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 36px; }
 .sl-steps.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
 @media (max-width: 800px) { .sl-bullets.two-col, .sl-steps.two-col { grid-template-columns: 1fr; } }
+
+/* Long unbreakable tokens (URLs, filenames, commands) wrap instead of overflowing the slide. */
+.rt, .sl-bullets li, .sl-caption, .sl-def dd, .sl-step-text, .notes-body p { overflow-wrap: anywhere; }
