@@ -5,7 +5,7 @@ export const flashcards: Flashcard[] = [
   { id: 'f2', front: 'AireOS: where do you create a WLAN?', back: '**WLANs** > **Create New** > Go. Choose type WLAN, then enter a profile name, the SSID and a WLAN ID.' },
   { id: 'f3', front: 'The five tabs of the AireOS WLAN edit page', back: '**General**, **Security**, **QoS**, **Policy-Mapping**, **Advanced**.' },
   { id: 'f4', front: 'WLAN profile name vs SSID', back: 'The profile name is an administrative label on the controller; the **SSID** (up to 32 characters) is what clients see. They may differ.' },
-  { id: 'f5', front: 'Status of a newly created AireOS WLAN', back: '**Disabled.** Tick Status > Enabled on the General tab and click Apply.' },
+  { id: 'f5', front: 'WLAN Status checkbox (General tab)', back: 'The **Enabled** box must be ticked or no AP broadcasts the SSID. Unticking it takes a WLAN off the air without deleting it.' },
   { id: 'f6', front: 'Default interface of a new WLAN', back: '**management.** Pick a dynamic interface or interface group on the General tab to map the WLAN to a client VLAN.' },
   { id: 'f7', front: 'Broadcast SSID setting', back: 'Enabled by default. Clearing it hides the SSID from beacons but is **not** a real security control.' },
   { id: 'f8', front: 'Dynamic interface (AireOS)', back: 'A logical interface for a client VLAN with a name, VLAN ID, IP address, gateway and DHCP server. Created under **CONTROLLER > Interfaces > New**.' },

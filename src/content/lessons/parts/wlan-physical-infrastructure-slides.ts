@@ -62,7 +62,7 @@ Total Mac Addresses for this criterion: 1`,
     caption: 'Only the AP\'s own MAC address appears: client MACs are hidden inside CAPWAP.',
     bullets: [
       'Access port in the AP management VLAN (100 here)',
-      'Client frames travel inside UDP 5246 and 5247 to the WLC',
+      'Client frames travel inside CAPWAP data packets (UDP 5247)',
       'PortFast: the AP is an end device, not a switch',
       '`power inline auto` is the PoE default',
     ],

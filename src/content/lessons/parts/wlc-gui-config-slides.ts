@@ -176,7 +176,7 @@ export const slides: Slide[] = [
       ['Profile Name', 'Name of the WLAN on the controller', 'Local only; never advertised'],
       ['SSID', 'Network name clients see', 'Up to 32 characters; may differ from the profile name'],
       ['ID', 'WLAN ID', 'IDs 1–16 are included in the default AP group'],
-      ['Status', 'Enabled checkbox', 'A new WLAN starts **disabled**'],
+      ['Status', 'Enabled checkbox', 'Must be **Enabled** or no AP broadcasts the SSID'],
       ['Interface/Interface Group(G)', 'VLAN mapping', 'Defaults to `management`'],
       ['Broadcast SSID', 'SSID included in beacons', 'Enabled by default'],
       ['Radio Policy', 'Bands that carry the WLAN', 'Default: All'],
