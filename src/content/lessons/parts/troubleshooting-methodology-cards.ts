@@ -1,0 +1,145 @@
+import type { Flashcard, Question } from '../../types';
+
+export const flashcards: Flashcard[] = [
+  { id: 'f1', front: 'Top-down troubleshooting', back: 'Start at the application layer and work down the OSI model; suits problems that look like application faults.' },
+  { id: 'f2', front: 'Bottom-up troubleshooting', back: 'Start at the physical layer and work up; suits suspected cabling, power or interface faults.' },
+  { id: 'f3', front: 'Divide and conquer', back: 'Start in the middle (usually a Layer 3 ping): if it works look higher, if it fails look lower.' },
+  { id: 'f4', front: 'Follow the path', back: 'Trace the traffic hop by hop from source to destination to find where it stops.' },
+  { id: 'f5', front: 'Compare configurations', back: 'Diff the failing device against a working twin or a known-good baseline to find the difference.' },
+  { id: 'f6', front: 'Swap components', back: 'Replace a suspect cable, SFP or port with a known-good part; change one thing at a time.' },
+  { id: 'f7', front: 'Steps of the troubleshooting process', back: 'Define the problem, gather facts, hypothesise, test, fix one thing, verify, document.' },
+  { id: 'f8', front: 'Ping result `!`', back: 'Echo reply received: success.' },
+  { id: 'f9', front: 'Ping result `.`', back: 'Timeout: no reply within 2 seconds (silence).' },
+  { id: 'f10', front: 'Ping result `U`', back: 'ICMP destination unreachable received, often from a router with no route or an ACL rejecting the packet.' },
+  { id: 'f11', front: 'Ping result `M`', back: 'Could not fragment: the packet exceeds a link MTU and the DF bit is set.' },
+  { id: 'f12', front: 'Ping results `Q` and `?`', back: '`Q`: source quench received (obsolete). `?`: unknown packet type received.' },
+  { id: 'f13', front: 'Ping result `&`', back: 'Packet lifetime (TTL) exceeded, from a low TTL or a routing loop.' },
+  { id: 'f14', front: 'Default IOS ping parameters', back: 'Five probes, 100-byte datagrams, 2-second timeout; the source is the outgoing interface address.' },
+  { id: 'f15', front: 'Why choose a source in extended ping?', back: 'The reply goes to the source address, so it tests the return path for that subnet.' },
+  { id: 'f16', front: 'How traceroute discovers hops', back: 'Sends probes with TTL 1, 2, 3 and so on; each router that drops one returns ICMP Time Exceeded (type 11).' },
+  { id: 'f17', front: 'What ends a traceroute on IOS and Linux?', back: 'The destination replies with ICMP Port Unreachable to the UDP probe. Windows tracert uses ICMP echo and gets an echo reply.' },
+  { id: 'f18', front: 'IOS traceroute defaults', back: 'Three probes per hop, 3-second timeout, maximum TTL 30, first UDP port 33434.' },
+  { id: 'f19', front: 'Asterisks in traceroute output', back: 'No reply at that hop within the timeout; investigate the last responding hop and the return path.' },
+  { id: 'f20', front: 'Interface status `administratively down`', back: 'The interface was shut down with `shutdown`; fix with `no shutdown`.' },
+  { id: 'f21', front: 'Interface status `down/down`', back: 'Layer 1 problem: no cable, dead far end or failed transceiver.' },
+  { id: 'f22', front: 'Interface status `up/down`', back: 'Signal present but Layer 2 fails: an encapsulation or keepalive problem.' },
+  { id: 'f23', front: 'Rising CRC errors on an interface', back: 'Bad cable, interference or a duplex mismatch.' },
+  { id: 'f24', front: 'Late collisions', back: 'Duplex mismatch (seen on the half-duplex side) or a cable that is too long.' },
+  { id: 'f25', front: 'Syslog message format', back: '`%FACILITY-SEVERITY-MNEMONIC: text`; severity 0 (emergencies) to 7 (debugging).' },
+  { id: 'f26', front: 'See log messages in a Telnet or SSH session', back: '`terminal monitor`.' },
+  { id: 'f27', front: 'Stop all debugging', back: '`undebug all` (or `no debug all`).' },
+  { id: 'f28', front: 'DHCP DORA and its ports', back: 'Discover, Offer, Request, Acknowledge; UDP 68 (client) and UDP 67 (server).' },
+  { id: 'f29', front: 'SYN answered by RST', back: 'The host is reachable but nothing is listening on that TCP port.' },
+  { id: 'f30', front: 'Initial TTL values', back: 'Windows 128, Linux and macOS 64, Cisco IOS 255.' },
+];
+
+export const quiz: Question[] = [
+  {
+    id: 'q1',
+    type: 'single',
+    stem: 'Which troubleshooting method starts in the middle of the OSI model, usually with a Layer 3 ping?',
+    options: ['Divide and conquer', 'Top-down', 'Bottom-up', 'Swap components'],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '**Divide and conquer** starts at Layer 3 and moves up if the ping works or down if it fails. Top-down starts at the application, bottom-up starts at the cable, and swapping components replaces suspect parts.',
+  },
+  {
+    id: 'q2',
+    type: 'single',
+    stem: 'What does the character U mean in a Cisco IOS ping result?',
+    options: [
+      'An ICMP destination unreachable message was received',
+      'An echo reply was received',
+      'The request timed out',
+      'The packet lifetime expired',
+    ],
+    answer: 0,
+    difficulty: 1,
+    explanation:
+      '`U` means a router answered with an ICMP **destination unreachable** message. A reply is `!`, a timeout is `.`, and an expired lifetime (TTL) is `&`.',
+  },
+  {
+    id: 'q3',
+    type: 'single',
+    stem: 'The first ping from a router to a directly connected neighbour shows .!!!! on a fresh router. What is the most likely reason for the first dot?',
+    options: [
+      'The router had to resolve the neighbour MAC address with ARP',
+      'The neighbour rejected the packet with an ACL',
+      'The MTU of the link is too small',
+      'The neighbour interface is down',
+    ],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'With an empty ARP cache, the first echo request is lost while ARP resolves the MAC address, and later probes succeed. An ACL or a down interface would affect every probe, and an MTU problem would produce `M`.',
+  },
+  {
+    id: 'q4',
+    type: 'multi',
+    stem: 'Which two statements about traceroute are true? (Choose two.)',
+    options: [
+      'Each router that discards a probe whose TTL reaches zero returns an ICMP Time Exceeded message',
+      'Cisco IOS sends UDP probes by default',
+      'Windows tracert sends UDP probes',
+      'An asterisk means the probe reached the destination',
+      'The TTL starts at 255 and is reduced by one with each probe',
+    ],
+    answers: [0, 1],
+    difficulty: 2,
+    explanation:
+      'Traceroute raises the TTL by one for each probe and learns each hop from the **ICMP Time Exceeded** reply; IOS uses **UDP** probes. Windows tracert uses ICMP echo, an asterisk means no reply, and the TTL increases from 1 instead of counting down from 255.',
+  },
+  {
+    id: 'q5',
+    type: 'input',
+    stem: 'Which IOS command turns off all debugging? Enter the command.',
+    answers: ['undebug all', 'no debug all'],
+    placeholder: 'command',
+    difficulty: 2,
+    explanation:
+      '`undebug all` (or `no debug all`) stops every debug that is running. Always do this after a debug session because debugging loads the CPU.',
+  },
+  {
+    id: 'q6',
+    type: 'match',
+    stem: 'Match each ping symbol to its meaning.',
+    pairs: [
+      { left: '`!`', right: 'Echo reply received' },
+      { left: '`.`', right: 'Timeout: no reply' },
+      { left: '`U`', right: 'Destination unreachable received' },
+      { left: '`M`', right: 'Could not fragment (DF bit set)' },
+      { left: '`&`', right: 'Packet lifetime (TTL) exceeded' },
+    ],
+    difficulty: 2,
+    explanation:
+      'Success is `!`, silence is `.`, an unreachable message is `U`, a too-big packet with DF set is `M`, and an expired TTL is `&`.',
+  },
+  {
+    id: 'q7',
+    type: 'single',
+    stem: 'show ip interface brief reports Status up and Protocol down for a serial interface. Which layer is most likely at fault?',
+    options: ['Layer 2', 'Layer 1', 'Layer 3', 'Layer 7'],
+    answer: 0,
+    difficulty: 2,
+    explanation:
+      'Status reflects Layer 1 and Protocol reflects Layer 2. With the signal present (`up`) but the protocol down, the data link layer is failing, for example through an encapsulation mismatch or missing keepalives. `down/down` would suggest Layer 1.',
+  },
+  {
+    id: 'q8',
+    type: 'order',
+    stem: 'Put the stages of the troubleshooting process in order.',
+    items: [
+      'Define the problem',
+      'Gather facts',
+      'Hypothesise a probable cause',
+      'Test the hypothesis',
+      'Implement one fix',
+      'Verify the result end to end',
+      'Document the cause and the fix',
+    ],
+    difficulty: 2,
+    explanation:
+      'Understand and describe the problem first, collect facts, form a hypothesis, test it, apply a single fix, verify with the original symptom, and finally document so that the next engineer benefits.',
+  },
+];
