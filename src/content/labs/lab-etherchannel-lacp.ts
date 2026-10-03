@@ -142,7 +142,7 @@ const lab: Lab = {
       'enable',
       'configure terminal',
       'interface range g0/1 - 2',
-      ' no channel-group 1',
+      ' no channel-group',
       ' channel-group 1 mode passive',
       ' exit',
       'interface port-channel 1',

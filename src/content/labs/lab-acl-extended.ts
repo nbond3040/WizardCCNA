@@ -147,7 +147,12 @@ const lab: Lab = {
         'Sequence numbers let you insert a rule exactly where it is needed, without retyping the entries around it. After the repair the Telnet deny is entry 20 and the permit is entry 30, so a line that starts with `25` lands between them and is evaluated before the permit can match FTP. Only FTP and Telnet are blocked: everything else from the Staff LAN must still flow.',
       hint: 'Inside `ip access-list extended STAFF-IN`, start the line with the number you want the entry to have.',
       checks: [
-        { type: 'show', device: 'BR1', command: 'show access-lists', pattern: '^\\s+25 deny tcp 192\\.168\\.10\\.0 0\\.0\\.0\\.255 any eq (ftp|21)' },
+        {
+          type: 'show',
+          device: 'BR1',
+          command: 'show access-lists',
+          pattern: `${STAFF_HDR}\\s+\\d+ deny tcp ${STAFF_NET} any eq (ftp|21)[^\\n]*\\n(?:\\s+\\d+ .*\\n)*?\\s+\\d+ permit ip any any`,
+        },
         { type: 'traffic', from: 'STAFF1', to: '10.0.0.10', proto: 'tcp', port: 21, expect: false },
         { type: 'traffic', from: 'STAFF1', to: '10.0.0.10', proto: 'tcp', port: 443 },
       ],

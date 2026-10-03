@@ -72,7 +72,7 @@ const lab: Lab = {
     {
       id: 'transit-eui64',
       title: 'Address the transit link **2001:db8:acad:12::/64**: R1 G0/0/1 uses **::1**, R2 G0/0/0 builds its interface ID automatically with **eui-64**',
-      details: 'With `eui-64` you give only the 64-bit prefix and the router appends an interface ID derived from the interface MAC address (inserting FFFE in the middle and flipping the U/L bit). Look at the result in `show ipv6 interface brief`: you cannot predict the last 64 bits, which is why the routes in this lab will not use R2\'s global address on this link as a next hop towards R2.',
+      details: 'With `eui-64` you give only the 64-bit prefix and the router appends an interface ID derived from the interface MAC address (inserting FFFE in the middle and flipping the U/L bit). Look at the result in `show ipv6 interface brief`: you cannot predict the last 64 bits in advance, which is why the route towards R2 uses R2\'s link-local address as its next hop.',
       hint: '`ipv6 address 2001:db8:acad:12::/64 eui-64`',
       checks: [
         { type: 'interface', device: 'R1', iface: 'Gi0/0/1', ipv6: '2001:db8:acad:12::1/64', status: 'up' },

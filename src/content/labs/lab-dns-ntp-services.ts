@@ -94,7 +94,7 @@ const lab: Lab = {
       details: '`no ip domain-lookup` also switches off name lookups for `ping` and `traceroute`. Re-enable it, define the server with `ip name-server` and the default domain with `ip domain-name`. Then test from R1 with `ping www.wizard.local` and `ping r2.wizard.local`.',
       hint: '`ip domain-lookup`, `ip name-server ...`, `ip domain-name ...`',
       checks: [
-        { type: 'config', device: 'R1', pattern: '^no ip domain-lookup$', expect: false },
+        { type: 'config', device: 'R1', pattern: '^no ip domain[- ]lookup$', expect: false },
         { type: 'config', device: 'R1', pattern: '^ip name-server 192\\.168\\.1\\.10$' },
         { type: 'config', device: 'R1', pattern: '^ip domain[- ]name wizard\\.local$' },
         { type: 'show', device: 'R1', command: 'ping www.wizard.local', pattern: 'Success rate is (80|100) percent' },
@@ -105,7 +105,7 @@ const lab: Lab = {
       id: 'host-table',
       title: 'On R2, add a static host table entry so that `ping HQ` reaches R1 at 192.168.1.1',
       details: 'A router can also resolve names locally, without any server, from its host table: `ip host NAME ADDRESS`. Local entries are consulted before DNS and keep working when the DNS server is down. Test with `ping HQ` on R2.',
-      hint: '`ip host HQ 192.168.1.1`',
+      hint: '`ip host NAME ADDRESS` in global configuration mode',
       checks: [
         { type: 'config', device: 'R2', pattern: '^ip host HQ 192\\.168\\.1\\.1$' },
         { type: 'show', device: 'R2', command: 'ping HQ', pattern: 'Success rate is (80|100) percent' },
@@ -125,7 +125,7 @@ const lab: Lab = {
       id: 'ntp-clients',
       title: 'Make SW1 and R2 NTP clients of R1 (**192.168.1.1**)',
       details: 'A client uses `ntp server ADDRESS`. SW1 reaches R1 over its management VLAN, R2 across the routed link. A client synchronizes once its server is reachable and itself synchronized, and then reports stratum 4. Verify with `show ntp status` and `show ntp associations`.',
-      hint: '`ntp server 192.168.1.1`',
+      hint: '`ntp server ADDRESS`; allow a moment for the association to synchronize and watch `show ntp associations`',
       checks: [
         { type: 'show', device: 'SW1', command: 'show ntp status', pattern: 'Clock is synchronized, stratum 4, reference is 192\\.168\\.1\\.1' },
         { type: 'show', device: 'R2', command: 'show ntp status', pattern: 'Clock is synchronized, stratum 4, reference is 192\\.168\\.1\\.1' },

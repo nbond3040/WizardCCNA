@@ -159,9 +159,11 @@ const lab: Lab = {
     },
     {
       id: 'verify',
-      title: 'Verify that the network still works: PC1 and PC2 reach SRV1 and each other',
-      details: 'VLAN 10 now follows SW3 G0/2 -> SW2 -> SW1 to reach SRV1 while the blocked G0/1 stays in reserve. If a ping fails, check that the PC ports were not err-disabled and that VLAN 10 is allowed on every trunk.',
+      title: 'Verify the final design: SW1 is root for VLAN 1, SW2 is root for VLAN 10, and PC1 and PC2 still reach SRV1 and each other',
+      details: 'VLAN 10 now follows SW3 G0/2 -> SW2 -> SW1 to reach SRV1 while the blocked G0/1 stays in reserve. Compare `show spanning-tree vlan 1` and `show spanning-tree vlan 10` on SW3. If a ping fails, check that the PC ports were not err-disabled and that VLAN 10 is allowed on every trunk.',
       checks: [
+        { type: 'stpRoot', vlan: 1, device: 'SW1' },
+        { type: 'stpRoot', vlan: 10, device: 'SW2' },
         { type: 'ping', from: 'PC1', to: '192.168.10.100' },
         { type: 'ping', from: 'PC2', to: '192.168.10.100' },
         { type: 'ping', from: 'PC1', to: '192.168.10.12' },

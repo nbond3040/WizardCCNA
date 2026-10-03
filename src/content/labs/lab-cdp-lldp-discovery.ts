@@ -1,0 +1,187 @@
+import type { Lab } from '../labTypes';
+
+/** Regex for one row of a CDP/LLDP neighbor table: Device ID followed by the local interface (Gi0/1, Gig 0/1, ...). */
+const row = (deviceId: string, local: string): string => `^${deviceId}\\s+(Gi|Fa)\\w*\\s?${local}\\b`;
+
+const lab: Lab = {
+  id: 'lab-cdp-lldp-discovery',
+  title: 'Mapping a Network with CDP and LLDP',
+  summary: 'Map an undocumented network from SW1 with CDP, record the neighbors in interface descriptions, enable LLDP, tune the timers and stop discovery protocols leaking to the ISP and a guest switch.',
+  difficulty: 1,
+  minutes: 30,
+  lessons: ['discovery-protocols'],
+  scenario:
+    'You have just taken over the network of a small office and there is no documentation. All you have is a console on **SW1**; the other devices in the diagram are unlabeled on purpose. Cisco Discovery Protocol (CDP) is enabled by default and tells you who is attached to each port: hostname, remote port, platform and management address.\n\n' +
+    'First map the network starting at SW1: for every link record the neighbor\'s hostname and the port it uses in an interface description, so the next engineer does not have to rediscover it. Then enable the vendor-neutral protocol **LLDP** next to CDP and tune the advertisement timers on SW1.\n\n' +
+    'Finally, tighten security. A carrier router and a guest-network switch are also attached, and both listen to discovery protocols. Neither may learn anything about your devices, while CDP and LLDP must keep working inside your own network.',
+  devices: [
+    {
+      id: 'ISP',
+      model: 'isr2911',
+      x: 2,
+      y: 1,
+      label: '?',
+      locked: true,
+      config: ['hostname ISP-EDGE', 'lldp run', 'interface GigabitEthernet0/0', ' ip address 203.0.113.1 255.255.255.252', ' no shutdown'].join('\n'),
+    },
+    {
+      id: 'R1',
+      model: 'isr4321',
+      x: 6,
+      y: 1,
+      label: '?',
+      config: [
+        'hostname HQ-GW',
+        'interface GigabitEthernet0/0/0',
+        ' ip address 203.0.113.2 255.255.255.252',
+        ' no shutdown',
+        'interface GigabitEthernet0/0/1',
+        ' ip address 10.0.1.1 255.255.255.0',
+        ' no shutdown',
+      ].join('\n'),
+    },
+    {
+      id: 'SW1',
+      model: 'c2960',
+      x: 6,
+      y: 3,
+      label: 'SW1 (start here)',
+      config: ['interface Vlan1', ' ip address 10.0.1.11 255.255.255.0', ' no shutdown'].join('\n'),
+    },
+    {
+      id: 'SW2',
+      model: 'c2960',
+      x: 6,
+      y: 5,
+      label: '?',
+      config: ['hostname ACC-1F', 'interface Vlan1', ' ip address 10.0.1.12 255.255.255.0', ' no shutdown'].join('\n'),
+    },
+    {
+      id: 'SW3',
+      model: 'c2960',
+      x: 9.5,
+      y: 5,
+      label: '?',
+      config: ['hostname ACC-2F', 'interface Vlan1', ' ip address 10.0.1.13 255.255.255.0', ' no shutdown'].join('\n'),
+    },
+    { id: 'GUEST', model: 'c2960', x: 11, y: 2.5, label: '?', locked: true, config: ['hostname GUEST-SW', 'lldp run'].join('\n') },
+  ],
+  links: [
+    { a: 'R1:g0/0/0', b: 'ISP:g0/0' },
+    { a: 'R1:g0/0/1', b: 'SW1:g0/1' },
+    { a: 'SW1:g0/2', b: 'SW2:g0/1' },
+    { a: 'SW2:g0/2', b: 'SW3:g0/1' },
+    { a: 'SW3:fa0/24', b: 'GUEST:fa0/1' },
+  ],
+  tasks: [
+    {
+      id: 'map-sw1',
+      title: 'On SW1 describe G0/1 and G0/2 as `<neighbor hostname> <neighbor port>` using what CDP reports',
+      details: 'Run `show cdp neighbors`: the **Device ID** column is the neighbor\'s hostname, **Local Intrfce** is the port on SW1 and **Port ID** is the port on the neighbor. `show cdp neighbors detail` adds the platform, the IOS version and the neighbor\'s IP address. Then enter the text with `description` on the matching SW1 interface.',
+      hint: '`show cdp neighbors` → `interface g0/1` → `description ...`',
+      checks: [
+        { type: 'config', device: 'SW1', section: 'interface GigabitEthernet0/1', pattern: '^ description (?=.*HQ-GW)(?=.*0/0/1)' },
+        { type: 'config', device: 'SW1', section: 'interface GigabitEthernet0/2', pattern: '^ description (?=.*ACC-1F)(?=.*0/1)' },
+      ],
+    },
+    {
+      id: 'map-chain',
+      title: 'Walk the chain: on each of the other two switches describe the port that leads away from SW1 with the next neighbor\'s hostname and port',
+      details: 'Open the console of the next device in the diagram and repeat `show cdp neighbors`. One neighbor is the device you came from; describe the port that faces the other neighbor, using the same `<hostname> <port>` format. Repeat on the last switch, whose far neighbor is a device you are not allowed to log in to.',
+      hint: 'Ignore the neighbor you came from: the description goes on the port facing the unknown device.',
+      checks: [
+        { type: 'config', device: 'SW2', section: 'interface GigabitEthernet0/2', pattern: '^ description (?=.*ACC-2F)(?=.*0/1)' },
+        { type: 'config', device: 'SW3', section: 'interface FastEthernet0/24', pattern: '^ description (?=.*GUEST-SW)(?=.*0/1)' },
+      ],
+    },
+    {
+      id: 'enable-lldp',
+      title: 'Enable LLDP globally on SW1 and on the three devices you mapped, so each of them also sees its neighbors through LLDP',
+      details: 'LLDP (IEEE 802.1AB) is the vendor-neutral counterpart of CDP and is **off** by default on Cisco devices. Enable it with `lldp run` on the router and on all three switches, then compare `show lldp neighbors` with `show cdp neighbors`. Both neighbors of a link must run LLDP before they see each other.',
+      hint: '`lldp run` in global configuration mode, then `show lldp neighbors`.',
+      checks: [
+        { type: 'show', device: 'SW1', command: 'show lldp neighbors', pattern: row('HQ-GW', '0/1') },
+        { type: 'show', device: 'SW1', command: 'show lldp neighbors', pattern: row('ACC-1F', '0/2') },
+        { type: 'show', device: 'SW2', command: 'show lldp neighbors', pattern: row('SW1', '0/1') },
+        { type: 'show', device: 'SW2', command: 'show lldp neighbors', pattern: row('ACC-2F', '0/2') },
+        { type: 'show', device: 'SW3', command: 'show lldp neighbors', pattern: row('ACC-1F', '0/1') },
+        { type: 'show', device: 'R1', command: 'show lldp neighbors', pattern: row('SW1', '0/0/1') },
+      ],
+    },
+    {
+      id: 'edge-ports',
+      title: 'Stop CDP and LLDP on the two edge-facing ports: the router port toward the carrier and the switch port toward the guest switch',
+      details: 'Edge links toward third parties must not advertise hostnames, platforms, IOS versions or IP addresses. On an interface `no cdp enable` stops CDP, and `no lldp transmit` plus `no lldp receive` stop LLDP. Do **not** use `no cdp run`: that would blind your own network too. The carrier router and the guest switch are locked, but the check results show what they still learn about you; `show cdp neighbors` on your side no longer lists them once the port is quiet.',
+      hint: 'Find the ports with `show cdp neighbors` on the router and on the last switch: the neighbors are named ISP-EDGE and GUEST-SW.',
+      checks: [
+        { type: 'show', device: 'ISP', command: 'show cdp neighbors', pattern: 'HQ-GW', expect: false },
+        { type: 'show', device: 'ISP', command: 'show lldp neighbors', pattern: 'HQ-GW', expect: false },
+        { type: 'show', device: 'GUEST', command: 'show cdp neighbors', pattern: 'ACC-2F', expect: false },
+        { type: 'show', device: 'GUEST', command: 'show lldp neighbors', pattern: 'ACC-2F', expect: false },
+        { type: 'show', device: 'SW1', command: 'show cdp neighbors', pattern: row('HQ-GW', '0/1') },
+        { type: 'show', device: 'SW1', command: 'show cdp neighbors', pattern: row('ACC-1F', '0/2') },
+      ],
+    },
+    {
+      id: 'timers',
+      title: 'On SW1 send CDP advertisements every **30** seconds with a holdtime of **90** seconds, and LLDP every **20** seconds with a holdtime of **60** seconds',
+      details: 'The defaults are 60 s / 180 s for CDP and 30 s / 120 s for LLDP. The holdtime tells neighbors how long to keep an entry without hearing from you, so keep it a few times larger than the timer. Verify CDP with `show cdp`; LLDP timers appear in the running configuration.',
+      hint: '`cdp timer`, `cdp holdtime`, `lldp timer` and `lldp holdtime` are global configuration commands.',
+      checks: [
+        { type: 'show', device: 'SW1', command: 'show cdp', pattern: 'every 30 seconds' },
+        { type: 'show', device: 'SW1', command: 'show cdp', pattern: 'holdtime value of 90 seconds' },
+        { type: 'config', device: 'SW1', pattern: '^lldp timer 20$' },
+        { type: 'config', device: 'SW1', pattern: '^lldp holdtime 60$' },
+      ],
+    },
+  ],
+  solution: {
+    SW1: [
+      'enable',
+      'configure terminal',
+      'interface g0/1',
+      ' description HQ-GW Gi0/0/1',
+      'interface g0/2',
+      ' description ACC-1F Gi0/1',
+      ' exit',
+      'lldp run',
+      'lldp timer 20',
+      'lldp holdtime 60',
+      'cdp timer 30',
+      'cdp holdtime 90',
+      'end',
+    ].join('\n'),
+    SW2: [
+      'enable',
+      'configure terminal',
+      'interface g0/2',
+      ' description ACC-2F Gi0/1',
+      ' exit',
+      'lldp run',
+      'end',
+    ].join('\n'),
+    SW3: [
+      'enable',
+      'configure terminal',
+      'lldp run',
+      'interface fa0/24',
+      ' description GUEST-SW Fa0/1',
+      ' no cdp enable',
+      ' no lldp transmit',
+      ' no lldp receive',
+      ' end',
+    ].join('\n'),
+    R1: [
+      'enable',
+      'configure terminal',
+      'lldp run',
+      'interface g0/0/0',
+      ' no cdp enable',
+      ' no lldp transmit',
+      ' no lldp receive',
+      ' end',
+    ].join('\n'),
+  },
+};
+
+export default lab;

@@ -94,7 +94,7 @@ const lab: Lab = {
       id: 'excluded',
       title: 'Exclude the first ten addresses (.1 to .10) of 192.168.10.0/24, 192.168.20.0/24 and 192.168.30.0/24 from DHCP on R1',
       details: 'Routers, printers and servers use those addresses statically, so the DHCP server must never lease them. Excluded ranges are global commands (`ip dhcp excluded-address LOW HIGH`), one range per subnet. Check them with `show running-config | include excluded`.',
-      hint: '`ip dhcp excluded-address 192.168.10.1 192.168.10.10`',
+      hint: '`ip dhcp excluded-address LOW HIGH`, once for each subnet',
       checks: [
         { type: 'config', device: 'R1', pattern: '^ip dhcp excluded-address 192\\.168\\.10\\.1 192\\.168\\.10\\.10$' },
         { type: 'config', device: 'R1', pattern: '^ip dhcp excluded-address 192\\.168\\.20\\.1 192\\.168\\.20\\.10$' },
@@ -105,7 +105,7 @@ const lab: Lab = {
       id: 'vlan-pools',
       title: 'Create DHCP pools **SALES** (192.168.10.0/24) and **ENGINEERING** (192.168.20.0/24) on R1 with default gateway .1 and DNS server 8.8.8.8',
       details: '`ip dhcp pool NAME` enters the `(dhcp-config)#` mode. Inside the pool use `network ADDRESS MASK`, `default-router ADDRESS` and `dns-server ADDRESS`. R1 picks the pool whose network matches the subnet of the interface the request arrived on (G0/0/0.10 for VLAN 10, G0/0/0.20 for VLAN 20). Verify with `show ip dhcp pool` or `show running-config | section dhcp`.',
-      hint: '`ip dhcp pool SALES` → `network 192.168.10.0 255.255.255.0` → `default-router 192.168.10.1` → `dns-server 8.8.8.8`',
+      hint: '`ip dhcp pool NAME`, then `network`, `default-router` and `dns-server` inside the pool',
       checks: [
         { type: 'config', device: 'R1', section: 'ip dhcp pool SALES', pattern: '^ network 192\\.168\\.10\\.0 255\\.255\\.255\\.0$' },
         { type: 'config', device: 'R1', section: 'ip dhcp pool SALES', pattern: '^ default-router 192\\.168\\.10\\.1$' },
@@ -143,7 +143,7 @@ const lab: Lab = {
       id: 'relay',
       title: 'Make R2 relay the branch DHCP broadcasts to the server 10.0.0.1, then renew PC3 and PC4',
       details: 'DHCP discovers are broadcasts and routers do not forward broadcasts. `ip helper-address` turns them into unicasts for the server and stamps the receiving interface address into giaddr. Configure it on the interface that **receives** the client broadcasts (the branch LAN, G0/0/1), not on the link towards R1. Then run `ipconfig /renew` on PC3 and PC4.',
-      hint: '`interface g0/0/1` → `ip helper-address 10.0.0.1`',
+      hint: '`ip helper-address ADDRESS` goes on the interface that faces the clients',
       checks: [
         { type: 'config', device: 'R2', section: 'interface GigabitEthernet0/0/1', pattern: '^ ip helper-address 10\\.0\\.0\\.1$' },
         { type: 'host', device: 'PC3', inSubnet: '192.168.30.0/24', gateway: '192.168.30.1', dns: '8.8.8.8' },

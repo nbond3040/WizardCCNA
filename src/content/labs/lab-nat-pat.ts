@@ -72,7 +72,7 @@ const lab: Lab = {
       id: 'inside-outside',
       title: 'Mark R1 G0/0 and G0/1 as NAT **inside** interfaces and G0/2 (towards the ISP) as the NAT **outside** interface',
       details: 'NAT only translates packets that cross between an inside and an outside interface, so it does nothing until every interface has a role. Use `ip nat inside` on the two LAN interfaces and `ip nat outside` on the uplink. `show ip nat statistics` lists both groups of interfaces.',
-      hint: '`interface g0/0` → `ip nat inside`',
+      hint: '`ip nat inside` and `ip nat outside` are interface-level commands; `show ip nat statistics` lists the result',
       checks: [
         { type: 'config', device: 'R1', section: 'interface GigabitEthernet0/0', pattern: '^ ip nat inside$' },
         { type: 'config', device: 'R1', section: 'interface GigabitEthernet0/1', pattern: '^ ip nat inside$' },
@@ -94,7 +94,7 @@ const lab: Lab = {
       id: 'dynamic-nat',
       title: 'Give the staff LAN dynamic NAT: standard ACL **1** permitting 10.1.1.0/24, pool **STAFF** 198.51.100.10 - 198.51.100.12 (/29) and the mapping between them, then ping INET (192.0.2.80) from PC1 and PC2',
       details: 'Dynamic NAT hands every inside host one address from the pool (one-to-one, no port translation) for as long as it has active traffic. The standard ACL decides **which** inside hosts may be translated; the pool supplies the inside global addresses. Entries are created by traffic, so ping INET from the PC command prompts and compare the inside local and inside global columns in `show ip nat translations`.',
-      hint: '`access-list 1 permit ...` → `ip nat pool STAFF FIRST LAST netmask 255.255.255.248` → `ip nat inside source list 1 pool STAFF`',
+      hint: 'Three pieces: a standard ACL, an `ip nat pool NAME FIRST LAST netmask MASK`, and an `ip nat inside source list ... pool ...` statement that ties them together',
       checks: [
         { type: 'ping', from: 'PC1', to: '192.0.2.80' },
         { type: 'ping', from: 'PC2', to: '192.0.2.80' },
@@ -107,7 +107,7 @@ const lab: Lab = {
       id: 'pat',
       title: 'Let the guest LAN (10.1.2.0/24) share R1\'s outside address with PAT: standard ACL **2** and an `overload` mapping on interface G0/2, then ping INET from PC3',
       details: 'Port Address Translation keeps a single inside global address (here the one configured on G0/2, 203.0.113.2) and tells the sessions apart by source port, so any number of guests fit behind it. `overload` is what turns NAT into PAT, and the `interface` keyword means "use whatever address the outside interface has". Ping INET from PC3 and look at the port numbers in `show ip nat translations`.',
-      hint: '`access-list 2 permit ...` → `ip nat inside source list 2 interface g0/2 overload`',
+      hint: 'Same ACL idea as before, but the mapping names an interface instead of a pool and ends with `overload`',
       checks: [
         { type: 'ping', from: 'PC3', to: '192.0.2.80' },
         { type: 'traffic', from: 'PC3', to: '192.0.2.80', proto: 'tcp', port: 80 },

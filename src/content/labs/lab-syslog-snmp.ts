@@ -9,7 +9,7 @@ const lab: Lab = {
   lessons: ['syslog', 'snmp'],
   scenario:
     'The Wizard Corp network operations team has built a management server, **SRV1 (192.168.1.50)**, that runs both a syslog collector and an SNMP manager. R1 (the office router) and SW1 (the access switch) have to report to it. R2 is the branch router on the other side of R1 and is already done.\n\n' +
-    'A recent audit found two problems on R1: log messages carry only the device uptime, so they cannot be matched against other systems, and the factory SNMP community strings **public** (read-only) and **private** (read-write) are still configured.\n\n' +
+    'A recent audit found two problems: log messages on R1 and SW1 carry no timestamp, so they cannot be matched against events from other systems, and R1 still has the factory SNMP community strings **public** (read-only) and **private** (read-write).\n\n' +
     'Send warnings and worse to the syslog server with proper timestamps, keep a local buffer for troubleshooting, replace the default SNMP communities with your own (read-write restricted to the NMS), and make R1 and SW1 send SNMPv2c traps to SRV1.',
   devices: [
     {
@@ -25,7 +25,14 @@ const lab: Lab = {
       model: 'c2960',
       x: 4,
       y: 3.5,
-      config: ['interface Vlan1', ' ip address 192.168.1.2 255.255.255.0', ' no shutdown', 'ip default-gateway 192.168.1.1'].join('\n'),
+      config: [
+        'no service timestamps debug',
+        'no service timestamps log',
+        'interface Vlan1',
+        ' ip address 192.168.1.2 255.255.255.0',
+        ' no shutdown',
+        'ip default-gateway 192.168.1.1',
+      ].join('\n'),
     },
     {
       id: 'R1',
@@ -33,6 +40,8 @@ const lab: Lab = {
       x: 7.2,
       y: 3.5,
       config: [
+        'no service timestamps debug',
+        'no service timestamps log',
         'interface GigabitEthernet0/0/0',
         ' description LAN',
         ' ip address 192.168.1.1 255.255.255.0',
@@ -68,8 +77,8 @@ const lab: Lab = {
     {
       id: 'timestamps',
       title: 'Stamp log messages on R1 and SW1 with date and time to the millisecond: `service timestamps log datetime msec`',
-      details: 'By default messages carry only the device uptime, which is useless when you correlate events from several devices. `datetime msec` adds the calendar date and time with millisecond precision (accurate only when the clock is right, which is what NTP is for). Debug output has its own `service timestamps debug` line; set both.',
-      hint: '`service timestamps log datetime msec` and `service timestamps debug datetime msec`',
+      details: 'Without timestamps a message says what happened but not when, which is useless when you correlate events from several devices. `datetime msec` adds the calendar date and time with millisecond precision (only as accurate as the clock, which is what NTP is for). Debug output has its own `service timestamps debug` line; set both.',
+      hint: 'Debug output has its own `service timestamps debug` line; check the result with `show running-config | include timestamps`',
       checks: [
         { type: 'config', device: 'R1', pattern: '^service timestamps log datetime msec$' },
         { type: 'config', device: 'SW1', pattern: '^service timestamps log datetime msec$' },
@@ -79,7 +88,7 @@ const lab: Lab = {
       id: 'syslog-server',
       title: 'Send messages of severity **warnings** (level 4) and worse from R1 and SW1 to the syslog server **192.168.1.50**',
       details: '`logging host ADDRESS` names the collector and `logging trap LEVEL` sets the severity sent to it. A level includes everything more severe, so `warnings` (4) covers warnings, errors, critical, alerts and emergencies, but not notifications (5) or informational (6). `show logging` shows the trap level and the destination.',
-      hint: '`logging host ...` and `logging trap warnings`',
+      hint: '`logging host ADDRESS` and `logging trap LEVEL`; the level can be a name or a number',
       checks: [
         { type: 'config', device: 'R1', pattern: '^logging (host )?192\\.168\\.1\\.50$' },
         { type: 'config', device: 'R1', pattern: '^logging trap warnings$' },
@@ -106,7 +115,7 @@ const lab: Lab = {
       id: 'snmp-communities',
       title: 'On R1 remove the default communities, then create **WizardRO** (read-only) and **WizardRW** (read-write, restricted by ACL 99 to the NMS 192.168.1.50); on SW1 create only the read-only **WizardRO**',
       details: 'SNMPv2c authenticates with a plain-text community string, and the factory defaults are the first thing every scanner tries. A read-only string lets the NMS poll counters; a read-write string lets it change the configuration, so tie it to the management station with a standard ACL: `snmp-server community NAME RO|RW [ACL]`. Delete the old strings with `no snmp-server community NAME`. The switch only needs to be polled, so it gets no read-write string.',
-      hint: '`access-list 99 permit host ...`, `snmp-server community WizardRW RW 99`',
+      hint: '`snmp-server community NAME RO|RW [ACL]`, `no snmp-server community NAME` and a standard `access-list`',
       checks: [
         { type: 'config', device: 'R1', pattern: '^snmp-server community public\\b', expect: false },
         { type: 'config', device: 'R1', pattern: '^snmp-server community private\\b', expect: false },
@@ -121,7 +130,7 @@ const lab: Lab = {
       id: 'snmp-traps',
       title: 'Make R1 and SW1 send SNMPv2c traps to **192.168.1.50** with community **WizardTRAP**, and set the location and contact on R1',
       details: '`snmp-server host ADDRESS version 2c COMMUNITY` defines the trap receiver (the string travels inside every trap) and `snmp-server enable traps` switches trap generation on: nothing is sent until trap types are enabled. `snmp-server location` and `snmp-server contact` tell the NMS where the device is and whom to call.',
-      hint: '`snmp-server host 192.168.1.50 version 2c ...`, `snmp-server enable traps`, `snmp-server location ...`',
+      hint: '`snmp-server host`, `snmp-server enable traps`, and `snmp-server location` / `snmp-server contact`',
       checks: [
         { type: 'config', device: 'R1', pattern: '^snmp-server host 192\\.168\\.1\\.50 (traps )?version 2c WizardTRAP$' },
         { type: 'config', device: 'R1', pattern: '^snmp-server enable traps' },

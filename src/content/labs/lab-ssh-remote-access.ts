@@ -63,7 +63,7 @@ const lab: Lab = {
       id: 'ssh-prereq',
       title: 'On R1 set the domain name **wizard.local**, generate a **2048-bit** RSA key pair and enable **SSH version 2** with a 60-second timeout and 2 authentication retries',
       details: 'SSH needs a hostname other than the default, a domain name (the key pair is named hostname.domain) and an RSA key pair; SSHv2 requires at least 768 bits and 2048 is the usual choice. `ip ssh version 2` refuses SSHv1 clients, `ip ssh time-out` limits the time allowed for authentication and `ip ssh authentication-retries` the number of attempts. Confirm with `show ip ssh`: it must report "SSH Enabled - version 2.0".',
-      hint: '`ip domain-name ...` → `crypto key generate rsa modulus 2048` → `ip ssh version 2`',
+      hint: '`ip domain-name`, `crypto key generate rsa`, then the `ip ssh` options; `show ip ssh` shows the result',
       checks: [
         { type: 'show', device: 'R1', command: 'show ip ssh', pattern: 'SSH Enabled - version 2\\.0' },
         { type: 'config', device: 'R1', pattern: '^ip ssh time-out 60$' },
@@ -74,14 +74,14 @@ const lab: Lab = {
       id: 'local-user',
       title: 'Create the local account **admin** with privilege level 15 and secret **Ssh-Pass-2026** on R1',
       details: 'Individual accounts make every login attributable to a person, unlike the shared line password. `username NAME privilege 15 secret PASSWORD` stores a hash (`secret`) rather than clear text (`password`), and privilege 15 puts the user straight into privileged EXEC.',
-      hint: '`username admin privilege 15 secret ...`',
+      hint: '`username NAME privilege LEVEL secret PASSWORD`',
       checks: [{ type: 'config', device: 'R1', pattern: '^username admin privilege 15 secret ' }],
     },
     {
       id: 'vty-ssh',
       title: 'Limit R1\'s VTY lines to SSH with local authentication and a 5-minute idle timeout, and delete the shared line password',
       details: 'The legacy `line vty 0 4` accepts Telnet and the shared password. `transport input ssh` refuses Telnet, `login local` authenticates against the local username database, `exec-timeout 5 0` disconnects idle sessions after five minutes and `no password` removes the now unused shared password. From the PC1 command prompt, `ssh -l admin 10.10.10.1` must work; Telnet and a wrong password must not.',
-      hint: '`line vty 0 4` → `transport input ssh` → `login local` → `exec-timeout 5 0` → `no password`',
+      hint: 'Under `line vty 0 4`: `transport input`, `login local`, `exec-timeout MIN SEC` and the `no` form of `password`',
       checks: [
         { type: 'login', from: 'PC1', to: '10.10.10.1', protocol: 'ssh', username: 'admin', password: 'Ssh-Pass-2026' },
         { type: 'login', from: 'PC1', to: '10.10.10.1', protocol: 'ssh', username: 'admin', password: 'not-the-password', expect: false },
@@ -141,6 +141,8 @@ const lab: Lab = {
       details: 'Until the running configuration is copied to NVRAM, a reload brings back Telnet and the clear-text passwords. Use `copy running-config startup-config` (or `write memory`) on both devices; `show startup-config` shows what would be loaded.',
       hint: '`copy running-config startup-config`',
       checks: [
+        { type: 'show', device: 'R1', command: 'show startup-config', pattern: 'transport input ssh' },
+        { type: 'show', device: 'SW1', command: 'show startup-config', pattern: 'transport input ssh' },
         { type: 'saved', device: 'R1' },
         { type: 'saved', device: 'SW1' },
       ],
