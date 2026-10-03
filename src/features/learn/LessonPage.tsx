@@ -14,7 +14,13 @@ import './slides.css';
 
 type View = 'deck' | 'done' | 'quiz' | 'results';
 
+/** Remount per lesson so slide position, quiz state and full-screen mode never leak between lessons. */
 export function LessonPage() {
+  const { lessonId = '' } = useParams();
+  return <LessonPageInner key={lessonId} />;
+}
+
+function LessonPageInner() {
   const { lessonId = '' } = useParams();
   const meta = LESSON_BY_ID[lessonId];
   const { data: lesson, loading } = useLesson(lessonId);
@@ -169,7 +175,7 @@ export function LessonPage() {
     );
   }
 
-  const slide = lesson.slides[index];
+  const slide = lesson.slides[Math.min(index, lesson.slides.length - 1)];
 
   return (
     <div className="page">

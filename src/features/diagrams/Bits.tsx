@@ -13,12 +13,16 @@ export function Bits({ d }: { d: BitsDiagram }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const showDec = d.showDecimal !== false;
   const hasLabels = d.rows.some((r) => r.label);
-  const labelW = hasLabels ? clamp(Math.max(...d.rows.map((r) => svgText(r.label).length)) * 7.4 + 16, 60, 150) : 0;
+  const maxLabel = Math.max(0, ...d.rows.map((r) => svgText(r.label).length));
+  // Short labels sit to the left of the bits; long ones are stacked above their row so they never overflow.
+  const stacked = hasLabels && maxLabel > 14;
+  const labelW = hasLabels && !stacked ? clamp(maxLabel * 7.4 + 16, 60, 150) : 0;
+  const labelH = stacked ? 20 : 0;
   const octGap = 10;
   const avail = clamp(width, 300, 900) - labelW - octGap * 3;
   const cell = clamp(avail / 32, 11, 26);
   const cw = cell - 2;
-  const rowH = cell + (showDec ? 30 : 12);
+  const rowH = cell + labelH + (showDec ? 30 : 12);
   const W = labelW + cell * 32 + octGap * 3;
   const H = d.rows.length * rowH + 4;
   const fs = clamp(cell * 0.6, 9, 13);
@@ -27,13 +31,19 @@ export function Bits({ d }: { d: BitsDiagram }) {
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Binary address diagram">
         {d.rows.map((r, ri) => {
           const bits = toBits(r.value);
-          const y = ri * rowH + 2;
+          const y = ri * rowH + 2 + labelH;
           const octets = [0, 1, 2, 3].map((o) => parseInt(bits.slice(o * 8, o * 8 + 8), 2));
           const xOf = (i: number) => labelW + i * cell + Math.floor(i / 8) * octGap;
           return (
             <g key={ri}>
               {r.label && (
-                <text x={labelW - 12} y={y + cell / 2 + 4} textAnchor="end" className="dg-bits-label" fill={r.tone ? tone(r.tone) : undefined}>
+                <text
+                  x={stacked ? 2 : labelW - 12}
+                  y={stacked ? y - 7 : y + cell / 2 + 4}
+                  textAnchor={stacked ? 'start' : 'end'}
+                  className="dg-bits-label"
+                  fill={r.tone ? tone(r.tone) : undefined}
+                >
                   {svgText(r.label)}
                 </text>
               )}

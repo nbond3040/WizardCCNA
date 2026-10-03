@@ -1,6 +1,9 @@
 import type { HeaderDiagram } from '../../content/types';
 import { clamp, svgText, tone, toneSoft, useWidth, wrapText } from './util';
 
+/** Shift a centered label so an estimated text width stays inside [0, W]. */
+const fitCenter = (cx: number, textW: number, W: number) => clamp(cx, textW / 2 + 2, W - textW / 2 - 2);
+
 export function Header({ d }: { d: HeaderDiagram }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const layout = d.layout ?? 'rows';
@@ -36,7 +39,7 @@ export function Header({ d }: { d: HeaderDiagram }) {
                   {sizeText(f.size)}
                 </text>
                 {f.sub && (
-                  <text x={x0 + w / 2} y={h + 33} textAnchor="middle" className="dg-sub faint-text">
+                  <text x={fitCenter(x0 + w / 2, svgText(f.sub).length * 6.6, W)} y={h + 33} textAnchor="middle" className="dg-sub faint-text">
                     {svgText(f.sub)}
                   </text>
                 )}

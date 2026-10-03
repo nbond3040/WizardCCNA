@@ -40,11 +40,11 @@ export function Stack({ d }: { d: StackDiagram }) {
                         {line}
                       </text>
                     ))}
-                    {l.sub && h > 34 && (
-                      <text x={x + colW / 2} y={subY} textAnchor="middle" className="dg-sub">
-                        {svgText(l.sub)}
+                    {l.sub && h > 34 && wrapText(svgText(l.sub), Math.max(10, Math.floor(colW / 6.4)), 2).map((line, j) => (
+                      <text key={`s${j}`} x={x + colW / 2} y={subY + j * 12} textAnchor="middle" className="dg-sub">
+                        {line}
                       </text>
-                    )}
+                    ))}
                   </g>
                 );
               })}
