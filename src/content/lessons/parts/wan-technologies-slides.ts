@@ -49,7 +49,7 @@ export const slides: Slide[] = [
       'Spoke-to-spoke traffic **transits the hub**',
       'Only **n − 1** links for n sites: cheap and simple',
       'Hub is a **single point of failure** → add a second hub',
-      'Common logical design for MPLS, E-Tree and VPNs',
+      'Enforced logically by E-Tree services and many VPN designs',
     ],
     diagram: {
       type: 'topology',
@@ -71,7 +71,7 @@ export const slides: Slide[] = [
       annotations: [{ x: 5, y: 4.5, text: 'Branch 1 → Branch 3 goes through the hub', tone: 'accent' }],
     },
     notes:
-      "A **point-to-point** WAN is one link between exactly two sites. It is the simplest design: one subnet (often a /30 or /31) and two routers that are each other's only neighbor on the link. Once a company has more than two sites, the most common logical design is **hub-and-spoke**: each branch (spoke) has one connection to a central site (hub), usually the headquarters or data center. For n sites you need only **n − 1** connections, so a hub with 20 branches (21 sites) needs 20 links, whereas a full mesh of the same 21 sites would need 210. The price is **suboptimal paths**: traffic from Branch 1 to Branch 3 travels up to the hub and back down, adding delay and consuming hub bandwidth. The hub is also a **single point of failure**, which is why designs often connect each spoke to two hubs. Hub-and-spoke is not only a physical layout: MPLS designs, E-Tree services and VPN deployments frequently enforce it logically. Expect exam questions that ask you to identify the topology from a drawing or to predict the path that spoke-to-spoke traffic takes.",
+      "A **point-to-point** WAN is one link between exactly two sites. It is the simplest design: one subnet (often a /30 or /31) and two routers that are each other's only neighbor on the link. Once a company has more than two sites, the most common logical design is **hub-and-spoke**: each branch (spoke) has one connection to a central site (hub), usually the headquarters or data center. For n sites you need only **n − 1** connections, so a hub with 20 branches (21 sites) needs 20 links, whereas a full mesh of the same 21 sites would need 210. The price is **suboptimal paths**: traffic from Branch 1 to Branch 3 travels up to the hub and back down, adding delay and consuming hub bandwidth. The hub is also a **single point of failure**, which is why designs often connect each spoke to two hubs. Hub-and-spoke is not only a physical layout: E-Tree services and many VPN deployments enforce it logically, and an MPLS VPN can be configured that way too, although MPLS VPNs are any-to-any by default. Expect exam questions that ask you to identify the topology from a drawing or to predict the path that spoke-to-spoke traffic takes.",
   },
   {
     kind: 'diagram',

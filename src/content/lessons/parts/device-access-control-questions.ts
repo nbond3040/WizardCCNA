@@ -426,7 +426,7 @@ line con 0
     answers: [0, 1],
     difficulty: 3,
     explanation:
-      'A password exists but without **`login`** IOS never prompts for it. `exec-timeout 0 0` disables the idle timer; **`exec-timeout 5 0`** sets 5 minutes. `exec-timeout 0 5` would be only 5 seconds. `transport input` selects protocols and adds no authentication, and the type 7 string shows the encryption service is already on — it would not create a prompt anyway.',
+      'A password exists but without **`login`** IOS never prompts for it. `exec-timeout 0 0` disables the idle timer; **`exec-timeout 5 0`** sets 5 minutes. `exec-timeout 0 5` would be only 5 seconds. `transport input` selects protocols and adds no authentication, and `service password-encryption` only changes how a password is stored, so it would not create a prompt either.',
   },
   {
     id: 'e18',

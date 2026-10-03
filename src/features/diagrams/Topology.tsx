@@ -10,7 +10,7 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
   const uid = useId().replace(/:/g, '');
   const gw = d.width ?? 10;
   const gh = d.height ?? 5;
-  const unit = clamp(width / gw, 30, maxUnit);
+  const unit = clamp(Math.max(width, 520) / gw, 30, maxUnit); // narrow screens scale a 520px canvas down
   const W = gw * unit;
   const H = gh * unit;
   const icon = clamp(unit * 0.52, 26, 46);
@@ -60,7 +60,7 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
               strokeOpacity={0.45}
               strokeDasharray="5 5"
             />
-            <text x={g.x * unit + 12} y={g.y * unit + 19} className="dg-group-label" fill={tone(g.tone ?? 'muted')}>
+            <text x={clamp(g.x * unit + 12, -pad + 2, Math.max(-pad + 2, W + pad - 2 - svgText(g.label).length * 7.2))} y={g.y * unit + 19} className="dg-group-label" fill={tone(g.tone ?? 'muted')}>
               {svgText(g.label)}
             </text>
           </g>
@@ -150,16 +150,18 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
           const fits = { right: n.x * unit + icon / 2 + 10 + tw <= W + pad - 4, left: n.x * unit - icon / 2 - 10 - tw >= -pad + 4 };
           const side = labelSide(n.id, pos, neighbors, fits);
           const L = labelLayout(side, n.x * unit, n.y * unit, icon, !!n.label, !!n.sub);
+          // Centered labels near the canvas edge slide inward instead of spilling out.
+          const inside = (x: number, w: number) => (L.anchor === 'middle' && w < W + pad * 2 - 4 ? clamp(x, -pad + 2 + w / 2, W + pad - 2 - w / 2) : x);
           return (
             <g key={n.id}>
               <DeviceIcon icon={n.icon} size={icon} x={n.x * unit} y={n.y * unit} color={tone(n.tone)} />
               {n.label && (
-                <text x={L.lx} y={L.ly} className="dg-node-label" textAnchor={L.anchor} fill={n.tone && n.tone !== 'default' ? tone(n.tone) : undefined}>
+                <text x={inside(L.lx, svgText(n.label).length * 7.6)} y={L.ly} className="dg-node-label" textAnchor={L.anchor} fill={n.tone && n.tone !== 'default' ? tone(n.tone) : undefined}>
                   {svgText(n.label)}
                 </text>
               )}
               {n.sub && (
-                <text x={L.sx} y={L.sy} className="dg-node-sub" textAnchor={L.anchor}>
+                <text x={inside(L.sx, svgText(n.sub).length * 7)} y={L.sy} className="dg-node-sub" textAnchor={L.anchor}>
                   {svgText(n.sub)}
                 </text>
               )}
@@ -168,7 +170,7 @@ export function Topology({ d, maxUnit = 96 }: { d: TopologyDiagram; maxUnit?: nu
         })}
 
         {d.annotations?.map((a, i) => (
-          <text key={`an${i}`} x={a.x * unit} y={a.y * unit} className="dg-annot" textAnchor="middle" fill={a.tone ? tone(a.tone) : undefined}>
+          <text key={`an${i}`} x={clamp(a.x * unit, -pad + 2 + (svgText(a.text).length * 6.4) / 2, W + pad - 2 - (svgText(a.text).length * 6.4) / 2)} y={a.y * unit} className="dg-annot" textAnchor="middle" fill={a.tone ? tone(a.tone) : undefined}>
             {svgText(a.text)}
           </text>
         ))}

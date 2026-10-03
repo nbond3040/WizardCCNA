@@ -223,6 +223,7 @@ R1(config-if)# no shutdown
 R1(config-if)# interface GigabitEthernet0/0/1
 R1(config-if)# ipv6 address FE80::1 link-local
 R1(config-if)# ipv6 address 2001:DB8:ACAD:12::1/64
+R1(config-if)# no shutdown
 R1(config-if)# end
 R1# show ipv6 interface brief
 GigabitEthernet0/0/0   [up/up]

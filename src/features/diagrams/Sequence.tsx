@@ -7,7 +7,7 @@ export function Sequence({ d }: { d: SequenceDiagram }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const uid = useId().replace(/:/g, '');
   const n = d.actors.length;
-  const W = clamp(width, 320, Math.max(520, n * 230));
+  const W = clamp(width, Math.max(480, n * 130), Math.max(520, n * 230));
   const colW = W / n;
   const xOf: Record<string, number> = {};
   d.actors.forEach((a, i) => (xOf[a.id] = colW * (i + 0.5)));

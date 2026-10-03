@@ -324,7 +324,7 @@ SW1# show storm-control FastEthernet0/5 broadcast
 Interface  Filter State   Upper        Lower        Current
 ---------  -------------  -----------  -----------  ----------
 Fa0/5      Forwarding          20.00%       10.00%        0.47%
-%STORM_CONTROL-3-FILTERED: A packet storm was detected on Fa0/5. A packet filter action has been applied on the interface.`,
+%STORM_CONTROL-3-FILTERED: A Broadcast storm detected on Fa0/5. A packet filter action has been applied on the interface.`,
     highlight: ['storm-control broadcast level 20.00 10.00', 'storm-control action trap', 'Forwarding'],
     caption: 'Rising threshold 20%, falling threshold 10%; default action filters, `shutdown` err-disables.',
     notes:

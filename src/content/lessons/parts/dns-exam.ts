@@ -311,7 +311,7 @@ Address:  10.1.1.90`,
     id: 'e15',
     type: 'input',
     stem: 'Which port number do DNS servers listen on for client queries?',
-    answers: ['53', 'udp 53', 'udp/53', 'port 53'],
+    answers: ['53', 'udp 53', 'udp/53', 'port 53', 'tcp 53', 'tcp/53', 'udp/tcp 53', 'tcp/udp 53'],
     placeholder: 'port',
     difficulty: 1,
     explanation:

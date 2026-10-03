@@ -4,14 +4,14 @@ const lab: Lab = {
   id: 'lab-interface-errors-duplex',
   title: 'Interface Errors: Duplex and Speed Mismatches',
   summary:
-    'Read show interfaces and show interfaces status to diagnose a duplex mismatch (late collisions on one end, CRC errors on the other), a hard-coded speed that keeps a link down and a legacy 10 Mb/s port, then restore auto-negotiation and prove the counters are clean.',
+    'Read show interfaces, show interfaces status and show logging to diagnose the classic duplex mismatch (one end hard-coded, the auto-negotiating end falls back to half duplex: late collisions on the half side, CRC errors and runts on the full side), a hard-coded speed that keeps a link down and a legacy 10 Mb/s port, then restore auto-negotiation, clear the cumulative counters and prove the errors are gone.',
   difficulty: 2,
   minutes: 30,
   lessons: ['interface-issues', 'cabling-interfaces'],
   scenario:
-    '**Initech\'s** branch office has one router, **R1**, and one access switch, **SW1**. R1 G0/0/0 connects to SW1 Gi0/1 and serves the staff LAN **192.168.10.0/24** (PC1 and PC2); R1 G0/0/1 connects to the server SRV1 (**10.10.10.10/24**). Over the years several people hard-coded speed and duplex on these ports.\n\n' +
-    'The monitoring system now raises error alarms for the SW1–R1 uplink: **CRC errors and runts** on the switch and **collisions and late collisions** on the router, and users say file transfers crawl. Separately, SRV1 was swapped for a temporary Fast Ethernet server last week and has had no link light since, and PC2\'s desk port is still configured for a decade-old 10 Mb/s device.\n\n' +
-    'Use `show interfaces`, `show interfaces status` (the `a-` prefix marks auto-negotiated values) and `show ip interface brief` to find every hard-coded setting that causes trouble, restore auto-negotiation, and prove the counters stay clean. Late collisions are counted by the **half-duplex** side, CRC errors and runts by the **full-duplex** side.',
+    '**Initech\'s** branch office has one router, **R1**, and one access switch, **SW1**. R1 G0/0/0 connects to SW1 Gi0/1 and serves the staff LAN **192.168.10.0/24** (PC1 and PC2); R1 G0/0/1 connects to the server SRV1 (**10.10.10.10/24**). Years ago someone hard-coded **speed 100** and **duplex full** on R1\'s LAN port to stop it from flapping; the switch port was never touched and still auto-negotiates.\n\n' +
+    'The monitoring system now raises error alarms for the SW1–R1 uplink: **collisions and late collisions** on the switch and **CRC errors and runts** on the router, and users say file transfers crawl. Separately, SRV1 was swapped for a temporary Fast Ethernet server last week and has had no link light since, and PC2\'s desk port is still configured for a decade-old 10 Mb/s device.\n\n' +
+    'Use `show interfaces`, `show interfaces status` (the `a-` prefix marks auto-negotiated values), `show ip interface brief` and `show logging` to find every hard-coded setting that causes trouble, restore auto-negotiation, and prove the counters stay clean. Late collisions are counted by the **half-duplex** side, CRC errors and runts by the **full-duplex** side. Error counters are cumulative: they stay on the screen until you run `clear counters`.',
   devices: [
     {
       id: 'SW1',
@@ -27,8 +27,6 @@ const lab: Lab = {
         ' duplex half',
         'interface GigabitEthernet0/1',
         ' description Uplink to R1',
-        ' speed 100',
-        ' duplex full',
       ].join('\n'),
     },
     {
@@ -41,7 +39,7 @@ const lab: Lab = {
         ' description LAN uplink to SW1',
         ' ip address 192.168.10.1 255.255.255.0',
         ' speed 100',
-        ' duplex half',
+        ' duplex full',
         ' no shutdown',
         'interface GigabitEthernet0/0/1',
         ' description Server SRV1',
@@ -64,7 +62,7 @@ const lab: Lab = {
     {
       id: 'uplink-r1',
       title: 'Remove the hard-coded speed and duplex from **R1 G0/0/0** so it auto-negotiates',
-      details: '`show interfaces g0/0/0` on R1 reports `Half-duplex, 100Mb/s` with *collisions* and *late collision* counters, while SW1\'s port runs `Full-duplex` and counts *runts* and *CRC* errors: the two ends disagree about duplex. A half-duplex port expects to see collisions in the first 64 bytes of a frame; a full-duplex peer simply transmits whenever it likes, so the half side logs late collisions and the full side receives truncated, corrupted frames. Start with R1 and remove the hard-coded values it carries.',
+      details: '`show interfaces g0/0/0` on R1 reports `Full-duplex, 100Mb/s` with *runts* and *CRC* errors, while `show interfaces status` on SW1 shows its Gi0/1 as `a-half` and `a-100`, with *collisions* and *late collision* counters: the two ends disagree about duplex, and `show logging` on both devices says so with `%CDP-4-DUPLEX_MISMATCH`. A port that is hard-coded stops advertising its abilities, so the neighbour that is still on auto cannot learn the duplex: it detects the **speed** from the signal (parallel detection) but **falls back to half duplex**. R1 transmits whenever it likes, the half-duplex switch counts collisions (late collisions once they happen after the first 64 bytes), and R1 receives the frames the switch aborted as runts and CRC errors. Only R1 is hard-coded, so R1 is the end to fix.',
       hint: 'The `no` form of the `speed` and `duplex` interface commands puts the port back on auto.',
       checks: [
         { type: 'config', device: 'R1', section: 'interface GigabitEthernet0/0/0', pattern: '^ speed ', expect: false },
@@ -73,9 +71,9 @@ const lab: Lab = {
     },
     {
       id: 'uplink-sw1',
-      title: 'Restore auto-negotiation on **SW1 Gi0/1** and confirm the uplink comes up as **a-full / a-1000**',
-      details: '`show interfaces status` on SW1 shows `full` and `100` without the `a-` prefix: the switch is hard-coded and counts CRC errors and runts because the router side disagrees about duplex. With both ends on auto the link negotiates the best common mode, 1000 Mb/s full duplex. Hard-coding both ends to the same values would also work, but auto is the recommended setting for modern ports.',
-      hint: '`show interfaces status` on SW1, then undo the hard-coded values on Gi0/1.',
+      title: 'Confirm that **SW1 Gi0/1** now negotiates **a-full / a-1000** and carries no hard-coded values',
+      details: '`show interfaces status` on SW1 shows `a-half` and `a-100` while R1 is hard-coded: the `a-` prefix means the value was negotiated, and half duplex was the fallback, not a choice. With both ends on auto the link negotiates the best common mode, 1000 Mb/s full duplex (gigabit links always auto-negotiate, so a duplex mismatch cannot happen at 1000 Mb/s). Hard-coding the switch to `speed 100` and `duplex full` would also stop the mismatch, but it would lock the uplink to 100 Mb/s: auto is the recommended setting for modern ports.',
+      hint: '`show interfaces status` on SW1, and `show running-config interface g0/1` to make sure no `speed` or `duplex` line is left.',
       checks: [
         { type: 'config', device: 'SW1', section: 'interface GigabitEthernet0/1', pattern: '^ speed ', expect: false },
         { type: 'config', device: 'SW1', section: 'interface GigabitEthernet0/1', pattern: '^ duplex ', expect: false },
@@ -84,8 +82,8 @@ const lab: Lab = {
     },
     {
       id: 'clean-counters',
-      title: 'Prove the uplink is clean: zero CRC errors, runts, collisions and late collisions on both ends',
-      details: 'On real devices error counters survive until they are cleared, so run `clear counters` on SW1 and R1, send traffic (for example `ping 192.168.10.1` from PC1) and look at the counters again with `show interfaces` on both ends. Only counters that still grow after the fix point to a problem that remains.',
+      title: 'Clear the counters on **SW1** and **R1**, then prove the uplink is clean: zero CRC errors, runts, collisions and late collisions on both ends',
+      details: 'On real devices error counters are cumulative: they survive the fix and only `clear counters` resets them, so the old errors stay on the screen after the fault is gone. Run `clear counters` (press Enter to confirm) on SW1 and on R1, send traffic (for example `ping 192.168.10.1` from PC1) and look at the counters again with `show interfaces` on both ends; `Last clearing of "show interface" counters` tells you when they were reset. Only counters that still grow after the fix point to a problem that remains.',
       hint: '`show interfaces gigabitEthernet 0/1` on SW1 and `show interfaces g0/0/0` on R1: read the `runts`, `CRC`, `collisions` and `late collision` lines.',
       checks: [
         { type: 'ping', from: 'PC1', to: '192.168.10.1' },
@@ -93,6 +91,10 @@ const lab: Lab = {
         { type: 'show', device: 'R1', command: 'show interfaces GigabitEthernet0/0/0', pattern: '^\\s*Full-duplex, 1000Mb/s' },
         { type: 'show', device: 'SW1', command: 'show interfaces GigabitEthernet0/1', pattern: '^\\s*0 runts, 0 giants' },
         { type: 'show', device: 'SW1', command: 'show interfaces GigabitEthernet0/1', pattern: '^\\s*0 input errors, 0 CRC' },
+        { type: 'show', device: 'SW1', command: 'show interfaces GigabitEthernet0/1', pattern: '^\\s*0 output errors, 0 collisions' },
+        { type: 'show', device: 'SW1', command: 'show interfaces GigabitEthernet0/1', pattern: '^\\s*0 babbles, 0 late collision' },
+        { type: 'show', device: 'R1', command: 'show interfaces GigabitEthernet0/0/0', pattern: '^\\s*0 runts, 0 giants' },
+        { type: 'show', device: 'R1', command: 'show interfaces GigabitEthernet0/0/0', pattern: '^\\s*0 input errors, 0 CRC' },
         { type: 'show', device: 'R1', command: 'show interfaces GigabitEthernet0/0/0', pattern: '^\\s*0 output errors, 0 collisions' },
         { type: 'show', device: 'R1', command: 'show interfaces GigabitEthernet0/0/0', pattern: '^\\s*0 babbles, 0 late collision' },
       ],
@@ -100,7 +102,7 @@ const lab: Lab = {
     {
       id: 'server-link',
       title: 'Bring up **R1 G0/0/1** so PC1 can reach SRV1 (**10.10.10.10**)',
-      details: '`show ip interface brief` on R1 shows G0/0/1 as down/down although the cable is connected. SRV1\'s network card is Fast Ethernet, so it can never link at 1000 Mb/s, and a port whose speed is hard-coded to a rate the other end cannot do stays down. Check the speed shown by `show interfaces g0/0/1`, then let the ports agree.',
+      details: '`show ip interface brief` on R1 shows G0/0/1 as down/down although the cable is connected. SRV1\'s network card is Fast Ethernet, so it can never link at 1000 Mb/s, and a port whose speed is hard-coded to a rate the other end cannot do stays down (no errors are counted, because there is no link at all). Check the speed shown by `show interfaces g0/0/1`, then let the ports agree.',
       hint: '`show ip interface brief`, then `show running-config interface g0/0/1`.',
       checks: [
         { type: 'interface', device: 'R1', iface: 'Gi0/0/1', status: 'up' },
@@ -111,7 +113,7 @@ const lab: Lab = {
     {
       id: 'pc2-port',
       title: 'Return **SW1 Fa0/2** (PC2) to auto-negotiation: the port must run **a-full / a-100**',
-      details: 'PC2 works, but `show interfaces status` shows its port at `half` and `10`: ten megabits, half duplex, hard-coded for a legacy device that no longer exists. Nothing is broken, so this fault is easy to overlook, yet the PC is throttled to a fraction of what the port can do.',
+      details: 'PC2 works, but `show interfaces status` shows its port at `half` and `10`: ten megabits, half duplex, hard-coded for a legacy device that no longer exists. The PC\'s own card is on auto, so it simply detects 10 Mb/s and falls back to half duplex to match: nothing is broken and no errors are counted, which makes this fault easy to overlook, yet the PC is throttled to a fraction of what the port can do.',
       hint: 'Look at the Duplex and Speed columns of `show interfaces status` for Fa0/2.',
       checks: [
         { type: 'show', device: 'SW1', command: 'show interfaces status', pattern: '^Fa0/2\\s+PC2\\s+connected\\s+1\\s+a-full\\s+a-100\\b' },
@@ -126,8 +128,10 @@ const lab: Lab = {
       checks: [
         { type: 'saved', device: 'SW1' },
         { type: 'saved', device: 'R1' },
-        { type: 'show', device: 'R1', command: 'show startup-config', pattern: '^ duplex half', expect: false },
-        { type: 'show', device: 'SW1', command: 'show startup-config', pattern: '^ duplex full', expect: false },
+        { type: 'show', device: 'R1', command: 'show startup-config', pattern: '^ duplex ', expect: false },
+        { type: 'show', device: 'R1', command: 'show startup-config', pattern: '^ speed ', expect: false },
+        { type: 'show', device: 'SW1', command: 'show startup-config', pattern: '^ duplex ', expect: false },
+        { type: 'show', device: 'SW1', command: 'show startup-config', pattern: '^ speed ', expect: false },
       ],
     },
   ],
@@ -140,22 +144,21 @@ const lab: Lab = {
       ' no duplex',
       'interface GigabitEthernet0/0/1',
       ' no speed',
-      ' exit',
-      'do write memory',
-      'end',
+      ' end',
+      'clear counters',
+      '',
+      'write memory',
     ].join('\n'),
     SW1: [
       'enable',
       'configure terminal',
-      'interface GigabitEthernet0/1',
-      ' no speed',
-      ' no duplex',
       'interface FastEthernet0/2',
       ' no speed',
       ' no duplex',
-      ' exit',
-      'do write memory',
-      'end',
+      ' end',
+      'clear counters',
+      '',
+      'write memory',
     ].join('\n'),
   },
 };

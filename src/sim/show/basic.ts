@@ -320,8 +320,9 @@ export function showIntStatus(c: Ctx): void {
     const vlan = !cfg.sw ? 'routed' : o?.mode === 'trunk' ? 'trunk' : String(cfg.accessVlan);
     const l1 = d.l2.l1.get(ek(dev.id, n));
     const up = !!l1?.carrier;
-    // `a-` marks a negotiated value; a hard-coded one is shown as configured (gigabit always negotiates its duplex)
-    const dup = cfg.duplex !== 'auto' && !(up && l1!.speed >= 1000) ? cfg.duplex : up ? `a-${l1!.duplex}` : 'auto';
+    // `a-` marks a negotiated value; a hard-coded one is shown as configured. A gigabit speed that was itself
+    // negotiated always negotiates the duplex too, whatever `duplex` says.
+    const dup = cfg.duplex !== 'auto' && !(up && l1!.speed >= 1000 && cfg.speed === 'auto') ? cfg.duplex : up ? `a-${l1!.duplex}` : 'auto';
     const sp = cfg.speed !== 'auto' ? cfg.speed : up ? `a-${l1!.speed}` : 'auto';
     const ph = dev.hw.ifaces.find((p) => p.name === n);
     const type = n.startsWith('Port-channel') ? '' : ph?.type === 'FastEthernet' ? '10/100BaseTX' : '10/100/1000BaseTX';

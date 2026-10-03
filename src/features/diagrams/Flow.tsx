@@ -10,7 +10,7 @@ export function Flow({ d }: { d: FlowDiagram }) {
   const manual = d.nodes.length > 0 && d.nodes.every((n) => n.x !== undefined && n.y !== undefined);
   const dir = d.direction ?? 'horizontal';
   const n = d.nodes.length;
-  const avail = clamp(width, 300, 1000);
+  const avail = clamp(width, 480, 1000);
   const boxes: Record<string, NodeBox> = {};
   let W: number;
   let H: number;
@@ -67,7 +67,8 @@ export function Flow({ d }: { d: FlowDiagram }) {
           const label = 'label' in e ? (e as { label?: string }).label : undefined;
           const et = 'tone' in e ? (e as { tone?: FlowDiagram['nodes'][number]['tone'] }).tone : undefined;
           const dashed = 'dashed' in e ? (e as { dashed?: boolean }).dashed : false;
-          const mx = (x1 + x2) / 2;
+          const pillW = label ? svgText(label).length * 6.3 + 12 : 0;
+          const mx = clamp((x1 + x2) / 2, pillW / 2 - 2, Math.max(pillW / 2 - 2, W + 2 - pillW / 2)); // keep the pill on the canvas
           const my = (y1 + y2) / 2;
           return (
             <g key={i}>

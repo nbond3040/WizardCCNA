@@ -29,7 +29,7 @@ export const flashcards: Flashcard[] = [
   { id: 'f26', front: 'Catalyst 9800 WLAN profile', back: 'Defines the SSID itself: name, WLAN ID, status, and Layer 2/Layer 3 security (including the AAA method list).' },
   { id: 'f27', front: 'Catalyst 9800 policy profile', back: 'Defines how client traffic is treated: VLAN, QoS, AAA override, timeouts, client exclusion, ACLs and central/local switching.' },
   { id: 'f28', front: 'Catalyst 9800 policy tag', back: 'Pairs WLAN profiles with policy profiles and is assigned to APs. It replaces AireOS AP groups.' },
-  { id: 'f29', front: 'Catalyst 9800 site tag vs RF tag', back: '**Site tag:** AP join and flex profiles; decides local vs FlexConnect mode. **RF tag:** RF profiles for the 2.4 GHz and 5 GHz radios.' },
+  { id: 'f29', front: 'Catalyst 9800 site tag vs RF tag', back: '**Site tag:** AP join and flex profiles; decides local vs FlexConnect mode. **RF tag:** RF profiles for each band (2.4, 5 and 6 GHz).' },
   { id: 'f30', front: 'Default tags on a Catalyst 9800 AP', back: '`default-policy-tag`, `default-site-tag` and `default-rf-tag`. The default policy tag does not include your new WLAN.' },
 ];
 

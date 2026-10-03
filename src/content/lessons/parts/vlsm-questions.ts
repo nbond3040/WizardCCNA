@@ -206,8 +206,8 @@ export const exam: Question[] = [
     exhibit: {
       kind: 'cli',
       text: `R1# show ip route | include 10.20
-      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
 C        10.20.0.0/23 is directly connected, GigabitEthernet0/0/1
+L        10.20.0.1/32 is directly connected, GigabitEthernet0/0/1
 O        10.20.1.0/26 [110/20] via 10.0.12.2, 00:01:40, Serial0/1/0`,
     },
     options: [

@@ -11,7 +11,7 @@ export function Header({ d }: { d: HeaderDiagram }) {
   const sizeText = (n: number) => `${n} ${unit === 'bits' ? (n === 1 ? 'bit' : 'bits') : n === 1 ? 'byte' : 'bytes'}`;
 
   if (layout === 'line') {
-    const W = clamp(width, 300, 1000);
+    const W = clamp(width, 520, 1000);
     const weights = d.fields.map((f) => Math.sqrt(f.size));
     const total = weights.reduce((a, b) => a + b, 0);
     let widths = weights.map((w) => Math.max(70, (W * w) / total));
@@ -53,7 +53,7 @@ export function Header({ d }: { d: HeaderDiagram }) {
   }
 
   const per = d.bitsPerRow ?? 32;
-  const W = clamp(width, 320, 860);
+  const W = clamp(width, 480, 860);
   const cell = W / per;
   const rowH = 46;
   const top = 26;

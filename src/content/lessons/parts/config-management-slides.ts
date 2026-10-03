@@ -292,13 +292,15 @@ resource "aws_subnet" "web" {
   {
     kind: 'cli',
     title: 'Plan and apply output',
-    code: `$ terraform init
-Initializing the backend...
-Initializing provider plugins...
-Terraform has been successfully initialized!
-
-$ terraform plan
+    code: `$ terraform plan
 Terraform will perform the following actions:
+
+  # aws_subnet.web will be created
+  + resource "aws_subnet" "web" {
+      + cidr_block = "10.0.1.0/24"
+      + id         = (known after apply)
+      + vpc_id     = (known after apply)
+    }
 
   # aws_vpc.lab will be created
   + resource "aws_vpc" "lab" {
@@ -309,14 +311,16 @@ Terraform will perform the following actions:
         }
     }
 
-Plan: 1 to add, 0 to change, 0 to destroy.
+Plan: 2 to add, 0 to change, 0 to destroy.
 
 $ terraform apply -auto-approve
 aws_vpc.lab: Creating...
 aws_vpc.lab: Creation complete after 2s [id=vpc-0a1b2c3d4e5f67890]
+aws_subnet.web: Creating...
+aws_subnet.web: Creation complete after 1s [id=subnet-0f1e2d3c4b5a69788]
 
-Apply complete! Resources: 1 added, 0 changed, 0 destroyed.`,
-    highlight: ['Plan: 1 to add, 0 to change, 0 to destroy.', 'Apply complete!'],
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.`,
+    highlight: ['Plan: 2 to add, 0 to change, 0 to destroy.', 'Apply complete!'],
     bullets: [
       '`init` downloads providers; `plan` previews; `apply` executes',
       '`+` create, `~` change in place, `-` destroy, `-/+` replace',
@@ -324,7 +328,7 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.`,
       'Manual changes to managed objects show up in the next plan',
     ],
     notes:
-      'Terraform prints a readable preview before it touches anything. A leading `+` marks a resource to be **created**, `~` marks an **update in place**, `-` marks a **destroy**, and `-/+` means destroy and recreate. Values that only exist after creation, such as an ID, appear as `(known after apply)`. The final line, `Plan: 1 to add, 0 to change, 0 to destroy.`, is the summary you should read first. `terraform apply` shows the plan again, asks for confirmation unless `-auto-approve` is used, performs the calls and ends with `Apply complete!`. Now run `terraform plan` a second time: Terraform reports that no changes are needed, because the real world already matches the code. That is the same idempotent behaviour you saw with Ansible, and the plan is also a **drift detector**. If someone changes a managed resource by hand, the next plan shows the difference and the next apply puts it back. The output here is shortened; real plans list every attribute.',
+      'Terraform prints a readable preview before it touches anything. A leading `+` marks a resource to be **created**, `~` marks an **update in place**, `-` marks a **destroy**, and `-/+` means destroy and recreate. Values that only exist after creation, such as an ID, appear as `(known after apply)`. The final line, `Plan: 2 to add, 0 to change, 0 to destroy.`, is the summary you should read first. `terraform apply` shows the plan again, asks for confirmation unless `-auto-approve` is used, performs the calls and ends with `Apply complete!`. Now run `terraform plan` a second time: Terraform reports that no changes are needed, because the real world already matches the code. That is the same idempotent behaviour you saw with Ansible, and the plan is also a **drift detector**. If someone changes a managed resource by hand, the next plan shows the difference and the next apply puts it back. The output here is shortened; real plans list every attribute.',
   },
   {
     kind: 'table',
@@ -391,7 +395,7 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.`,
       'Both describe resources: package, service, file, user',
     ],
     notes:
-      'Compare the two snippets and notice the family resemblance. Both describe **resources**, such as a package or a service, and both state what should be true rather than how to do it. The **Puppet manifest** uses the Puppet DSL, a declarative language with curly braces and `=>` arrows. It says the `ntp` package must be installed and the service must be running and enabled, and `require` states a dependency so the package is handled first. The **Chef recipe** is plain Ruby with a small domain language: `package \'ntp\' do ... end` and an `action` for each resource. A recipe is not deployed alone; recipes are grouped into **cookbooks**, which the Chef server distributes to nodes. For the CCNA you only need to recognise the vocabulary and the pairings: Puppet goes with manifests and the Puppet DSL, Chef goes with recipes, cookbooks and Ruby, and both are agent-based pull tools. You will not be asked to write either one, and these tools appear in answer options mostly as distractors for questions about Ansible and Terraform.',
+      'Compare the two snippets and notice the family resemblance. Both describe **resources**, such as a package or a service, and each resource states what should be true. The **Puppet manifest** uses the Puppet DSL, a declarative language with curly braces and `=>` arrows. It says the `ntp` package must be installed and the service must be running and enabled, and `require` states a dependency so the package is handled first. The **Chef recipe** is plain Ruby with a small domain language: `package \'ntp\' do ... end` and an `action` for each resource. Because a recipe is ordinary Ruby that runs top to bottom, Chef is often described as procedural, whereas Puppet is purely declarative. A recipe is not deployed alone; recipes are grouped into **cookbooks**, which the Chef server distributes to nodes. For the CCNA you only need to recognise the vocabulary and the pairings: Puppet goes with manifests and the Puppet DSL, Chef goes with recipes, cookbooks and Ruby, and both are agent-based pull tools. You will not be asked to write either one, and these tools appear in answer options mostly as distractors for questions about Ansible and Terraform.',
   },
   {
     kind: 'compare',

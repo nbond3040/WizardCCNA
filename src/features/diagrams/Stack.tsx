@@ -23,8 +23,11 @@ export function Stack({ d }: { d: StackDiagram }) {
   const textH = maxLabelLines * 15 + (maxSubLines ? maxSubLines * 12 + 4 : 0) + 16;
   const rowH = Math.max(totalRows > 8 ? 36 : 44, textH + 6);
 
-  const hasTitles = d.columns.some((c) => c.title);
-  const top = hasTitles ? 28 : 0;
+  // Column titles are uppercase with letter spacing (~8px per character), so wrap them to the column.
+  const titleCap = Math.max(8, Math.floor((colW - 8) / 8));
+  const titles = d.columns.map((c) => (c.title ? wrapText(svgText(c.title), titleCap, 2) : []));
+  const titleLines = Math.max(0, ...titles.map((t) => t.length));
+  const top = titleLines ? 14 + titleLines * 13 : 0;
   const H = top + totalRows * rowH;
   return (
     <div ref={ref} className="dg dg-stack">
@@ -34,11 +37,11 @@ export function Stack({ d }: { d: StackDiagram }) {
           let row = 0;
           return (
             <g key={ci}>
-              {c.title && (
-                <text x={x + colW / 2} y={16} textAnchor="middle" className="dg-col-title">
-                  {svgText(c.title)}
+              {titles[ci].map((line, j) => (
+                <text key={j} x={x + colW / 2} y={16 + j * 13} textAnchor="middle" className="dg-col-title">
+                  {line}
                 </text>
-              )}
+              ))}
               {c.layers.map((l, li) => {
                 const span = l.span ?? 1;
                 const y = top + row * rowH;

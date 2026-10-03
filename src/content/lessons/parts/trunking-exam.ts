@@ -248,7 +248,7 @@ Gi0/2       1,10,30,99`,
   {
     id: 'e13',
     type: 'multi',
-    stem: 'SW1 Gi0/1 is configured with `switchport mode dynamic auto`. Which two configurations on the connected SW2 port result in an operational trunk? (Choose two.)',
+    stem: 'SW1 Gi0/1 is configured with `switchport mode dynamic auto`. Which two configurations on the connected SW2 port result in a link that operates as a trunk on both switches? (Choose two.)',
     options: [
       '`switchport mode trunk`',
       '`switchport mode dynamic desirable`',

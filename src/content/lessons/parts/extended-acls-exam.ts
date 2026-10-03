@@ -154,7 +154,7 @@ Extended IP access list BRANCH-IN
   {
     id: 'e9',
     type: 'single',
-    stem: 'Refer to the exhibit. About 40 seconds after an engineer applied ACL FROM-R1 inbound on R2 G0/0/0, the link to OSPF neighbor R1, the adjacency went down. Which change restores the adjacency while keeping the rest of the policy?',
+    stem: 'Refer to the exhibit. About 40 seconds after an engineer applied ACL FROM-R1 inbound on R2 G0/0/0, the OSPF adjacency with neighbor R1 went down. Which change restores the adjacency while keeping the rest of the policy?',
     exhibit: {
       kind: 'cli',
       text: `%OSPF-5-ADJCHG: Process 1, Nbr 1.1.1.1 on GigabitEthernet0/0/0 from FULL to DOWN, Neighbor Down: Dead timer expired

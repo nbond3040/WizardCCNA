@@ -192,7 +192,7 @@ const slides: Slide[] = [
       bullets: [
         '**Encryption** + integrity + authentication',
         'Anti-replay with sequence numbers',
-        'Integrity check stops at the ESP header',
+        'Integrity check does not cover the outer IP header',
         'Crosses NAT with NAT-T (UDP 4500)',
         '==Used by virtually every VPN==',
       ],

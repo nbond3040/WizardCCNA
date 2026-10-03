@@ -198,7 +198,7 @@ There is 1 interface on the system:
     id: 'e11',
     type: 'input',
     stem: 'Which UDP port does a WLC use by default to send RADIUS authentication requests to a server such as Cisco ISE? (Enter the number.)',
-    answers: ['1812', 'udp 1812'],
+    answers: ['1812', 'udp 1812', 'udp/1812', 'udp1812'],
     placeholder: 'port number',
     difficulty: 1,
     explanation:

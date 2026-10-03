@@ -19,7 +19,7 @@ export function Bits({ d }: { d: BitsDiagram }) {
   const labelW = hasLabels && !stacked ? clamp(maxLabel * 7.4 + 16, 60, 150) : 0;
   const labelH = stacked ? 20 : 0;
   const octGap = 10;
-  const avail = clamp(width, 300, 900) - labelW - octGap * 3;
+  const avail = clamp(width, 480, 900) - labelW - octGap * 3;
   const cell = clamp(avail / 32, 11, 26);
   const cw = cell - 2;
   const rowH = cell + labelH + (showDec ? 30 : 12);

@@ -55,7 +55,7 @@ export const dhcpQuiz: Question[] = [
   {
     id: 'q3',
     type: 'multi',
-    stem: 'In a DHCP exchange on a single subnet, which two messages does the client send as broadcasts? (Choose two.)',
+    stem: 'In the initial DHCP exchange on a single subnet, which two messages does the client send as broadcasts? (Choose two.)',
     options: ['DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPACK', 'DHCPNAK'],
     answers: [0, 2],
     difficulty: 1,

@@ -19,7 +19,7 @@ export const exam: Question[] = [
       kind: 'table',
       columns: ['Setting', 'Value'],
       rows: [
-        ['Minimum length', '12 characters'],
+        ['Minimum length', '15 characters'],
         ['Maximum length', '64 characters'],
         ['Composition rules', 'None; common and breached passwords are blocked'],
         ['Maximum password age', '30 days'],
@@ -28,7 +28,7 @@ export const exam: Question[] = [
       ],
     },
     options: [
-      'A minimum length of 12 characters',
+      'A minimum length of 15 characters',
       'Blocking common and breached passwords',
       'A maximum password age of 30 days',
       'Allowing paste into password fields',
@@ -37,7 +37,7 @@ export const exam: Question[] = [
     answer: 2,
     difficulty: 2,
     explanation:
-      'NIST recommends against scheduled password changes because users respond with small predictable edits; a change should be forced only on evidence of compromise, so a 30-day maximum age is the conflict. A 12-character minimum, a 64-character maximum, screening against common and breached lists, allowing paste (so password managers work) and requiring MFA all match the guidance.',
+      'NIST recommends against scheduled password changes because users respond with small predictable edits; a change should be forced only on evidence of compromise, so a 30-day maximum age is the conflict. A 15-character minimum, a 64-character maximum, screening against common and breached lists, allowing paste (so password managers work) and requiring MFA all match the guidance.',
   },
   {
     id: 'e3',

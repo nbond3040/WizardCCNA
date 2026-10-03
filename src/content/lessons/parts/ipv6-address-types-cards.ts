@@ -19,7 +19,7 @@ export const flashcards: Flashcard[] = [
   { id: 'f16', front: 'Broadcast in IPv6', back: '**Does not exist.** Multicast (FF02::1 and solicited-node groups) replaces it.' },
   { id: 'f17', front: 'Modified EUI-64 steps', back: 'Split the MAC, insert `FFFE` in the middle, flip the 7th bit (U/L bit) of the first byte.' },
   { id: 'f18', front: 'EUI-64 interface ID of MAC 001A.2B3C.4D5E', back: '021A:2BFF:FE3C:4D5E, written 21A:2BFF:FE3C:4D5E.' },
-  { id: 'f19', front: 'EUI-64: first byte 0C after the flip', back: '0E (C = 1100 becomes 1110 = E).' },
+  { id: 'f19', front: 'EUI-64: the MAC starts with byte 0C. What is the first byte of the interface ID?', back: '0E (C = 1100 becomes 1110 = E after flipping the 7th bit).' },
   { id: 'f20', front: 'Which hex digit changes in EUI-64?', back: 'Only the second hex digit: swap 0/2, 1/3, 4/6, 5/7, 8/A, 9/B, C/E, D/F.' },
   { id: 'f21', front: 'IOS command for an EUI-64 global address', back: '`ipv6 address 2001:DB8:ACAD:1::/64 eui-64`' },
   { id: 'f22', front: 'RS / RA ICMPv6 types', back: 'Router Solicitation **133** / Router Advertisement **134**.' },

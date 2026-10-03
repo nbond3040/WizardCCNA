@@ -422,6 +422,7 @@ Gi0/2     Core-2             notconnect   1            auto   auto Not Present`,
     answers: [
       'show interfaces status err-disabled',
       'show interface status err-disabled',
+      'show int status err-disabled',
       'sh int status err-disabled',
       'sh interfaces status err-disabled',
     ],
