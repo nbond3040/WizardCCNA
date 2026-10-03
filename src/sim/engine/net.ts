@@ -5,10 +5,11 @@
 import type { LabDevice, LabLink } from '../../content/labTypes';
 import { parseIfName } from '../model/ifname';
 import type { Device, HostDevice, IosDevice } from '../model/state';
-import { EPOCH_MS, logStamp } from '../util/format';
+import { DEFAULT_TS_FORMAT, EPOCH_MS, logTimestamp, parseTsFormat } from '../util/format';
 import { buildDevice } from './topo';
 import { computeDerived, type Derived } from './derived';
-import { applySticky, summarize, emitTransitionLogs, type Summary } from './commit';
+import { applySticky, summarize, emitTransitionLogs, emitDiscoveryLogs, type Summary } from './commit';
+import { accrueBackground } from './counters';
 
 export interface End {
   dev: string;
@@ -140,7 +141,10 @@ export class Net {
 
   tick(ms = 2000): void {
     this.tickCount++;
-    this.clock += ms + ((this.tickCount * 137) % 997);
+    const step = ms + ((this.tickCount * 137) % 997);
+    this.clock += step;
+    // duplex-mismatched wires keep collecting errors from background frames while time passes
+    accrueBackground(this, step);
   }
 
   /** Device wall clock in ms since 1970 (includes `clock set` offsets and timezone). */
@@ -207,6 +211,17 @@ export class Net {
     this.prevSummary = summarize(this);
   }
 
+  /**
+   * CDP frames have crossed every link by the time a lab is loaded: log what they revealed (native VLAN and
+   * duplex mismatches), once per end, as the baseline is taken.
+   */
+  announceDiscoveries(): void {
+    this.dirty = true;
+    const cur = summarize(this);
+    emitDiscoveryLogs(this, cur);
+    this.prevSummary = cur;
+  }
+
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
@@ -230,7 +245,8 @@ export class Net {
     if (!dev || this.dry) return;
     const dyn = dev.st.dyn;
     const auth = dyn.clockSet || !!dyn.ntpSync;
-    const ts = dev.st.cfg.tsLog ? `${auth ? '' : '*'}${logStamp(this.devClock(dev))}: ` : '';
+    const tz = dev.st.cfg.tz ? { name: dev.st.cfg.tz.name, offsetMin: dev.st.cfg.tz.h * 60 + dev.st.cfg.tz.m } : undefined;
+    const ts = dev.st.cfg.tsLog ? logTimestamp(parseTsFormat(dev.st.cfg.tsLogFmt ?? DEFAULT_TS_FORMAT), this.devClock(dev), this.uptimeSec(dev), auth, tz) : '';
     const line = ts + msg;
     dyn.logBuf.push(line);
     if (dyn.logBuf.length > 300) dyn.logBuf.splice(0, dyn.logBuf.length - 300);

@@ -4,6 +4,7 @@
 import type { HostConfig, LabCheck, LabDevice, LabLink } from '../content/labTypes';
 import type { CheckResult, IfStatus, PacketHop, PacketTrace, SimDeviceInfo, SimInterfaceInfo, SimLinkInfo, SimSnapshot, Terminal } from './api';
 import { Net, ek } from './engine/net';
+import { accrueBackground } from './engine/counters';
 import { ifNames } from './engine/topo';
 import { defaultVlans, newDevCfg, newDevDyn, type Device, type IosDevice } from './model/state';
 import { shortIf } from './model/ifname';
@@ -87,7 +88,9 @@ export class NetworkSim {
       dev.st.dyn.savedAt = null;
       dev.st.savedRsa = dev.st.dyn.rsa ? { ...dev.st.dyn.rsa } : undefined;
     }
-    net.rebaseline();
+    // faults present at load have been there since boot: CDP already reported them and their error counters have grown
+    net.announceDiscoveries();
+    accrueBackground(net, net.clock);
     net.console.clear();
     net.silent = false;
   }

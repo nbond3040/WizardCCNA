@@ -13,7 +13,8 @@ import { rangesHas } from '../util/format';
 import { ifMac } from './topo';
 import { ek, type Net } from './net';
 import type { Derived } from './derived';
-import { flood, type L2Endpoint, type L2Hop } from './l2';
+import { flood, type L2Endpoint, type L2Hop, type L2Wire } from './l2';
+import { noteFrames } from './counters';
 import { hostEffective, hostEffective6, lookup, lookup6, type V6Addr } from './l3';
 import { evalAcl } from './acl';
 import { isInsideAddr, natIn, natOut } from './nat';
@@ -151,6 +152,8 @@ interface Resolved {
   mac: string;
   hops: L2Hop[];
   miss: boolean;
+  /** physical wires the unicast frame crosses */
+  wires: L2Wire[];
 }
 
 function switchText(hops: L2Hop[], dir: 'fwd' | 'rev'): PacketHop[] {
@@ -168,7 +171,7 @@ function resolve4(net: Net, d: Derived, dev: Device, ifName: string, nh: number,
   if (t === 'Serial') {
     const peer = net.peerOf(dev.id, ifName);
     if (!peer || !ifUp(d, dev.id, ifName) || !ifUp(d, peer.dev, peer.ifName)) return null;
-    return { ep: peer, mac: '', hops: [], miss: false };
+    return { ep: peer, mac: '', hops: [], miss: false, wires: [] };
   }
   const myMac = ifMac(dev, ifName);
   const myIp = primaryIp(d, dev, ifName);
@@ -238,6 +241,9 @@ function resolve4(net: Net, d: Derived, dev: Device, ifName: string, nh: number,
       else tt[String(myIp)] = { mac: myMac, t: net.clock };
     }
     w.hops.push({ device: dev.id, iface: shortIf(ifName), action: `ARP for ${ipStr(nh)}: reply from ${devName(target)} ${shortIf(found.ep.ifName)} (${macDotted(found.mac)})${found.proxy ? ' [proxy ARP]' : ''}`, ok: true });
+    // the request is broadcast over every wire of the flood domain, the reply comes back along the path
+    noteFrames(net, fl.wires);
+    noteFrames(net, found.ep.wires);
   }
   // reply direction MAC learning + port security on the target side
   for (const h of found.ep.hops) {
@@ -255,7 +261,7 @@ function resolve4(net: Net, d: Derived, dev: Device, ifName: string, nh: number,
       }
     }
   }
-  return { ep: { dev: found.ep.dev, ifName: found.ep.ifName }, mac: found.mac, hops: found.ep.hops, miss: !hit };
+  return { ep: { dev: found.ep.dev, ifName: found.ep.ifName }, mac: found.mac, hops: found.ep.hops, miss: !hit, wires: found.ep.wires };
 }
 
 /* ------------------------------------------------------------------ */
@@ -470,6 +476,7 @@ export function forward4(net: Net, origin: Device, pkt0: Pkt, opts: FwdOpts = {}
     }
     if (res.miss && cur.t === 'ios') w.arpDrop = true;
     countIf(cur, egress, 'out', w.pkt.size);
+    noteFrames(net, res.wires);
     w.hops.push(...switchText(res.hops, 'fwd'));
     const next = net.dev(res.ep.dev)!;
     // unicast MAC learning for the data frame
@@ -654,16 +661,16 @@ function owner6(net: Net, d: Derived, dev: Device, ip: bigint): string | null {
   return null;
 }
 
-function resolve6(net: Net, d: Derived, dev: Device, ifName: string, nh: bigint): { dev: string; ifName: string } | null {
+function resolve6(net: Net, d: Derived, dev: Device, ifName: string, nh: bigint): { dev: string; ifName: string; wires: L2Wire[] } | null {
   if (typeOfName(ifName)?.name === 'Serial') {
     const peer = net.peerOf(dev.id, ifName);
-    return peer && ifUp(d, peer.dev, peer.ifName) ? peer : null;
+    return peer && ifUp(d, peer.dev, peer.ifName) ? { ...peer, wires: [] } : null;
   }
   const fl = flood(net, d.l2, dev, ifName);
   for (const ep of fl.eps) {
     const edev = net.dev(ep.dev)!;
     if (edev.id === dev.id) continue;
-    if (v6addrsOf(net, d, edev, ep.ifName).some((a) => parseV6(a.addr) === nh)) return { dev: ep.dev, ifName: ep.ifName };
+    if (v6addrsOf(net, d, edev, ep.ifName).some((a) => parseV6(a.addr) === nh)) return { dev: ep.dev, ifName: ep.ifName, wires: ep.wires };
   }
   return null;
 }
@@ -736,6 +743,7 @@ export function forward6(net: Net, origin: Device, pkt0: Pkt6): Walk6 {
       w.hops.push({ device: cur.id, action: `ND for ${v6Str(nh).toUpperCase()} failed`, ok: false });
       return w;
     }
+    noteFrames(net, res.wires);
     cur = net.dev(res.dev)!;
     inIf = res.ifName;
   }

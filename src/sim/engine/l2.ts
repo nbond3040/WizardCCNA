@@ -168,7 +168,8 @@ function computeL1(net: Net, dev: Device, ifName: string): L1 {
   const s2 = cfgSpeed(pcfg);
   let speed: number;
   if (s1 !== null && s2 !== null) {
-    if (s1 !== s2) return { ...base, speedMismatch: true };
+    // two different hard-coded speeds never link; neither may exceed what the hardware can do
+    if (s1 !== s2 || s1 > phys.speed || s1 > pphys.speed) return { ...base, speedMismatch: true };
     speed = s1;
   } else if (s1 !== null) {
     if (s1 > pphys.speed) return { ...base, speedMismatch: true };
@@ -177,12 +178,15 @@ function computeL1(net: Net, dev: Device, ifName: string): L1 {
     if (s2 > phys.speed) return { ...base, speedMismatch: true };
     speed = s2;
   } else speed = Math.min(phys.speed, pphys.speed);
+  // Gigabit always autonegotiates (1000BASE-T requires it) and runs full duplex: no duplex mismatch is possible.
+  if (speed >= 1000) return { ...base, carrier: true, speed, duplex: 'full' };
+  // Duplex is only negotiated while it is `auto` (a hard-coded `speed` merely limits what the port advertises).
+  // An auto end facing a hard-coded (silent) partner cannot learn the duplex: parallel detection finds the
+  // speed, but the duplex falls back to half. A hard-coded end uses its configured duplex.
   const d1 = cfgDuplex(cfg);
   const d2 = cfgDuplex(pcfg);
-  const neg1 = s1 === null && d1 === null;
-  const neg2 = s2 === null && d2 === null;
-  const eff1: 'full' | 'half' = d1 ?? (neg1 && neg2 ? 'full' : neg1 && !neg2 ? (d2 ?? 'half') : 'half');
-  const eff2: 'full' | 'half' = d2 ?? (neg1 && neg2 ? 'full' : neg2 && !neg1 ? (d1 ?? 'half') : 'half');
+  const eff1: 'full' | 'half' = d1 === null && d2 === null ? 'full' : (d1 ?? 'half');
+  const eff2: 'full' | 'half' = d1 === null && d2 === null ? 'full' : (d2 ?? 'half');
   return { ...base, carrier: true, speed, duplex: eff1, duplexMismatch: eff1 !== eff2 };
 }
 
@@ -829,11 +833,19 @@ export function computeL2(net: Net): L2State {
 /* L2 flooding                                                         */
 /* ------------------------------------------------------------------ */
 
+/** Transmitting end of a physical wire a frame crosses. */
+export interface L2Wire {
+  dev: string;
+  ifName: string;
+}
+
 export interface L2Endpoint {
   dev: string;
   ifName: string;
   /** chain of switch hops from the source (for MAC learning / tracing) */
   hops: L2Hop[];
+  /** physical wires crossed from the source to this endpoint, in order */
+  wires: L2Wire[];
 }
 
 export interface L2Hop {
@@ -856,6 +868,8 @@ export interface FloodResult {
   eps: L2Endpoint[];
   opt82: boolean;
   drops: string[];
+  /** every physical wire the flooded frame crosses (transmitting ends) */
+  wires: L2Wire[];
 }
 
 /** The physical port and 802.1Q tag an L3 interface transmits on. */
@@ -877,14 +891,15 @@ export function txPoint(_net: Net, dev: Device, ifName: string): { phys: string;
 
 /** Flood a broadcast frame from an L3 interface and return every L3 endpoint that receives it. */
 export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, opts: FrameOpts = {}): FloodResult {
-  const res: FloodResult = { eps: [], opt82: false, drops: [] };
+  const res: FloodResult = { eps: [], opt82: false, drops: [], wires: [] };
+  const seenWire = new Set<string>();
   const tp = txPoint(net, fromDev, fromIf);
   if (!tp) return res;
   const visitedBridge = new Set<string>();
   const visitedWire = new Set<string>();
-  type Item = { kind: 'wire'; dev: string; phys: string; tag: number | null; hops: L2Hop[] } | { kind: 'bridge'; dev: string; vlan: number; inPort: string | null; hops: L2Hop[] };
+  type Item = { kind: 'wire'; dev: string; phys: string; tag: number | null; hops: L2Hop[]; wires: L2Wire[] } | { kind: 'bridge'; dev: string; vlan: number; inPort: string | null; hops: L2Hop[]; wires: L2Wire[] };
   const queue: Item[] = [];
-  const sendOut = (dev: Device, phys: string, tag: number | null, hops: L2Hop[]) => {
+  const sendOut = (dev: Device, phys: string, tag: number | null, hops: L2Hop[], wires: L2Wire[]) => {
     // logical Port-channel on a router/L3: pick a bundled member
     let p = phys;
     if (phys.startsWith('Port-channel') && dev.t === 'ios') {
@@ -895,10 +910,15 @@ export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, op
     }
     const s = st.l1.get(ek(dev.id, p));
     if (!s?.carrier || !s.peer) return;
-    queue.push({ kind: 'wire', dev: s.peer.dev, phys: s.peer.ifName, tag, hops });
+    const wire: L2Wire = { dev: dev.id, ifName: p };
+    if (!seenWire.has(ek(wire.dev, wire.ifName))) {
+      seenWire.add(ek(wire.dev, wire.ifName));
+      res.wires.push(wire);
+    }
+    queue.push({ kind: 'wire', dev: s.peer.dev, phys: s.peer.ifName, tag, hops, wires: [...wires, wire] });
   };
-  if ('vlan' in tp) queue.push({ kind: 'bridge', dev: fromDev.id, vlan: tp.vlan, inPort: null, hops: [] });
-  else sendOut(fromDev, tp.phys, tp.tag, []);
+  if ('vlan' in tp) queue.push({ kind: 'bridge', dev: fromDev.id, vlan: tp.vlan, inPort: null, hops: [], wires: [] });
+  else sendOut(fromDev, tp.phys, tp.tag, [], []);
   let guard = 0;
   while (queue.length && guard++ < 5000) {
     const it = queue.shift()!;
@@ -908,7 +928,7 @@ export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, op
       if (visitedWire.has(wk)) continue;
       visitedWire.add(wk);
       if (dev.t === 'host') {
-        if (it.tag === null) res.eps.push({ dev: dev.id, ifName: it.phys, hops: it.hops });
+        if (it.tag === null) res.eps.push({ dev: dev.id, ifName: it.phys, hops: it.hops, wires: it.wires });
         continue;
       }
       const ifst = st.ifs.get(ek(dev.id, it.phys));
@@ -950,7 +970,7 @@ export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, op
         }
         if (opts.dhcpClient && dev.st.cfg.snoop && rangesHas(dev.st.cfg.snoopVlans, vlan) && dev.st.cfg.snoopOpt82 && !lc.snoopTrust) res.opt82 = true;
         if (opts.onIngress && !opts.onIngress(dev, logical, vlan, it.phys)) continue;
-        queue.push({ kind: 'bridge', dev: dev.id, vlan, inPort: logical, hops: it.hops });
+        queue.push({ kind: 'bridge', dev: dev.id, vlan, inPort: logical, hops: it.hops, wires: it.wires });
         continue;
       }
       // router / routed port / L3 endpoint
@@ -958,12 +978,12 @@ export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, op
         const nat = Object.values(dev.st.cfg.ifaces).find((x) => parentOf(x.name) === it.phys && x.dot1q?.native);
         const target = nat ? nat.name : it.phys;
         const ts = st.ifs.get(ek(dev.id, target));
-        if (ts && ts.line === 'up') res.eps.push({ dev: dev.id, ifName: target, hops: it.hops });
+        if (ts && ts.line === 'up') res.eps.push({ dev: dev.id, ifName: target, hops: it.hops, wires: it.wires });
       } else {
         const sub = Object.values(dev.st.cfg.ifaces).find((x) => parentOf(x.name) === it.phys && x.dot1q?.vlan === it.tag && !x.dot1q.native);
         if (sub) {
           const ts = st.ifs.get(ek(dev.id, sub.name));
-          if (ts && ts.line === 'up') res.eps.push({ dev: dev.id, ifName: sub.name, hops: it.hops });
+          if (ts && ts.line === 'up') res.eps.push({ dev: dev.id, ifName: sub.name, hops: it.hops, wires: it.wires });
         }
       }
       continue;
@@ -978,7 +998,7 @@ export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, op
     const svi = `Vlan${it.vlan}`;
     if (it.inPort !== null && dev.st.cfg.ifaces[svi]) {
       const ss = st.ifs.get(ek(dev.id, svi));
-      if (ss && ss.line === 'up') res.eps.push({ dev: dev.id, ifName: svi, hops });
+      if (ss && ss.line === 'up') res.eps.push({ dev: dev.id, ifName: svi, hops, wires: it.wires });
     }
     for (const [key, o] of st.oper) {
       if (!key.startsWith(dev.id + '|')) continue;
@@ -992,8 +1012,8 @@ export function flood(net: Net, st: L2State, fromDev: Device, fromIf: string, op
       if (o.port.startsWith('Port-channel')) {
         const b = st.bundles.get(ek(dev.id, o.port));
         const m = b?.members.find((x) => x.flag === 'P');
-        if (m) sendOut(dev, m.ifName, tag, outHops);
-      } else sendOut(dev, o.port, tag, outHops);
+        if (m) sendOut(dev, m.ifName, tag, outHops, it.wires);
+      } else sendOut(dev, o.port, tag, outHops, it.wires);
     }
   }
   return res;

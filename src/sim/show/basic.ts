@@ -278,24 +278,23 @@ export function interfaceDetail(c: Ctx, name: string): string[] {
   out.push(`  Last clearing of "show interface" counters ${dd?.lastClear !== undefined ? hms((net.clock - dd.lastClear) / 1000) : 'never'}`);
   out.push('  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0', '  Queueing strategy: fifo', '  Output queue: 0/40 (size/max)');
   out.push('  5 minute input rate 0 bits/sec, 0 packets/sec', '  5 minute output rate 0 bits/sec, 0 packets/sec');
-  const l1 = net.d.l2.l1.get(ek(dev.id, name));
-  const dm = !!l1?.duplexMismatch && l1.carrier;
   const inP = (dd?.inPkts ?? 0) + (st?.line === 'up' ? 12 : 0);
   const outP = (dd?.outPkts ?? 0) + (st?.line === 'up' ? 15 : 0);
-  const crc = (dd?.crc ?? 0) + (dm && l1?.duplex === 'full' ? 17 : 0);
-  const runts = (dd?.runts ?? 0) + (dm && l1?.duplex === 'full' ? 9 : 0);
-  const late = (dd?.lateColl ?? 0) + (dm && l1?.duplex === 'half' ? 23 : 0);
-  const coll = (dd?.collisions ?? 0) + (dm && l1?.duplex === 'half' ? 41 : 0);
+  // error counters are cumulative state (see engine/counters.ts): they outlive the fault until `clear counters`
+  const crc = dd?.crc ?? 0;
+  const runts = dd?.runts ?? 0;
+  const giants = dd?.giants ?? 0;
+  const frame = dd?.frame ?? 0;
   out.push(
     `     ${inP} packets input, ${(dd?.inBytes ?? 0) + inP * 64} bytes, 0 no buffer`,
     `     Received ${Math.floor(inP / 3)} broadcasts (0 IP multicasts)`,
-    `     ${runts} runts, 0 giants, 0 throttles `,
-    `     ${crc + runts} input errors, ${crc} CRC, 0 frame, 0 overrun, 0 ignored`,
+    `     ${runts} runts, ${giants} giants, 0 throttles `,
+    `     ${runts + giants + crc + frame} input errors, ${crc} CRC, ${frame} frame, 0 overrun, 0 ignored`,
     '     0 watchdog, 0 multicast, 0 pause input',
     `     ${outP} packets output, ${(dd?.outBytes ?? 0) + outP * 64} bytes, 0 underruns`,
-    `     0 output errors, ${coll} collisions, ${dd?.resets ?? 1} interface resets`,
+    `     ${dd?.outErrors ?? 0} output errors, ${dd?.collisions ?? 0} collisions, ${dd?.resets ?? 1} interface resets`,
     '     0 unknown protocol drops',
-    `     0 babbles, ${late} late collision, 0 deferred`,
+    `     0 babbles, ${dd?.lateColl ?? 0} late collision, 0 deferred`,
     '     0 lost carrier, 0 no carrier, 0 pause output',
     '     0 output buffer failures, 0 output buffers swapped out',
   );
@@ -321,7 +320,8 @@ export function showIntStatus(c: Ctx): void {
     const vlan = !cfg.sw ? 'routed' : o?.mode === 'trunk' ? 'trunk' : String(cfg.accessVlan);
     const l1 = d.l2.l1.get(ek(dev.id, n));
     const up = !!l1?.carrier;
-    const dup = cfg.duplex !== 'auto' ? cfg.duplex : up ? `a-${l1!.duplex}` : 'auto';
+    // `a-` marks a negotiated value; a hard-coded one is shown as configured (gigabit always negotiates its duplex)
+    const dup = cfg.duplex !== 'auto' && !(up && l1!.speed >= 1000) ? cfg.duplex : up ? `a-${l1!.duplex}` : 'auto';
     const sp = cfg.speed !== 'auto' ? cfg.speed : up ? `a-${l1!.speed}` : 'auto';
     const ph = dev.hw.ifaces.find((p) => p.name === n);
     const type = n.startsWith('Port-channel') ? '' : ph?.type === 'FastEthernet' ? '10/100BaseTX' : '10/100/1000BaseTX';

@@ -13,7 +13,8 @@ import { resolveName } from '../engine/services';
 import { showRoots } from './show';
 import { normalizeConfig, runningConfig, savedConfigText } from '../show/running';
 import { configExitMessage } from './global';
-import { lookupIf } from '../engine/topo';
+import { clearCounters } from '../engine/counters';
+import { ifNames, lookupIf } from '../engine/topo';
 
 /* ------------------------------------------------------------------ */
 /* helpers                                                             */
@@ -293,13 +294,12 @@ function clearRun(c: Ctx): void {
     return;
   }
   if (c.a.counters) {
-    c.io.ask('Clear "show interface" counters on all interfaces [confirm]', (inp) => {
+    // `clear counters` asks about every interface, `clear counters <interface>` about just that one
+    const one = c.a.cif as string | undefined;
+    c.io.ask(one ? 'Clear "show interface" counters on this interface [confirm]' : 'Clear "show interface" counters on all interfaces [confirm]', (inp) => {
       if (/^n/i.test(inp.trim())) return;
-      for (const d of Object.values(dyn.ifd)) {
-        d.inPkts = d.outPkts = d.inBytes = d.outBytes = d.bcast = d.crc = d.runts = d.collisions = d.lateColl = 0;
-        d.lastClear = c.net.clock;
-      }
-      c.net.log(dev.id, `%CLEAR-5-COUNTERS: Clear counter on all interfaces by ${c.s.via === 'vty' ? c.s.user ?? 'vty' : 'console'}`);
+      clearCounters(c.net, dev, one ? [one] : ifNames(dev));
+      c.net.log(dev.id, `%CLEAR-5-COUNTERS: Clear counter on ${one ? `interface ${one}` : 'all interfaces'} by ${c.s.via === 'vty' ? c.s.user ?? 'vty' : 'console'}`);
     });
     return;
   }

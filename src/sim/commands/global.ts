@@ -6,7 +6,7 @@ import { newOspfCfg, type DhcpPool, type IosDevice, type LineCfg, defaultLine } 
 import { parseIfRange, shortIf } from '../model/ifname';
 import { makeSecret, type7Decode, secretTypeOf, type SecretType } from '../util/crypto';
 import { ipStr, isMask, maskFromLen, maskLen, netOf, parseIp } from '../util/ip';
-import { normRanges, rangesStr, rangesToList, type Ranges } from '../util/format';
+import { DEFAULT_TS_FORMAT, normRanges, parseTsFormat, rangesStr, rangesToList, tsFormatText, type Ranges } from '../util/format';
 import { parseV6, v6Str, v6Net } from '../util/ipv6';
 import { accessListNode, getAcl } from './acl';
 import { candidateRid } from '../engine/ospf';
@@ -162,8 +162,16 @@ function serviceTimestamps(c: Ctx): void {
   const cfg = c.dev.st.cfg;
   const which = c.a.debug ? 'debug' : c.a.log ? 'log' : 'both';
   const v = !c.neg;
-  if (which === 'debug' || which === 'both') cfg.tsDebug = v;
-  if (which === 'log' || which === 'both') cfg.tsLog = v;
+  // `service timestamps log|debug` without a format means uptime on IOS; the bare form keeps the default datetime stamps
+  const fmt = c.a.tsfmt === undefined && which === 'both' ? DEFAULT_TS_FORMAT : tsFormatText(parseTsFormat(c.a.tsfmt as string | undefined));
+  if (which === 'debug' || which === 'both') {
+    cfg.tsDebug = v;
+    if (v) cfg.tsDebugFmt = fmt;
+  }
+  if (which === 'log' || which === 'both') {
+    cfg.tsLog = v;
+    if (v) cfg.tsLogFmt = fmt;
+  }
 }
 
 function serviceOther(c: Ctx): void {

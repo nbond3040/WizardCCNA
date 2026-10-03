@@ -125,6 +125,54 @@ export function logStamp(ms: number, offsetMin = 0): string {
   return `${MONTHS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, ' ')} ${two(d.getUTCHours())}:${two(d.getUTCMinutes())}:${two(d.getUTCSeconds())}.${String(d.getUTCMilliseconds()).padStart(3, '0')}`;
 }
 
+/** `service timestamps log|debug <format>`: `uptime`, or `datetime` with msec / localtime / show-timezone / year. */
+export interface TsFormat {
+  uptime: boolean;
+  msec: boolean;
+  localtime: boolean;
+  showTz: boolean;
+  year: boolean;
+}
+
+export const DEFAULT_TS_FORMAT = 'datetime msec';
+
+/** Parse the words after `service timestamps log|debug` (keywords may be abbreviated; none means `uptime`, as on IOS). */
+export function parseTsFormat(words: string | undefined): TsFormat {
+  const f: TsFormat = { uptime: false, msec: false, localtime: false, showTz: false, year: false };
+  const toks = (words ?? '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const is = (t: string, kw: string) => kw.startsWith(t);
+  let datetime = false;
+  for (const t of toks) {
+    if (is(t, 'uptime')) f.uptime = true;
+    else if (is(t, 'datetime')) datetime = true;
+    else if (is(t, 'msec')) f.msec = true;
+    else if (is(t, 'localtime')) f.localtime = true;
+    else if (is(t, 'show-timezone')) f.showTz = true;
+    else if (is(t, 'year')) f.year = true;
+  }
+  if (f.uptime || !datetime) return { uptime: true, msec: false, localtime: false, showTz: false, year: false };
+  return f;
+}
+
+/** Canonical running-config text of a timestamp format. */
+export function tsFormatText(f: TsFormat): string {
+  if (f.uptime) return 'uptime';
+  return ['datetime', f.msec && 'msec', f.localtime && 'localtime', f.showTz && 'show-timezone', f.year && 'year'].filter(Boolean).join(' ');
+}
+
+/**
+ * The "<stamp>: " prefix of a log message. Uptime stamps look like `00:05:52: ` (then `1d02h: `, `1w2d: `);
+ * date stamps like `*Mar  1 00:05:52.123: ` where the leading `*` means the clock is not authoritative.
+ */
+export function logTimestamp(f: TsFormat, wallMs: number, uptimeSec: number, authoritative: boolean, tz?: { name: string; offsetMin: number }): string {
+  if (f.uptime) return `${age(uptimeSec)}: `;
+  const d = new Date(wallMs + (f.localtime && tz ? tz.offsetMin * 60000 : 0));
+  const day = String(d.getUTCDate()).padStart(2, ' ');
+  const time = `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}:${two(d.getUTCSeconds())}${f.msec ? `.${String(d.getUTCMilliseconds()).padStart(3, '0')}` : ''}`;
+  const zone = f.showTz ? ` ${f.localtime && tz ? tz.name : 'UTC'}` : '';
+  return `${authoritative ? '' : '*'}${MONTHS[d.getUTCMonth()]} ${day} ${f.year ? `${d.getUTCFullYear()} ` : ''}${time}${zone}: `;
+}
+
 /** "Mar 02 1993 12:05 AM" (DHCP lease expiration format) */
 export function leaseStamp(ms: number): string {
   const d = new Date(ms);

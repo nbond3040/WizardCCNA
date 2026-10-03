@@ -272,6 +272,9 @@ export interface DevCfg {
   pwEnc: boolean;
   tsLog: boolean;
   tsDebug: boolean;
+  /** `service timestamps log|debug <format>`: 'uptime' or 'datetime [msec] [localtime] [show-timezone] [year]' (default 'datetime msec') */
+  tsLogFmt?: string;
+  tsDebugFmt?: string;
   bannerMotd?: string;
   bannerLogin?: string;
   bannerExec?: string;
@@ -379,10 +382,17 @@ export interface IfDyn {
   inBytes: number;
   outBytes: number;
   bcast: number;
+  /** Error counters are cumulative state: they grow while a fault exists and only `clear counters` resets them. */
   crc: number;
   runts: number;
   collisions: number;
   lateColl: number;
+  /** absent in snapshots saved before these counters existed (read with `?? 0`) */
+  giants?: number;
+  frame?: number;
+  outErrors?: number;
+  /** ms of simulated time accumulated towards the next background frame on a duplex-mismatched wire */
+  errMs?: number;
   resets: number;
   lastClear?: number;
   lease?: { ip: number; mask: number; gw?: number; dns?: number; server: number; t: number };

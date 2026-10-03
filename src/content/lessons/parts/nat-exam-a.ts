@@ -197,13 +197,13 @@ Dynamic mappings:
     answer: 0,
     difficulty: 3,
     explanation:
-      'All six pool addresses are allocated (100%) and 23 allocation misses show hosts being refused — **pool exhaustion**. Adding `overload` turns the pool into PAT so every host can share the six addresses. Clearing the table only frees addresses until the next six hosts grab them, a larger netmask does not add addresses because the start and end are unchanged, and G0/0/1 is correctly the outside interface.',
+      'All six pool addresses are allocated (100%) and 23 allocation misses show hosts being refused — **pool exhaustion**. Adding `overload` turns the pool into PAT so every host can share the six addresses. Clearing the table only frees addresses until the next six hosts grab them, changing the netmask does not add addresses because the start and end are unchanged, and G0/0/1 is correctly the outside interface.',
   },
   {
     id: 'e11',
     type: 'input',
     stem: 'Which privileged EXEC command removes all dynamic entries from the NAT translation table?',
-    answers: ['clear ip nat translation *'],
+    answers: ['clear ip nat translation *', 'clear ip nat trans *'],
     placeholder: 'command',
     difficulty: 1,
     explanation:

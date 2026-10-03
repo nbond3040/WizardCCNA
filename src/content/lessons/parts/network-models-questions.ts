@@ -160,7 +160,7 @@ Transmission Control Protocol, Src Port: 51544, Dst Port: 443, Seq: 0, Len: 0`,
   {
     id: 'e3',
     type: 'multi',
-    stem: 'Refer to the exhibit. PC1 sends a packet to Server1. Which two devices use the destination IP address of the packet to make a forwarding decision? (Choose two.)',
+    stem: 'Refer to the exhibit. PC1 sends a packet to Server1. Which two intermediate devices use the destination IP address of the packet to make a forwarding decision? (Choose two.)',
     exhibit: {
       kind: 'diagram',
       diagram: {

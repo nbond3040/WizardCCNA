@@ -193,5 +193,5 @@ button.list-item { border-left: 0; border-right: 0; border-bottom: 0; background
 /* Narrow screens: let list rows wrap so titles keep their width and chips drop below. */
 @media (max-width: 600px) {
   .list-item { flex-wrap: wrap; row-gap: 8px; }
-  .list-item > div[style*='flex'] { flex-basis: calc(100% - 48px); }
+  .list-item > div[style*='flex'] { flex-basis: calc(100% - 48px) !important; }
 }

@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { ArrowRight, BookOpen, CalendarDays, Check, Flame, FlaskConical, Layers, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import { EXAM_VERSIONS, LESSONS, lessonInVersion } from '../../content/curriculum';
 import { AVAILABLE_LABS, useAllLabs, useAllLessons } from '../../content/registry';
+import { GUI_LABS } from '../guilabs/registry';
 import { useProgress, useSettings } from '../../store/progress';
 import { useExamVersion } from '../../store/version';
 import { addDays, formatDate, formatMinutes, relativeDay, today } from '../../lib/date';
@@ -39,7 +40,8 @@ export function Dashboard() {
 
   const vc = content ? versionCards(content, version) : [];
   const due = content ? buildQueue({ kind: 'today' }, vc, cards, lessons, missedCards, newLimit).length : 0;
-  const labTotal = Object.values(labDefs ?? {}).filter((l) => l.lessons.some((id) => LESSONS.find((x) => x.id === id && lessonInVersion(x, version)))).length || AVAILABLE_LABS.length;
+  const inVersion = (l: { lessons: string[] }) => l.lessons.some((id) => LESSONS.find((x) => x.id === id && lessonInVersion(x, version)));
+  const labTotal = Object.values(labDefs ?? {}).filter(inVersion).length + GUI_LABS.filter(inVersion).length || AVAILABLE_LABS.length + GUI_LABS.length;
   const ready = computeReadiness({ version, content, lessons, cards, questions, exams, labs, labTotal });
   const days = streak(activity);
   const inProgress = LESSONS.find((l) => lessonInVersion(l, version) && lessons[l.id] && !lessons[l.id].deckDoneAt);
@@ -69,7 +71,7 @@ export function Dashboard() {
         <div className="grid c4 mt-l">
           <Feature icon={BookOpen} title="Slide decks" text="Minimal slides with an instructor's explanation for every one — and a quiz at the end of each deck." stat={totals ? `${totals.slides} slides` : `${LESSONS.length} lessons`} to="/learn" />
           <Feature icon={Layers} title="Flashcards" text="Unlocked as you finish decks. Spaced repetition; misses go to a queue until you know them." stat={totals ? `${totals.cards} cards` : ''} to="/flashcards" />
-          <Feature icon={FlaskConical} title="Network labs" text="Configure routers and switches in a Packet-Tracer-style simulator with live grading." stat={`${AVAILABLE_LABS.length} labs`} to="/labs" />
+          <Feature icon={FlaskConical} title="Network labs" text="Configure routers and switches in a Packet-Tracer-style simulator with live grading." stat={`${AVAILABLE_LABS.length + GUI_LABS.length} labs`} to="/labs" />
           <Feature icon={Trophy} title="Practice exams" text="Timed, blueprint-weighted simulations with drag-and-drop, exhibits and a 300–1000 score." stat={totals ? `${totals.questions} questions` : ''} to="/practice" />
         </div>
       </div>

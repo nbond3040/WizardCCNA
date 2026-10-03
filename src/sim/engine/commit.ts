@@ -106,6 +106,28 @@ function hostOf(net: Net, id: string): string {
   return d ? d.st.cfg.hostname : id;
 }
 
+function logNativeMismatch(net: Net, key: string): void {
+  const [devId, port, native, peerDev, peerPort, peerNative] = key.split('|');
+  net.log(devId, `%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port} (${native}), with ${hostOf(net, peerDev)} ${peerPort} (${peerNative}).`);
+}
+
+function logDuplexMismatch(net: Net, key: string): void {
+  const [devId, port] = key.split('|');
+  const l1 = net.d.l2.l1.get(key);
+  if (!l1?.peer) return;
+  const peer = net.d.l2.l1.get(ek(l1.peer.dev, l1.peer.ifName));
+  const a = net.ios(devId);
+  const b = net.ios(l1.peer.dev);
+  if (!a || !b || !a.st.cfg.cdp || !b.st.cfg.cdp) return; // CDP frames carry the duplex
+  net.log(devId, `%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on ${port} (${l1.duplex === 'full' ? 'not half duplex' : 'half duplex'}), with ${hostOf(net, l1.peer.dev)} ${l1.peer.ifName} (${peer?.duplex === 'full' ? 'not half duplex' : 'half duplex'}).`);
+}
+
+/** Mismatches that already exist when the baseline is taken (lab load): CDP has long since reported them. */
+export function emitDiscoveryLogs(net: Net, cur: Summary): void {
+  for (const k of cur.native) logNativeMismatch(net, k);
+  for (const k of cur.duplex) logDuplexMismatch(net, k);
+}
+
 export function emitTransitionLogs(net: Net, prev: Summary, cur: Summary): void {
   // interfaces
   for (const [key, st] of cur.ifs) {
@@ -170,21 +192,9 @@ export function emitTransitionLogs(net: Net, prev: Summary, cur: Summary): void 
       net.log(devId, `%HSRP-5-STATECHANGE: ${ifName} Grp ${grp} state ${from === 'Listen' && state === 'Active' ? 'Standby' : from} -> ${state}`);
     }
   }
-  // CDP native VLAN mismatch
-  for (const k of cur.native) {
-    if (prev.native.has(k)) continue;
-    const [devId, port, native, peerDev, peerPort, peerNative] = k.split('|');
-    net.log(devId, `%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port} (${native}), with ${hostOf(net, peerDev)} ${peerPort} (${peerNative}).`);
-  }
-  for (const k of cur.duplex) {
-    if (prev.duplex.has(k)) continue;
-    const [devId, port] = k.split('|');
-    const l1 = net.d.l2.l1.get(k);
-    if (!l1?.peer) continue;
-    const peer = net.d.l2.l1.get(ek(l1.peer.dev, l1.peer.ifName));
-    if (!net.ios(devId) || !net.ios(l1.peer.dev)) continue;
-    net.log(devId, `%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on ${port} (${l1.duplex === 'full' ? 'not half duplex' : 'half duplex'}), with ${hostOf(net, l1.peer.dev)} ${l1.peer.ifName} (${peer?.duplex === 'full' ? 'not half duplex' : 'half duplex'}).`);
-  }
+  // CDP native VLAN / duplex mismatches
+  for (const k of cur.native) if (!prev.native.has(k)) logNativeMismatch(net, k);
+  for (const k of cur.duplex) if (!prev.duplex.has(k)) logDuplexMismatch(net, k);
   for (const k of cur.rootInc) {
     if (prev.rootInc.has(k)) continue;
     const [devId, port, vlan] = k.split('|');
