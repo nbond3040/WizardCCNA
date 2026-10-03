@@ -6,6 +6,7 @@ import type { Net } from '../engine/net';
 import { ifResolve } from '../engine/topo';
 import { IF_TYPES } from '../model/hardware';
 import type { IosDevice } from '../model/state';
+import { ipHostAddr } from '../model/state';
 import { iosRegex } from '../util/format';
 import { parseIp } from '../util/ip';
 import { complete as gComplete, formatHelp, help as gHelp, ifTypeOnly, parse, tokenize, type Env, type HelpEntry, type Node } from './grammar';
@@ -172,7 +173,7 @@ export function runLine(net: Net, s: Session, rawLine: string, io: TermIO, out: 
         unknownExecWord(net, s, toks[0].text, io, out);
         return out;
       }
-      if (parseIp(toks[0].text) !== null || s.dev.st.cfg.hosts[toks[0].text.toLowerCase()] !== undefined) {
+      if (parseIp(toks[0].text) !== null || ipHostAddr(s.dev.st.cfg, toks[0].text) !== undefined) {
         out.push(...caretLines(io.promptLen, toks[1].start));
         return out;
       }

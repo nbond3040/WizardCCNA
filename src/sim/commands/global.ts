@@ -74,8 +74,11 @@ function levelNodes(key: string, run: (c: Ctx) => void): Node[] {
   return [num(0, 7, 'Logging severity level', { key, run }), ...LOG_LEVELS.map(([l, h]) => k(l, h, { key: `${key}=${l}`, run }))];
 }
 
+const LEVEL_NAMES = ['emergencies', 'alerts', 'critical', 'errors', 'warnings', 'notifications', 'informational', 'debugging'];
+
 function levelFrom(c: Ctx, key: string): string | undefined {
-  if (typeof c.a[key] === 'number') return String(c.a[key]);
+  // IOS stores numeric severities by name (`logging trap 4` → `logging trap warnings`)
+  if (typeof c.a[key] === 'number') return LEVEL_NAMES[c.a[key] as number];
   const kk = Object.keys(c.a).find((x) => x.startsWith(`${key}=`));
   return kk ? lvl(kk.split('=')[1]) : undefined;
 }
@@ -265,9 +268,9 @@ function nameServer(c: Ctx): void {
 
 function ipHost(c: Ctx): void {
   const cfg = c.dev.st.cfg;
-  const n = (c.a.hname as string).toLowerCase();
-  if (c.neg) delete cfg.hosts[n];
-  else cfg.hosts[n] = c.a.haddr as number;
+  const n = c.a.hname as string;
+  for (const k of Object.keys(cfg.hosts)) if (k.toLowerCase() === n.toLowerCase()) delete cfg.hosts[k];
+  if (!c.neg) cfg.hosts[n] = c.a.haddr as number;
 }
 
 function ipRouting(c: Ctx): void {

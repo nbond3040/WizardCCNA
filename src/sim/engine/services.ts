@@ -1,5 +1,6 @@
 /** Application services: SSH/Telnet login evaluation, DNS resolution and NTP synchronization. */
 import type { Device, IosDevice, LineCfg } from '../model/state';
+import { ipHostAddr } from '../model/state';
 import { parseIp } from '../util/ip';
 import { verifySecret } from '../util/crypto';
 import type { Net } from './net';
@@ -99,7 +100,7 @@ export function dnsQuery(net: Net, from: Device, server: number, name: string): 
 
 export function resolveName(net: Net, from: Device, name: string): Resolve {
   if (from.t === 'ios') {
-    const h = from.st.cfg.hosts[name.toLowerCase()];
+    const h = ipHostAddr(from.st.cfg, name);
     if (h !== undefined) return { ok: true, ip: h };
     if (!from.st.cfg.domainLookup) return { ok: false, reason: 'nolookup' };
     const servers = from.st.cfg.nameServers;

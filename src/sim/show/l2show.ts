@@ -425,7 +425,7 @@ export function showEtherPortChannel(c: Ctx): void {
       '',
       '------------',
       '',
-      `Age of the Port-channel   = 0d:${hms(c.net.clock / 1000).replace(/:/, 'h:').replace(/:/, 'm:')}s`,
+      `Age of the Port-channel   = 0d:${hms(c.net.clock / 1000).replace(/^(\d+):(\d+):(\d+)$/, '$1h:$2m:$3')}s`,
       `Logical slot/port   = 2/${b.group}          Number of ports = ${members.length}`,
       'HotStandBy port = null ',
       `Port state          = Port-channel ${b.up ? 'Ag-Inuse' : 'Ag-Not-Inuse'} `,

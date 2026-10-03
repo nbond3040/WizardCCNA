@@ -545,6 +545,13 @@ export function newIfDyn(): IfDyn {
   };
 }
 
+/** `ip host` lookup: names are stored as typed and matched case-insensitively. */
+export function ipHostAddr(cfg: DevCfg, name: string): number | undefined {
+  const n = name.toLowerCase();
+  const hit = Object.entries(cfg.hosts).find(([k]) => k.toLowerCase() === n);
+  return hit?.[1];
+}
+
 export function newDevCfg(hw: Hw, hostname: string): DevCfg {
   const router = hw.kind === 'router';
   const ifaces: Record<string, IfCfg> = {};

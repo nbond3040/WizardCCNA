@@ -166,12 +166,12 @@ export function extAclRoots(): Node[] {
 
 /* ---------------- generic blocks (key chain, tacacs server, radius server) ---------------- */
 
-function blockLine(c: Ctx): void {
+function blockLine(c: Ctx, kw: string): void {
   const b = c.s.block;
   if (!b) return;
   const blk = c.dev.st.cfg.blocks[b.idx];
   if (!blk) return;
-  const text = (c.a.text as string).trim().replace(/\s+/g, ' ');
+  const text = `${kw} ${(c.a.text as string | undefined) ?? ''}`.trim().replace(/\s+/g, ' ');
   // key chain → key N → key-string: the key's own lines are nested one level deeper
   const inKey = b.prompt === 'config-keychain-key' && b.key !== undefined;
   const line = inKey ? ` ${text}` : text;
@@ -204,9 +204,27 @@ function subCount(lines: string[], at: number): number {
   return n;
 }
 
+/** sub-commands of key chain / tacacs server / radius server blocks (anything else falls back to global config) */
+const BLOCK_WORDS: [string, string, boolean][] = [
+  ['accept-lifetime', 'Set accept lifetime of key', false],
+  ['address', 'Server address', false],
+  ['automate-tester', 'Configure server automated testing', false],
+  ['cryptographic-algorithm', 'Set cryptographic authentication algorithm', false],
+  ['key', 'Configure a key / per-server encryption key', false],
+  ['key-string', 'Set key string', false],
+  ['port', 'TCP port for TACACS+ server (default is 49)', false],
+  ['retransmit', 'Number of retries to active server (overrides default)', false],
+  ['send-lifetime', 'Set send lifetime of key', false],
+  ['single-connection', 'Multiplex all packets over a single tcp connection to server', true],
+  ['timeout', 'Time to wait for this server to reply (overrides default)', false],
+];
+
 let bRoots: Node[] | null = null;
 export function blockRoots(): Node[] {
   if (bRoots) return bRoots;
-  bRoots = [a('line', 'LINE', 'Configuration line', { key: 'text', run: blockLine })];
+  bRoots = BLOCK_WORDS.map(([w, h, alone]) => {
+    const run = (c: Ctx) => blockLine(c, w);
+    return k(w, h, { run: alone ? run : undefined, nr: run }, [a('line', 'LINE', h, { key: 'text', run })]);
+  });
   return bRoots;
 }

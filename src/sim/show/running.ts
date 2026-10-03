@@ -266,6 +266,13 @@ export function configBody(net: Net, dev: IosDevice): string[] {
   L.push(c.pwEnc ? 'service password-encryption' : 'no service password-encryption');
   for (const x of c.extra.filter((l) => l.startsWith('service '))) L.push(x);
   L.push('!', `hostname ${c.hostname}`, '!', 'boot-start-marker', 'boot-end-marker', '!');
+  const lg = c.log;
+  if (lg.buffered === false) L.push('no logging buffered');
+  else if (lg.buffered) L.push(`logging buffered${lg.buffered.size ? ` ${lg.buffered.size}` : ''}${lg.buffered.level && lg.buffered.level !== 'debugging' ? ` ${lg.buffered.level}` : ''}`.replace(/^logging buffered$/, 'logging buffered 4096'));
+  if (lg.console === false) L.push('no logging console');
+  else if (lg.console && lg.console !== 'debugging') L.push(`logging console ${lg.console}`);
+  if (lg.monitor === false) L.push('no logging monitor');
+  else if (lg.monitor && lg.monitor !== 'debugging') L.push(`logging monitor ${lg.monitor}`);
   if (c.enableSecret) L.push(`enable secret ${secretType(c.enableSecret)} ${c.enableSecret}`);
   if (c.enablePassword) L.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) L.push('!');
@@ -314,7 +321,8 @@ export function configBody(net: Net, dev: IosDevice): string[] {
   L.push('!');
   if (xe && dev.kind === 'router') L.push(`license udi pid ${dev.hw.platform} sn ${dev.hw.serial}`, 'diagnostic bootup level minimal', '!');
   if (sw || xe) {
-    L.push(`spanning-tree mode ${c.stpMode}`);
+    // ISR 4000 (IOS XE) routers only carry the extend system-id line
+    if (sw) L.push(`spanning-tree mode ${c.stpMode}`);
     if (c.stpPortfastDefault) L.push('spanning-tree portfast default');
     if (c.stpBpduguardDefault) L.push('spanning-tree portfast bpduguard default');
     if (c.stpBpdufilterDefault) L.push('spanning-tree portfast bpdufilter default');
@@ -433,7 +441,7 @@ export function configBody(net: Net, dev: IosDevice): string[] {
   const numbered = acls.filter((a) => a.numbered).sort((a, b) => Number(a.name) - Number(b.name));
   if (numbered.length) L.push('!');
   for (const acl of numbered) L.push(...numberedAclLines(acl));
-  if (c.log.trap) L.push(`logging trap ${c.log.trap}`);
+  if (c.log.trap && c.log.trap !== 'informational') L.push(`logging trap ${c.log.trap}`);
   if (c.log.source) L.push(`logging source-interface ${c.log.source}`);
   for (const h of c.log.hosts) L.push(`logging host ${ipStr(h)}`);
   for (const r of c.routes6) L.push(`ipv6 route ${v6Disp(r.net)}/${r.len}${r.ifName ? ` ${r.ifName}` : ''}${r.nh ? ` ${v6Disp(r.nh)}` : ''}${r.ad !== 1 ? ` ${r.ad}` : ''}`);

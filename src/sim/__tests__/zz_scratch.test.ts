@@ -21,7 +21,7 @@ function runAll(sim: NetworkSim, dev: string, lines: string[], label: string, sh
   for (const l of lines) {
     const r = t.execute(l);
     const bad = /% ?(Invalid|Incomplete|Ambiguous|Unknown)/.test(r.output);
-    if (bad || showOut || process.env.ALLP) console.log(`[${label} ${dev}] ${t.prompt()} <= ${JSON.stringify(l)}\n${r.output.split('\n').slice(0, showOut ? 60 : 6).join('\n')}`);
+    if (bad || showOut || process.env.ALLP) console.log(`[${label} ${dev}] ${t.prompt()} <= ${JSON.stringify(l)}\n${r.output.split('\n').slice(0, showOut ? 400 : 6).join('\n')}`);
   }
 }
 
@@ -64,4 +64,22 @@ it('switch smoke', () => {
     'interface fa0/8', 'switchport mode dynamic auto', 'switchport mode dynamic desirable', 'speed 100', 'duplex full', 'description test', 'shutdown', 'no shutdown', 'exit',
     'interface vlan 1', 'ip address 192.168.1.2 255.255.255.0', 'no shutdown', 'end'], 'sw');
   runAll(sim, 'L3', ['enable', 'configure terminal', 'ip routing', 'interface g1/0/3', 'no switchport', 'ip address 10.3.3.1 255.255.255.0', 'interface g1/0/4', 'switchport trunk encapsulation dot1q', 'switchport mode trunk', 'interface vlan 10', 'ip address 10.10.10.1 255.255.255.0', 'end'], 'l3');
+});
+it('shows', () => {
+  const sim = topo();
+  runAll(sim, 'R1', ['enable', 'conf t', 'ip route 192.168.2.0 255.255.255.0 10.0.12.2', 'router ospf 1', 'network 10.0.12.0 0.0.0.3 area 0', 'network 192.168.1.0 0.0.0.255 area 0', 'end'], 'r1');
+  runAll(sim, 'R2', ['enable', 'conf t', 'ip route 192.168.1.0 255.255.255.0 10.0.12.1', 'router ospf 1', 'network 0.0.0.0 255.255.255.255 area 0', 'end'], 'r2');
+  runAll(sim, 'L3', ['enable', 'conf t', 'ip routing', 'interface g1/0/1', 'no switchport', 'ip address 192.168.2.2 255.255.255.0', 'end'], 'l3');
+  runAll(sim, 'PC1', ['ping 192.168.2.100'], 'pc');
+  const shows = ['show version', 'show ip interface brief', 'show ip interface g0/0/0', 'show interfaces g0/0/0', 'show interfaces description', 'show ip route', 'show ip route static', 'show ip route connected', 'show ip route ospf', 'show ip route 192.168.2.100', 'show ipv6 interface brief', 'show ipv6 route', 'show ip ospf neighbor', 'show ip ospf interface brief', 'show ip ospf interface g0/0/1', 'show ip ospf', 'show ip ospf database', 'show ip protocols', 'show cdp neighbors', 'show cdp neighbors detail', 'show cdp', 'show lldp neighbors', 'show arp', 'show ip arp', 'show clock', 'show ntp status', 'show ntp associations', 'show ip ssh', 'show users', 'show history', 'show logging', 'show flash:', 'dir', 'show startup-config', 'show running-config interface g0/0/0', 'show ip nat statistics', 'show ip dhcp pool', 'show ip dhcp binding', 'show standby', 'show standby brief', 'show access-lists', 'show ip access-lists', 'show interfaces status', 'show protocols', 'show ip ospf database router', 'show controllers serial 0/1/0', 'show inventory', 'show processes cpu', 'show memory', 'show license', 'show privilege', 'show terminal', 'show hosts', 'show snmp'];
+  runAll(sim, 'R1', shows, 'R1show', true);
+});
+it('switch shows', () => {
+  const sim = topo();
+  runAll(sim, 'SW1', ['enable', 'conf t', 'vlan 10', 'name USERS', 'exit', 'interface fa0/1', 'switchport mode access', 'switchport access vlan 10', 'switchport port-security', 'interface g0/2', 'switchport mode trunk', 'interface range fa0/20 - 21', 'channel-group 1 mode active', 'end'], 'sw');
+  runAll(sim, 'L3', ['enable', 'conf t', 'interface g1/1/1', 'switchport trunk encapsulation dot1q', 'switchport mode trunk', 'end'], 'l3');
+  runAll(sim, 'PC1', ['ping 192.168.1.1'], 'pc');
+  const shows = ['show vlan', 'show vlan brief', 'show interfaces trunk', 'show interfaces switchport', 'show interfaces fa0/1 switchport', 'show interfaces status', 'show mac address-table', 'show mac address-table dynamic', 'show mac address-table interface fa0/1', 'show mac address-table vlan 1', 'show spanning-tree', 'show spanning-tree vlan 1', 'show spanning-tree summary', 'show spanning-tree interface g0/2 detail', 'show etherchannel summary', 'show etherchannel port-channel', 'show port-security', 'show port-security interface fa0/1', 'show ip dhcp snooping', 'show ip dhcp snooping binding', 'show errdisable recovery', 'show power inline', 'show vtp status', 'show interfaces fa0/1', 'show running-config', 'show version', 'show interfaces counters', 'show env all', 'show cdp neighbors', 'show lldp neighbors detail'];
+  runAll(sim, 'SW1', shows, 'SWshow', true);
+  runAll(sim, 'L3', ['show version', 'show ip interface brief', 'show interfaces trunk', 'show running-config'], 'L3show', true);
 });

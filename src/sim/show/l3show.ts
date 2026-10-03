@@ -384,7 +384,9 @@ export function showIpOspf(c: Ctx, v6 = false): void {
 export function showOspfDatabase(c: Ctx): void {
   for (const p of procsOf(c, false)) {
     c.out.push('', `            OSPF Router with ID (${ipStr(p.rid ?? 0)}) (Process ID ${p.pid})`);
-    const ageOf = (id: string) => 10 + ((id.length * 37 + Math.floor(c.net.clock / 1000)) % 1700);
+    // LSAs are refreshed every 30 minutes; ages stay below the router uptime
+    const up = Math.floor(c.net.uptimeSec(c.dev));
+    const ageOf = (id: string) => Math.max(1, up - 15 - ([...id].reduce((n, ch) => n + ch.charCodeAt(0), 0) % 40)) % 1800;
     for (const a of p.areas) {
       const routers = p.lsdb.filter((l) => l.kind === 'router' && l.area === a);
       c.out.push('', `\t\tRouter Link States (Area ${a})`, '', 'Link ID         ADV Router      Age         Seq#       Checksum Link count');

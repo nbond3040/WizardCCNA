@@ -3,6 +3,7 @@ import { a, k, num, type Node } from '../cli/grammar';
 import type { Ctx, Session, TermIO } from '../cli/session';
 import type { Net } from '../engine/net';
 import type { Device } from '../model/state';
+import { ipHostAddr } from '../model/state';
 import { verifySecret } from '../util/crypto';
 import { chunk, monthIndex, EPOCH_MS } from '../util/format';
 import { ipStr, parseIp } from '../util/ip';
@@ -50,7 +51,7 @@ function resolveTarget(c: Ctx, target: string): { ip?: number; v6?: bigint; labe
   if (v6 !== null) return { v6, label: v6Ios(v6) };
   const r = resolveName(c.net, c.dev, target);
   if (r.ok) {
-    if (c.dev.st.cfg.hosts[target.toLowerCase()] === undefined && r.server !== undefined) c.out.push(`Translating "${target}"...domain server (${ipStr(r.server)}) [OK]`, '');
+    if (ipHostAddr(c.dev.st.cfg, target) === undefined && r.server !== undefined) c.out.push(`Translating "${target}"...domain server (${ipStr(r.server)}) [OK]`, '');
     return { ip: r.ip, label: ipStr(r.ip) };
   }
   if (r.reason === 'nolookup') c.out.push(`Translating "${target}"`);
@@ -536,7 +537,7 @@ export function unknownExecWord(net: Net, s: Session, word: string, io: TermIO, 
     io.remote('telnet', ip, undefined, word);
     return;
   }
-  const h = cfg.hosts[word.toLowerCase()];
+  const h = ipHostAddr(cfg, word);
   if (h !== undefined) {
     io.remote('telnet', h, undefined, word);
     return;
