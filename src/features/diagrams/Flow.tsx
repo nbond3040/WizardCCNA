@@ -8,9 +8,10 @@ export function Flow({ d }: { d: FlowDiagram }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const uid = useId().replace(/:/g, '');
   const manual = d.nodes.length > 0 && d.nodes.every((n) => n.x !== undefined && n.y !== undefined);
-  const dir = d.direction ?? 'horizontal';
   const n = d.nodes.length;
-  const avail = clamp(width, 480, 1000);
+  // A row of four or more boxes is unreadable when squeezed into a phone-width slide, so it stacks vertically there.
+  const dir = !manual && (d.direction ?? 'horizontal') === 'horizontal' && n >= 4 && width > 0 && width < 520 ? 'vertical' : (d.direction ?? 'horizontal');
+  const avail = clamp(width, !manual && dir === 'vertical' ? 300 : 480, 1000);
   const boxes: Record<string, NodeBox> = {};
   let W: number;
   let H: number;
