@@ -1,18 +1,29 @@
 {
   "name": "wizardccna-desktop",
+  "productName": "WizardCCNA",
   "version": "1.0.0",
   "private": true,
   "description": "WizardCCNA - the complete CCNA 200-301 course as an offline desktop app",
-  "author": "WizardCCNA",
+  "author": {
+    "name": "WizardCCNA",
+    "email": "noreply@example.com"
+  },
   "main": "main.cjs",
   "scripts": {
     "start": "node scripts/prepare.cjs && electron .",
     "smoke": "node scripts/prepare.cjs && electron . --smoke-test",
     "dist": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --win --publish never",
-    "dist:dir": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --win --dir --publish never"
+    "dist:dir": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --win --dir --publish never",
+    "dist:linux": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --linux --publish never",
+    "dist:linux:dir": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --linux dir --publish never"
   },
   "devDependencies": {
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3"
+  },
+  "homepage": "https://github.com/nbond3040/WizardCCNA",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nbond3040/WizardCCNA.git"
   }
 }

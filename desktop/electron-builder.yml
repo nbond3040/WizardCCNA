@@ -28,3 +28,22 @@ nsis:
   artifactName: WizardCCNA-Setup-${version}.${ext}
 portable:
   artifactName: WizardCCNA-Portable-${version}.${ext}
+linux:
+  icon: build/icon.png
+  artifactName: WizardCCNA-${version}-x86_64.${ext}
+  executableName: wizardccna
+  category: Education
+  synopsis: Complete CCNA 200-301 study course
+  description: Slides, flashcards, a network simulator, labs and practice exams for the Cisco CCNA 200-301 exam. Works fully offline.
+  maintainer: WizardCCNA <noreply@example.com>
+  target:
+    - target: rpm
+      arch: [x64]
+    - target: AppImage
+      arch: [x64]
+    - target: tar.gz
+      arch: [x64]
+rpm:
+  packageName: wizardccna
+  fpm:
+    - "--rpm-rpmbuild-define=_build_id_links none"

@@ -29,20 +29,34 @@ your exam date picks the right blueprint automatically.
 
 Progress is stored locally in your browser (export/import from Settings). No account needed.
 
-## Windows desktop app
+## Desktop app (Windows and Linux/Fedora)
 
-The same app also ships as an offline Windows program (Electron, in `desktop/`): a normal installer and a
-single-file portable `.exe`, ~100 MB, no browser or internet needed. Your progress is stored on your PC
-(`%APPDATA%\WizardCCNA`) and is separate from the website's; use *Settings → Export/Import progress* to move it.
+The same app also ships as an offline desktop program (Electron, in `desktop/`), ~110 MB, no browser or internet
+needed. Progress is stored on your computer (`%APPDATA%\WizardCCNA` on Windows, `~/.config/WizardCCNA` on Linux) and is
+separate from the website's; use *Settings → Export/Import progress* to move it.
 
-- **Get the .exe:** *Actions → Build Windows app → Run workflow*; when it finishes, download the
-  `WizardCCNA-windows` artifact (installer + portable). Pushing a tag such as `v1.0.0` also attaches both files to a
-  GitHub Release. The workflow starts the packaged app on the Windows runner and fails if the dashboard, a lesson,
-  the practice page or a lab don't load.
-- **Run it locally:** `npm run build`, then `cd desktop && npm install && npm start`
-  (`npm run smoke` runs the same headless check as CI).
-- The installer is **unsigned**, so Windows SmartScreen shows "Windows protected your PC" on first run:
-  click *More info → Run anyway*. Removing the warning needs a code-signing certificate.
+**Get the files:** *Actions → Build desktop apps → Run workflow*, then download the artifacts when it finishes
+(`WizardCCNA-windows`, `WizardCCNA-linux`). Pushing a tag such as `v1.0.0` also attaches everything to a GitHub Release.
+CI starts each packaged app, loads the dashboard, a lesson, the practice page and a lab, and fails on any error.
+
+| Platform | File | Install |
+|---|---|---|
+| Windows | `WizardCCNA-Setup-<version>.exe` | Run the installer |
+| Windows | `WizardCCNA-Portable-<version>.exe` | Just run it, nothing is installed |
+| Fedora / RHEL | `WizardCCNA-<version>-x86_64.rpm` | `sudo dnf install ./WizardCCNA-*.rpm`, then start *WizardCCNA* from the menu or run `wizardccna` |
+| Any Linux | `WizardCCNA-<version>-x86_64.AppImage` | `chmod +x` it and run it (needs FUSE 2: `sudo dnf install fuse-libs`, or start it with `--appimage-extract-and-run`) |
+| Any Linux | `WizardCCNA-<version>-x86_64.tar.gz` | Unpack and run `wizardccna` |
+
+The Windows files are **unsigned**, so SmartScreen shows "Windows protected your PC" on first run: click
+*More info → Run anyway* (removing the warning needs a code-signing certificate). On a HiDPI Wayland desktop the window
+can look soft; start it with `wizardccna --ozone-platform-hint=auto` to use native Wayland.
+
+**Run from source** (any OS with Node 22+; on Fedora: `sudo dnf install nodejs npm git`):
+
+```bash
+npm ci && npm run build
+cd desktop && npm install && npm start     # npm run smoke = the same headless check CI runs
+```
 
 ## Develop
 
