@@ -10,6 +10,7 @@ import { buildDevice } from './topo';
 import { computeDerived, type Derived } from './derived';
 import { applySticky, summarize, emitTransitionLogs, emitDiscoveryLogs, type Summary } from './commit';
 import { accrueBackground } from './counters';
+import { recoverErrdisabled } from './errdisable';
 
 export interface End {
   dev: string;
@@ -145,6 +146,8 @@ export class Net {
     this.clock += step;
     // duplex-mismatched wires keep collecting errors from background frames while time passes
     accrueBackground(this, step);
+    // `errdisable recovery`: ports whose recovery interval is over come back (the commit that follows logs the link-up)
+    recoverErrdisabled(this);
   }
 
   /** Device wall clock in ms since 1970 (includes `clock set` offsets and timezone). */

@@ -8,6 +8,7 @@ import { ipStr } from '../util/ip';
 import { ek, type Net } from './net';
 import type { Derived } from './derived';
 import { retryDhcpClients } from './dhcp';
+import { errDisable } from './errdisable';
 
 export interface Summary {
   ifs: Map<string, { line: string; proto: string }>;
@@ -25,9 +26,7 @@ export function applySticky(net: Net, d: Derived): boolean {
   for (const e of d.l2.errEvents) {
     const dev = net.ios(e.dev);
     if (!dev) continue;
-    const dd = ifDyn(dev, e.ifName);
-    if (dd.errDisabled) continue;
-    dd.errDisabled = e.reason;
+    if (!errDisable(net, dev, e.ifName, e.reason)) continue;
     net.log(dev.id, `%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port ${e.ifName} with BPDU Guard enabled. Disabling port.`);
     net.log(dev.id, `%PM-4-ERR_DISABLE: bpduguard error detected on ${shortIf(e.ifName)}, putting ${shortIf(e.ifName)} in err-disable state`);
     changed = true;

@@ -384,7 +384,7 @@ Port-channel1 is up, line protocol is up (connected)
     options: [
       'A hash of the flow\'s addresses selects the same member, keeping frames in order',
       'LACP lets one member forward at a time while the others stay idle',
-      'Spanning tree blocks the other member links and leaves just one link forwarding',
+      'Spanning tree blocks the other member links and leaves just one link forwarding traffic',
       'Each VLAN is pinned to a specific member link when the bundle forms',
     ],
     answer: 0,

@@ -194,7 +194,7 @@ interface GigabitEthernet0/0/0
     options: [
       'CoS is lost when a router builds a new Layer 2 header; DSCP stays in the IP header',
       'CoS can only mark voice traffic, while DSCP can mark voice, video and data',
-      'DSCP is encrypted in transit, so it cannot be altered anywhere along the path',
+      'DSCP is encrypted in transit, so a provider cannot alter it along the path',
       'CoS values are limited to 0 through 3, while DSCP values range from 0 up to 63',
     ],
     answer: 0,

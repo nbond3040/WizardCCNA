@@ -57,7 +57,7 @@ export const quiz: Question[] = [
     options: [
       'Every 30 days, to shorten the life of a stolen password',
       'Every 90 days, as part of the standard rotation schedule',
-      'When there is evidence the password has been compromised',
+      'Only when there is evidence the password has been compromised',
       'Every time the user signs in from a new device or location',
     ],
     answer: 2,
