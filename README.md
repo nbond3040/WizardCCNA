@@ -54,9 +54,14 @@ npm run build        # production build in dist/
 
 ## Deploy
 
-The site is fully static (`base: './'`), so `dist/` works on any static host. The included GitHub Actions
-workflow (`.github/workflows/deploy.yml`) builds and publishes to **GitHub Pages** on pushes to `main`
-— enable Pages with "GitHub Actions" as the source in the repository settings.
+The site is fully static (`base: './'`, hash routing), so `dist/` works on any static host.
+
+**GitHub Pages:** open the repository's *Settings → Pages* and set *Build and deployment → Source* to
+**GitHub Actions** (the default "Deploy from a branch" mode would serve the unbuilt source). Then publish by
+running the **Deploy to GitHub Pages** workflow (*Actions → Deploy to GitHub Pages → Run workflow*) or by
+pushing to `main`. The workflow runs the content validator and every test, builds, and deploys `dist/`;
+the site appears at `https://<user>.github.io/<repo>/`. Pages only accepts deployments from branches the
+`github-pages` environment allows (by default, the repository's default branch).
 
 ---
 
