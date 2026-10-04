@@ -207,6 +207,17 @@ function validateSlide(s: Slide, where: string, out: Issues) {
   }
 }
 
+/** Practice questions must not be solvable by picking the longest option: warn when the key is much longer than the distractors. */
+function lengthGiveaway(options: string[], answers: number[], where: string, out: Issues) {
+  const keys = new Set(answers);
+  const avg = (xs: string[]) => xs.reduce((a, o) => a + o.length, 0) / Math.max(1, xs.length);
+  const right = options.filter((_, i) => keys.has(i));
+  const wrong = options.filter((_, i) => !keys.has(i));
+  if (!wrong.length) return;
+  const ratio = answers.length === 1 ? right[0].length / Math.max(...wrong.map((o) => o.length)) : avg(right) / avg(wrong);
+  if (ratio >= 1.4) out.warnings.push(`${where}: the correct option(s) are ${ratio.toFixed(1)}x longer than the distractors — balance option lengths so length is not a giveaway`);
+}
+
 export function validateQuestion(q: Question, where: string, out: Issues) {
   if (!q.id) out.errors.push(`${where}: missing id`);
   checkRich(q.stem, `${where}.stem`, out);
@@ -227,6 +238,7 @@ export function validateQuestion(q: Question, where: string, out: Issues) {
       if (!(q.answer >= 0 && q.answer < q.options.length)) out.errors.push(`${where}: answer index ${q.answer} out of range`);
       if (new Set(q.options).size !== q.options.length) out.errors.push(`${where}: duplicate options`);
       q.options.forEach((o, i) => checkRich(o, `${where}.options[${i}]`, out));
+      lengthGiveaway(q.options, [q.answer], where, out);
       break;
     }
     case 'multi': {
@@ -241,6 +253,7 @@ export function validateQuestion(q: Question, where: string, out: Issues) {
         out.errors.push(`${where}: stem says a different "Choose N" than the ${q.answers.length} answers given`);
       }
       q.options.forEach((o, i) => checkRich(o, `${where}.options[${i}]`, out));
+      lengthGiveaway(q.options, q.answers, where, out);
       break;
     }
     case 'order':
