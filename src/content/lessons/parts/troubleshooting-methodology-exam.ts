@@ -48,7 +48,7 @@ export const exam: Question[] = [
     ],
     difficulty: 1,
     explanation:
-      '`show logging` reads the log buffer, `show ip interface brief` summarises status and protocol, `show interfaces` provides the detailed counters used to spot cabling and duplex faults, and `debug ip icmp` displays live ICMP activity (and must be switched off afterwards).',
+      '`show logging` reads the log buffer, `show ip interface brief` summarizes status and protocol, `show interfaces` provides the detailed counters used to spot cabling and duplex faults, and `debug ip icmp` displays live ICMP activity (and must be switched off afterwards).',
   },
   {
     id: 'e5',
@@ -433,7 +433,7 @@ Log Buffer (4096 bytes):
     ],
     difficulty: 3,
     explanation:
-      'Link state and CRC errors are physical (Layer 1). VLAN assignment and trunk allowed lists are Layer 2. Missing routes and unreachable remote subnets are Layer 3. Port-based behaviour such as RST responses and ACLs that filter by TCP port is Layer 4.',
+      'Link state and CRC errors are physical (Layer 1). VLAN assignment and trunk allowed lists are Layer 2. Missing routes and unreachable remote subnets are Layer 3. Port-based behavior such as RST responses and ACLs that filter by TCP port is Layer 4.',
   },
   {
     id: 'e23',

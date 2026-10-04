@@ -22,7 +22,7 @@ export const flashcards: Flashcard[] = [
   { id: 'f19', front: '`power inline static`', back: 'Reserves the port\'s power in advance, even with nothing connected — guarantees power for a critical PD.' },
   { id: 'f20', front: '`power inline never`', back: 'Disables PD detection and power on the port; data forwarding continues. Admin shows **off**.' },
   { id: 'f21', front: 'Units of `max` in `power inline auto max`', back: '**Milliwatts**: `power inline auto max 15400` = 15.4 W (range 4000–30000 on PoE+ switches).' },
-  { id: 'f22', front: '`show power inline` summary section', back: 'Per module: **Available**, **Used** and **Remaining** watts of the PoE budget.' },
+  { id: 'f22', front: '`show power inline` summary section', back: 'The summary line: **Available**, **Used** and **Remaining** watts of the switch\'s PoE budget.' },
   { id: 'f23', front: 'Oper state **power-deny**', back: 'A PD was detected, but the remaining budget cannot cover its allocation.' },
   { id: 'f24', front: 'Class 4 PDs a 370 W budget can power', back: '**12** (370 ÷ 30 = 12.3, round down).' },
   { id: 'f25', front: 'Fine-grained PoE power negotiation', back: '**CDP** or **LLDP** (LLDP-MED) lets a booted PD request an exact wattage, freeing unused budget.' },

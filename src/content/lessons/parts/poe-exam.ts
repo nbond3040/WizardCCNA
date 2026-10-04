@@ -65,10 +65,8 @@ export const exam: Question[] = [
       kind: 'cli',
       text: `SW1# show power inline
 
-Module   Available     Used     Remaining
-          (Watts)     (Watts)    (Watts)
-------   ---------   --------   ---------
-1           370.0      360.0        10.0
+Available:370.0(w)  Used:360.0(w)  Remaining:10.0(w)
+
 Interface Admin  Oper       Power   Device              Class Max
                             (Watts)
 --------- ------ ---------- ------- ------------------- ----- ----
@@ -98,10 +96,8 @@ Gi1/0/14  auto   off        0.0     n/a                 n/a   30.0`,
       kind: 'cli',
       text: `SW1# show power inline
 
-Module   Available     Used     Remaining
-          (Watts)     (Watts)    (Watts)
-------   ---------   --------   ---------
-1           370.0      360.0        10.0
+Available:370.0(w)  Used:360.0(w)  Remaining:10.0(w)
+
 <output omitted>`,
     },
     options: ['A class 4 access point', 'A class 3 IP camera', 'A class 0 IoT sensor', 'A class 2 IP phone'],
@@ -187,10 +183,8 @@ Module   Available     Used     Remaining
       kind: 'cli',
       text: `SW1# show power inline
 
-Module   Available     Used     Remaining
-          (Watts)     (Watts)    (Watts)
-------   ---------   --------   ---------
-1           370.0       60.0       310.0
+Available:370.0(w)  Used:60.0(w)  Remaining:310.0(w)
+
 Interface Admin  Oper       Power   Device              Class Max
                             (Watts)
 --------- ------ ---------- ------- ------------------- ----- ----
@@ -290,10 +284,8 @@ Gi1/0/7   auto   off        0.0     n/a                 n/a   30.0`,
       kind: 'cli',
       text: `SW2# show power inline
 
-Module   Available     Used     Remaining
-          (Watts)     (Watts)    (Watts)
-------   ---------   --------   ---------
-1           740.0       52.4       687.6
+Available:740.0(w)  Used:52.4(w)  Remaining:687.6(w)
+
 Interface Admin  Oper       Power   Device              Class Max
                             (Watts)
 --------- ------ ---------- ------- ------------------- ----- ----

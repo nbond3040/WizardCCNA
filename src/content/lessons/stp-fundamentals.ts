@@ -728,7 +728,7 @@ Gi0/2               Altn BLK 4         128.26   P2p`,
       answer: 0,
       difficulty: 3,
       explanation:
-        'Root path cost (4) and sender BID (SW1) tie on both links, so SW2 compares the **sender port IDs**. The priority half is compared first, so **64.26 < 128.25** even though 26 > 25. The BPDU from SW1 Gi0/2 arrives on **SW2 Gi0/1**, which becomes the root port, and SW2 Gi0/2 blocks. Option B ignores the priority half of the port ID. Option C names the right port for the wrong reason: SW2\'s local port IDs matter only when the sender port IDs are identical. STP never forwards on two parallel links in one VLAN unless they are bundled into an EtherChannel.',
+        'Root path cost (4) and sender BID (SW1) tie on both links, so SW2 compares the **sender port IDs**. The priority half is compared first, so **64.26 < 128.25** even though 26 > 25. The BPDU from SW1 Gi0/2 arrives on **SW2 Gi0/1**, which becomes the root port, and SW2 Gi0/2 blocks. Choosing SW2 Gi0/2 because its BPDUs come from the lower port number 25 ignores the priority half of the port ID. Choosing SW2 Gi0/1 because of SW2\'s own lower port ID names the right port for the wrong reason: SW2\'s local port IDs matter only when the sender port IDs are identical. STP never forwards on two parallel links in one VLAN unless they are bundled into an EtherChannel.',
     },
     {
       id: 'e9',
@@ -1000,7 +1000,7 @@ Gi0/2               Desg FWD 4         128.26   P2p`,
     {
       id: 'e23',
       type: 'single',
-      stem: "SW1 (root) connects to SW2 over two 1 Gbps links: SW1 Gi0/1 to SW2 Gi0/2, and SW1 Gi0/2 to SW2 Gi0/1. All port priorities are default. An engineer then sets `spanning-tree port-priority 16` on SW2 Gi0/1. Which port is SW2's root port afterward?",
+      stem: "SW1 (root) connects to SW2 over two 1 Gbps links: SW1 Gi0/1 to SW2 Gi0/2, and SW1 Gi0/2 to SW2 Gi0/1. All port priorities are default. An engineer then sets `spanning-tree port-priority 16` on SW2 Gi0/1. Which port is SW2's root port afterward, and why?",
       options: [
         "Gi0/2, because it hears SW1's port ID 128.25; SW2's own port priority does not affect its root port",
         'Gi0/1, because its port priority is now lower than that of Gi0/2',
@@ -1010,7 +1010,7 @@ Gi0/2               Desg FWD 4         128.26   P2p`,
       answer: 0,
       difficulty: 3,
       explanation:
-        'Cost and sender BID tie, so SW2 compares the **sender** port IDs: SW2 Gi0/2 hears 128.25 (from SW1 Gi0/1), which beats 128.26, so **Gi0/2** is and remains the root port. Changing the port priority on SW2 changes only the port ID that SW2 *advertises* to switches downstream; it never influences SW2\'s own root port choice. Options B and C use local values that STP never reaches here, and option D is wrong because 16 is a lower (better) value, not a higher one.',
+        'Cost and sender BID tie, so SW2 compares the **sender** port IDs: SW2 Gi0/2 hears 128.25 (from SW1 Gi0/1), which beats 128.26, so **Gi0/2** is and remains the root port. Changing the port priority on SW2 changes only the port ID that SW2 *advertises* to switches downstream; it never influences SW2\'s own root port choice. The answers that pick Gi0/1 because of its lower local port priority or port number use local values that STP never reaches here, and the answer that says Gi0/1 became less preferred is wrong because 16 is a lower (better) value, not a higher one.',
     },
   ],
 };

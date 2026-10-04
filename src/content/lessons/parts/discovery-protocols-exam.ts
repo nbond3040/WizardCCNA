@@ -202,7 +202,7 @@ Management address(es):
     answer: 0,
     difficulty: 3,
     explanation:
-      "CDPv2 compared the native VLANs: the local interface and value come first, so ASW1's Gi1/1/1 uses **VLAN 99**, and the neighbor DSW1's Gi1/0/1 uses **VLAN 1**. The second option reverses the two sides. DSW1 must be sending CDPv2, since the native VLAN is only advertised in version 2, and a duplex problem would produce a DUPLEX_MISMATCH message instead.",
+      "CDPv2 compared the native VLANs: the local interface and value come first, so ASW1's Gi1/1/1 uses **VLAN 99**, and the neighbor DSW1's Gi1/0/1 uses **VLAN 1**. The answer that puts native VLAN 1 on ASW1 and native VLAN 99 on DSW1 reverses the two sides. DSW1 must be sending CDPv2, since the native VLAN is only advertised in version 2, and a duplex problem would produce a DUPLEX_MISMATCH message instead.",
   },
   {
     id: 'e12',
@@ -311,7 +311,7 @@ Global CDP information:
     answer: 0,
     difficulty: 2,
     explanation:
-      '`show cdp` reports the CDP send interval (**`cdp timer 30`**) and the holdtime sent to neighbors (**`cdp holdtime 90`**). LLDP timers appear in `show lldp`, the third option swaps the values, and the defaults would be 60 and 180 seconds.',
+      '`show cdp` reports the CDP send interval (**`cdp timer 30`**) and the holdtime sent to neighbors (**`cdp holdtime 90`**). LLDP timers appear in `show lldp`, `cdp timer 90` with `cdp holdtime 30` swaps the values, and the defaults would be 60 and 180 seconds.',
   },
   {
     id: 'e19',

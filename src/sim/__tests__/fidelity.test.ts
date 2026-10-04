@@ -60,16 +60,32 @@ function mode(sim: NetworkSim, dev: string, intf: string): string {
 
 const count = (text: string, re: RegExp): number => (text.match(re) ?? []).length;
 
-/** Two switches joined on `port`, one PC behind each; `a` / `b` are interface commands for the joined ports. */
-function pair(a: string[] = [], b: string[] = [], port = 'g0/1'): NetworkSim {
+/**
+ * Two switches joined on `port`, one PC behind each; `a` / `b` are interface commands for the joined ports,
+ * either part of the lab (`load`: the faults exist when the lab opens) or typed later (`cli`).
+ */
+function pair(a: string[] = [], b: string[] = [], port = 'g0/1', via: 'load' | 'cli' = 'load'): NetworkSim {
+  const conf = (lines: string[]) => (via === 'load' && lines.length ? [`interface ${port}`, ...lines.map((l) => ` ${l}`)].join('\n') : undefined);
   const sim = build(
-    [{ id: 'SW1', model: 'c2960', x: 0, y: 0 }, { id: 'SW2', model: 'c2960', x: 2, y: 0 }, pc('PC1', '192.168.10.11'), pc('PC2', '192.168.10.12')],
+    [
+      { id: 'SW1', model: 'c2960', x: 0, y: 0, config: conf(a) },
+      { id: 'SW2', model: 'c2960', x: 2, y: 0, config: conf(b) },
+      pc('PC1', '192.168.10.11'),
+      pc('PC2', '192.168.10.12'),
+    ],
     [{ a: `SW1:${port}`, b: `SW2:${port}` }, { a: 'SW1:fa0/2', b: 'PC1:fa0' }, { a: 'SW2:fa0/2', b: 'PC2:fa0' }],
   );
-  if (a.length) cfg(sim, 'SW1', [`interface ${port}`, ...a]);
-  if (b.length) cfg(sim, 'SW2', [`interface ${port}`, ...b]);
+  if (via === 'cli') {
+    if (a.length) cfg(sim, 'SW1', [`interface ${port}`, ...a]);
+    if (b.length) cfg(sim, 'SW2', [`interface ${port}`, ...b]);
+  }
   return sim;
 }
+
+const VIA = ['load', 'cli'] as const;
+
+/** The log buffer only (messages already delivered to the console are not repeated in it). */
+const logBuffer = (sim: NetworkSim, dev: string): string => show(sim, dev, 'show logging | begin Log Buffer');
 
 /** Send real traffic across the pair (ARP + echo requests and replies). */
 const traffic = (sim: NetworkSim): string => run(sim, 'PC1', 'ping 192.168.10.12');
@@ -81,18 +97,19 @@ const labSim = (): NetworkSim => new NetworkSim({ devices: lab.devices, links: l
 /* ------------------------------------------------------------------ */
 
 describe('duplex and speed negotiation', () => {
-  /** Assert the classic mismatch between SW1 and SW2 on Fa0/1: `full` is the full-duplex end, the other one half. */
-  function expectMismatch(sim: NetworkSim, full: 'SW1' | 'SW2'): void {
+  /** Assert the classic mismatch between SW1 and SW2 on `port`: `full` is the full-duplex end, the other one half. */
+  function expectMismatch(sim: NetworkSim, full: 'SW1' | 'SW2', port = 'fa0/1', speed = '100Mb/s'): void {
     const half = full === 'SW1' ? 'SW2' : 'SW1';
+    const long = port.startsWith('g') ? 'GigabitEthernet0/1' : 'FastEthernet0/1';
     // the link stays up/up: the symptoms are errors, not an outage
-    for (const d of [full, half]) expect(sim.check({ type: 'interface', device: d, iface: 'fa0/1', status: 'up' }).pass).toBe(true);
-    expect(mode(sim, full, 'fa0/1')).toBe('Full-duplex, 100Mb/s');
-    expect(mode(sim, half, 'fa0/1')).toBe('Half-duplex, 100Mb/s');
-    const before = { full: errors(sim, full, 'fa0/1'), half: errors(sim, half, 'fa0/1') };
+    for (const d of [full, half]) expect(sim.check({ type: 'interface', device: d, iface: port, status: 'up' }).pass).toBe(true);
+    expect(mode(sim, full, port)).toBe(`Full-duplex, ${speed}`);
+    expect(mode(sim, half, port)).toBe(`Half-duplex, ${speed}`);
+    const before = { full: errors(sim, full, port), half: errors(sim, half, port) };
     traffic(sim);
-    const f = errors(sim, full, 'fa0/1');
-    const h = errors(sim, half, 'fa0/1');
-    // the half-duplex end counts collisions and late collisions ...
+    const f = errors(sim, full, port);
+    const h = errors(sim, half, port);
+    // the half-duplex end counts collisions and late collisions (output errors) ...
     expect(h.collisions).toBeGreaterThan(before.half.collisions);
     expect(h.late).toBeGreaterThan(before.half.late);
     expect(h.outErrors).toBeGreaterThan(before.half.outErrors);
@@ -102,54 +119,64 @@ describe('duplex and speed negotiation', () => {
     expect(f.runts).toBeGreaterThan(before.full.runts);
     expect(f.inErrors).toBe(f.crc + f.runts + f.giants);
     expect([f.collisions, f.late, f.outErrors]).toEqual([0, 0, 0]);
-    // CDP notices on both ends
-    expect(show(sim, full, 'show logging')).toMatch(/%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on FastEthernet0\/1 \(not half duplex\), with SW\d FastEthernet0\/1 \(half duplex\)\./);
-    expect(show(sim, half, 'show logging')).toMatch(/%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on FastEthernet0\/1 \(half duplex\), with SW\d FastEthernet0\/1 \(not half duplex\)\./);
+    // CDP reported it on both ends
+    expect(logBuffer(sim, full)).toMatch(new RegExp(`%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on ${long} \\(not half duplex\\), with SW\\d ${long} \\(half duplex\\)\\.`));
+    expect(logBuffer(sim, half)).toMatch(new RegExp(`%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on ${long} \\(half duplex\\), with SW\\d ${long} \\(not half duplex\\)\\.`));
   }
 
   it('auto/auto negotiates the highest common speed and full duplex without errors', () => {
-    const sim = pair([], [], 'fa0/1');
-    expect(row(sim, 'SW1', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'a-full', speed: 'a-100' });
-    expect(row(sim, 'SW2', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'a-full', speed: 'a-100' });
-    expect(mode(sim, 'SW1', 'fa0/1')).toBe('Full-duplex, 100Mb/s');
-    traffic(sim);
-    expect(errors(sim, 'SW1', 'fa0/1')).toEqual(ZERO);
-    expect(errors(sim, 'SW2', 'fa0/1')).toEqual(ZERO);
-    expect(show(sim, 'SW1', 'show logging')).not.toMatch(/DUPLEX_MISMATCH/);
+    for (const port of ['fa0/1', 'g0/1']) {
+      const sim = pair([], [], port);
+      const short = port === 'fa0/1' ? 'Fa0/1' : 'Gi0/1';
+      const speed = port === 'fa0/1' ? 'a-100' : 'a-1000';
+      expect(row(sim, 'SW1', short)).toEqual({ status: 'connected', duplex: 'a-full', speed });
+      expect(row(sim, 'SW2', short)).toEqual({ status: 'connected', duplex: 'a-full', speed });
+      expect(mode(sim, 'SW1', port)).toBe(`Full-duplex, ${port === 'fa0/1' ? 100 : 1000}Mb/s`);
+      traffic(sim);
+      expect(errors(sim, 'SW1', port)).toEqual(ZERO);
+      expect(errors(sim, 'SW2', port)).toEqual(ZERO);
+      expect(logBuffer(sim, 'SW1')).not.toMatch(/DUPLEX_MISMATCH/);
+    }
   });
 
   it('hard-coded full against auto: the auto end matches the speed but falls back to half duplex', () => {
-    const sim = pair(['duplex full'], [], 'fa0/1');
-    // the hard-coded end shows its duplex without the a- prefix, the auto end shows what it fell back to
-    expect(row(sim, 'SW1', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'full', speed: 'a-100' });
-    expect(row(sim, 'SW2', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'a-half', speed: 'a-100' });
-    expectMismatch(sim, 'SW1');
+    for (const via of VIA) {
+      const sim = pair(['duplex full'], [], 'fa0/1', via);
+      // the hard-coded end shows its duplex without the a- prefix, the auto end shows what it fell back to
+      expect(row(sim, 'SW1', 'Fa0/1'), via).toEqual({ status: 'connected', duplex: 'full', speed: 'a-100' });
+      expect(row(sim, 'SW2', 'Fa0/1'), via).toEqual({ status: 'connected', duplex: 'a-half', speed: 'a-100' });
+      expectMismatch(sim, 'SW1');
+    }
   });
 
   it('speed 100 + duplex full against auto is the same mismatch', () => {
-    const sim = pair(['speed 100', 'duplex full'], [], 'fa0/1');
-    expect(row(sim, 'SW1', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'full', speed: '100' });
-    expect(row(sim, 'SW2', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'a-half', speed: 'a-100' });
-    expectMismatch(sim, 'SW1');
+    for (const via of VIA) {
+      const sim = pair(['speed 100', 'duplex full'], [], 'fa0/1', via);
+      expect(row(sim, 'SW1', 'Fa0/1'), via).toEqual({ status: 'connected', duplex: 'full', speed: '100' });
+      expect(row(sim, 'SW2', 'Fa0/1'), via).toEqual({ status: 'connected', duplex: 'a-half', speed: 'a-100' });
+      expectMismatch(sim, 'SW1');
+    }
   });
 
   it('hard-coded full against hard-coded half is a mismatch whichever end is full', () => {
-    const sim = pair(['duplex full'], ['duplex half'], 'fa0/1');
-    expect(row(sim, 'SW1', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'full', speed: 'a-100' });
-    expect(row(sim, 'SW2', 'Fa0/1')).toEqual({ status: 'connected', duplex: 'half', speed: 'a-100' });
-    expectMismatch(sim, 'SW1');
-    const swapped = pair(['duplex half'], ['duplex full'], 'fa0/1');
-    expectMismatch(swapped, 'SW2');
+    for (const via of VIA) {
+      const sim = pair(['duplex full'], ['duplex half'], 'fa0/1', via);
+      expect(row(sim, 'SW1', 'Fa0/1'), via).toEqual({ status: 'connected', duplex: 'full', speed: 'a-100' });
+      expect(row(sim, 'SW2', 'Fa0/1'), via).toEqual({ status: 'connected', duplex: 'half', speed: 'a-100' });
+      expectMismatch(sim, 'SW1');
+      expectMismatch(pair(['duplex half'], ['duplex full'], 'fa0/1', via), 'SW2');
+    }
   });
 
   it('identical hard-coded settings are fine, and so is half against half', () => {
     for (const duplex of ['full', 'half']) {
       const sim = pair(['speed 100', `duplex ${duplex}`], ['speed 100', `duplex ${duplex}`], 'fa0/1');
       expect(row(sim, 'SW1', 'Fa0/1')).toEqual({ status: 'connected', duplex, speed: '100' });
+      expect(row(sim, 'SW2', 'Fa0/1')).toEqual({ status: 'connected', duplex, speed: '100' });
       traffic(sim);
       expect(errors(sim, 'SW1', 'fa0/1')).toEqual(ZERO);
       expect(errors(sim, 'SW2', 'fa0/1')).toEqual(ZERO);
-      expect(show(sim, 'SW1', 'show logging')).not.toMatch(/DUPLEX_MISMATCH/);
+      expect(logBuffer(sim, 'SW1')).not.toMatch(/DUPLEX_MISMATCH/);
     }
   });
 
@@ -168,19 +195,17 @@ describe('duplex and speed negotiation', () => {
     for (const d of ['SW1', 'SW2']) {
       expect(row(sim, d, 'Fa0/1').status).toBe('notconnect');
       expect(sim.check({ type: 'interface', device: d, iface: 'fa0/1', status: 'down' }).pass).toBe(true);
-      expect(mode(sim, d, 'fa0/1')).not.toMatch(/^(Full|Half)-duplex, \d+Mb\/s$/m.source ? /^$/ : /^$/);
     }
     expect(row(sim, 'SW1', 'Fa0/1')).toMatchObject({ speed: '10' });
     expect(row(sim, 'SW2', 'Fa0/1')).toMatchObject({ speed: '100' });
+    expect(mode(sim, 'SW1', 'fa0/1')).toBe('Auto-duplex, 10Mb/s');
+    expect(mode(sim, 'SW2', 'fa0/1')).toBe('Auto-duplex, 100Mb/s');
     expect(sim.check({ type: 'ping', from: 'PC1', to: '192.168.10.12' }).pass).toBe(false);
     traffic(sim);
     expect(errors(sim, 'SW1', 'fa0/1')).toEqual(ZERO);
     expect(errors(sim, 'SW2', 'fa0/1')).toEqual(ZERO);
     // a speed the other end cannot do (gigabit against a Fast Ethernet port) keeps the link down as well
-    const gig = build(
-      [{ id: 'R1', model: 'isr4321', x: 0, y: 0 }, pc('PC1', '10.0.0.10')],
-      [{ a: 'R1:g0/0/1', b: 'PC1:fa0' }],
-    );
+    const gig = build([{ id: 'R1', model: 'isr4321', x: 0, y: 0 }, pc('PC1', '10.0.0.10')], [{ a: 'R1:g0/0/1', b: 'PC1:fa0' }]);
     cfg(gig, 'R1', ['interface g0/0/1', 'ip address 10.0.0.1 255.255.255.0', 'no shutdown', 'speed 1000']);
     expect(show(gig, 'R1', 'show ip interface brief')).toMatch(/^GigabitEthernet0\/0\/1\s+10\.0\.0\.1\s+YES manual down\s+down$/m);
     cfg(gig, 'R1', ['interface g0/0/1', 'no speed']);
@@ -202,16 +227,11 @@ describe('duplex and speed negotiation', () => {
       traffic(sim);
       expect(errors(sim, 'SW1', 'g0/1'), `${a} / ${b}`).toEqual(ZERO);
       expect(errors(sim, 'SW2', 'g0/1'), `${a} / ${b}`).toEqual(ZERO);
-      expect(show(sim, 'SW1', 'show logging')).not.toMatch(/DUPLEX_MISMATCH/);
+      expect(logBuffer(sim, 'SW1')).not.toMatch(/DUPLEX_MISMATCH/);
     }
-    // but the same hard-coding on a link that negotiates only 100 Mb/s does mismatch
-    expectMismatchAt100(pair(['speed 100', 'duplex full'], [], 'g0/1'));
+    // but the same hard-coding on a gigabit port that is held to 100 Mb/s does mismatch
+    for (const via of VIA) expectMismatch(pair(['speed 100', 'duplex full'], [], 'g0/1', via), 'SW1', 'g0/1');
   });
-
-  function expectMismatchAt100(sim: NetworkSim): void {
-    expect(mode(sim, 'SW1', 'g0/1')).toBe('Full-duplex, 100Mb/s');
-    expect(mode(sim, 'SW2', 'g0/1')).toBe('Half-duplex, 100Mb/s');
-  }
 
   it('a host NIC is always on auto: hard-coded full on the switch port mismatches, half does not', () => {
     const sim = pair();
@@ -220,9 +240,9 @@ describe('duplex and speed negotiation', () => {
     traffic(sim);
     expect(errors(sim, 'SW1', 'fa0/2').crc).toBeGreaterThan(0);
     expect(errors(sim, 'SW1', 'fa0/2').collisions).toBe(0);
-    expect(show(sim, 'SW1', 'show logging')).not.toMatch(/DUPLEX_MISMATCH/); // PCs do not speak CDP
+    expect(logBuffer(sim, 'SW1')).not.toMatch(/DUPLEX_MISMATCH/); // PCs do not speak CDP
 
-    const legacy = pair();
+    const legacy = pair([], [], 'g0/1', 'load');
     cfg(legacy, 'SW1', ['interface fa0/2', 'speed 10', 'duplex half']);
     expect(row(legacy, 'SW1', 'Fa0/2')).toEqual({ status: 'connected', duplex: 'half', speed: '10' });
     traffic(legacy);
@@ -255,8 +275,8 @@ describe('persistent interface error counters', () => {
     expect(r1.inErrors).toBe(r1.crc + r1.runts);
     expect(r1.collisions + r1.late).toBe(0);
     // CDP reported the mismatch on both ends when the link came up
-    expect(count(show(sim, 'SW1', 'show logging'), /%CDP-4-DUPLEX_MISMATCH/g)).toBe(1);
-    expect(count(show(sim, 'R1', 'show logging'), /%CDP-4-DUPLEX_MISMATCH/g)).toBe(1);
+    expect(count(logBuffer(sim, 'SW1'), /%CDP-4-DUPLEX_MISMATCH/g)).toBe(1);
+    expect(count(logBuffer(sim, 'R1'), /%CDP-4-DUPLEX_MISMATCH/g)).toBe(1);
     // an interface that never saw a fault has clean counters
     expect(errors(sim, 'SW1', 'fa0/1')).toEqual(ZERO);
     expect(errors(sim, 'R1', 'g0/0/1')).toEqual(ZERO);
@@ -271,10 +291,6 @@ describe('persistent interface error counters', () => {
     expect(after.sw.late).toBeGreaterThan(before.sw.late);
     expect(after.r1.crc).toBeGreaterThan(before.r1.crc);
     expect(after.r1.runts).toBeGreaterThan(before.r1.runts);
-    // traffic that does not use the faulty link leaves it alone: SW1 Fa0/2 <-> PC2 only
-    const mid = errors(sim, 'R1', 'g0/0/0');
-    run(sim, 'R1', 'ping 10.10.10.10');
-    expect(errors(sim, 'R1', 'g0/0/0')).toEqual(mid);
   });
 
   it('grow with simulated time while the mismatch exists (background frames)', () => {
@@ -313,9 +329,11 @@ describe('persistent interface error counters', () => {
     const t = sim.terminal('R1');
     t.execute('enable');
     expect(show(sim, 'R1', 'show interfaces g0/0/0')).toMatch(/Last clearing of "show interface" counters never/);
-    expect(t.execute('clear counters').output).toContain('Clear "show interface" counters on all interfaces [confirm]');
+    t.execute('clear counters');
+    expect(t.prompt()).toBe('Clear "show interface" counters on all interfaces [confirm]');
     // declining leaves everything as it was
     t.execute('n');
+    expect(t.prompt()).toBe('R1#');
     expect(errors(sim, 'R1', 'g0/0/0').crc).toBeGreaterThan(0);
     t.execute('clear counters');
     t.execute('');
@@ -337,8 +355,10 @@ describe('persistent interface error counters', () => {
     run(sim, 'PC1', 'ping 192.168.10.1');
     const t = sim.terminal('SW1');
     t.execute('enable');
-    expect(t.execute('clear counters gigabitEthernet 0/2').output).toContain('Clear "show interface" counters on this interface [confirm]');
+    t.execute('clear counters g0/2');
+    expect(t.prompt()).toBe('Clear "show interface" counters on this interface [confirm]');
     t.execute('');
+    expect(t.prompt()).toBe('SW1#');
     expect(errors(sim, 'SW1', 'g0/1').collisions).toBeGreaterThan(0);
     expect(show(sim, 'SW1', 'show interfaces g0/1')).toMatch(/Last clearing of "show interface" counters never/);
     expect(show(sim, 'SW1', 'show interfaces g0/2')).toMatch(/Last clearing of "show interface" counters \d\d:\d\d:\d\d/);
@@ -353,20 +373,29 @@ describe('persistent interface error counters', () => {
 
   it('start growing again after a clear if the fault is still there', () => {
     const sim = labSim();
-    const t = sim.terminal('R1');
-    t.execute('enable');
-    t.execute('clear counters');
-    t.execute('');
-    expect(errors(sim, 'R1', 'g0/0/0')).toEqual(ZERO);
+    for (const [d, intf] of [['R1', 'g0/0/0'], ['SW1', 'g0/1']]) {
+      const t = sim.terminal(d);
+      t.execute('enable');
+      t.execute('clear counters');
+      t.execute('');
+      expect(errors(sim, d, intf), d).toEqual(ZERO);
+    }
     run(sim, 'PC1', 'ping 192.168.10.1');
     expect(errors(sim, 'R1', 'g0/0/0').crc).toBeGreaterThan(0);
     expect(errors(sim, 'SW1', 'g0/1').collisions).toBeGreaterThan(0);
+    // and without any traffic they creep up with the background frames
+    const t = sim.terminal('R1');
+    t.execute('clear counters');
+    t.execute('');
+    expect(errors(sim, 'R1', 'g0/0/0')).toEqual(ZERO);
+    for (let i = 0; i < 8; i++) run(sim, 'R1', 'show ip interface brief');
+    expect(errors(sim, 'R1', 'g0/0/0').crc).toBeGreaterThan(0);
   });
 
-  it('are part of the snapshot and survive a restore (also from older snapshots)', () => {
+  it('are part of the snapshot and survive a restore', () => {
     const sim = labSim();
     run(sim, 'PC1', 'ping 192.168.10.1');
-    cfg(sim, 'R1', ['interface g0/0/0', 'no speed', 'no duplex']);
+    fixUplink(sim);
     const t = sim.terminal('SW1');
     t.execute('enable');
     t.execute('clear counters g0/2');
@@ -374,6 +403,7 @@ describe('persistent interface error counters', () => {
     const saved = errors(sim, 'R1', 'g0/0/0');
     const savedSw = errors(sim, 'SW1', 'g0/1');
     expect(saved.crc).toBeGreaterThan(0);
+    expect(savedSw.late).toBeGreaterThan(0);
     const snap = JSON.parse(JSON.stringify(sim.snapshot()));
     const copy = NetworkSim.fromSnapshot({ devices: lab.devices, links: lab.links }, snap);
     expect(errors(copy, 'R1', 'g0/0/0')).toEqual(saved);
@@ -386,15 +416,28 @@ describe('persistent interface error counters', () => {
     ct.execute('clear counters');
     ct.execute('');
     expect(errors(copy, 'R1', 'g0/0/0')).toEqual(ZERO);
-    // snapshots written before the newer counters existed restore with zeros, not NaN
+    expect(errors(sim, 'R1', 'g0/0/0')).toEqual(saved); // the original is untouched
+  });
+
+  it('a mismatch that is still present keeps accumulating after a restore, also from snapshots without the newer counters', () => {
+    const sim = labSim();
+    run(sim, 'PC1', 'ping 192.168.10.1');
+    const crc = errors(sim, 'R1', 'g0/0/0').crc;
+    const snap = JSON.parse(JSON.stringify(sim.snapshot()));
+    const copy = NetworkSim.fromSnapshot({ devices: lab.devices, links: lab.links }, snap);
+    run(copy, 'PC1', 'ping 192.168.10.1');
+    expect(errors(copy, 'R1', 'g0/0/0').crc).toBeGreaterThan(crc);
+    // snapshots written before giants / frame / output errors / the background timer existed
     const old = JSON.parse(JSON.stringify(snap)) as { devices: Record<string, { dyn: { ifd: Record<string, Record<string, unknown>> } }> };
     for (const d of Object.values(old.devices)) for (const dd of Object.values(d.dyn?.ifd ?? {})) for (const k of ['giants', 'frame', 'outErrors', 'errMs']) delete dd[k];
     const legacy = NetworkSim.fromSnapshot({ devices: lab.devices, links: lab.links }, old as never);
+    expect(show(legacy, 'SW1', 'show interfaces g0/1')).not.toMatch(/NaN|undefined/);
+    run(legacy, 'PC1', 'ping 192.168.10.1');
+    for (let i = 0; i < 6; i++) run(legacy, 'SW1', 'show ip interface brief');
     const out = show(legacy, 'SW1', 'show interfaces g0/1');
     expect(out).not.toMatch(/NaN|undefined/);
-    expect(errors(legacy, 'SW1', 'g0/1')).toMatchObject({ giants: 0, outErrors: 0 });
-    run(legacy, 'PC1', 'ping 192.168.10.1');
-    expect(show(legacy, 'SW1', 'show interfaces g0/1')).not.toMatch(/NaN|undefined/);
+    expect(errors(legacy, 'SW1', 'g0/1').outErrors).toBeGreaterThan(0);
+    expect(errors(legacy, 'R1', 'g0/0/0').crc).toBeGreaterThan(crc);
   });
 });
 
@@ -415,39 +458,41 @@ describe('native VLAN mismatch at lab load', () => {
   it('is logged once on both switches, as CDP does when the frames cross the link', () => {
     const sim = new NetworkSim(trunkLab(' switchport trunk native vlan 99'));
     expect(sim.configErrors()).toEqual([]);
-    const sw1 = show(sim, 'SW1', 'show logging');
-    const sw2 = show(sim, 'SW2', 'show logging');
+    const sw1 = logBuffer(sim, 'SW1');
+    const sw2 = logBuffer(sim, 'SW2');
     expect(count(sw1, MISMATCH)).toBe(1);
     expect(count(sw2, MISMATCH)).toBe(1);
     expect(sw1).toMatch(/%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0\/1 \(99\), with SW2 GigabitEthernet0\/1 \(1\)\./);
     expect(sw2).toMatch(/%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0\/1 \(1\), with SW1 GigabitEthernet0\/1 \(99\)\./);
-    // later commits do not repeat it
+    // the same line is not repeated by later commits (not even after a rename), and nothing is echoed to a console that opens later
     cfg(sim, 'SW1', ['hostname EDGE1', 'interface fa0/5', 'description x']);
     run(sim, 'SW2', ['enable', 'show version']);
-    expect(count(show(sim, 'EDGE1' === 'x' ? 'SW1' : 'SW1', 'show logging'), MISMATCH)).toBe(1);
-    expect(count(show(sim, 'SW2', 'show logging'), MISMATCH)).toBe(1);
+    expect(count(logBuffer(sim, 'SW1'), MISMATCH)).toBe(1);
+    expect(count(logBuffer(sim, 'SW2'), MISMATCH)).toBe(1);
+    const t = sim.terminal('SW2');
+    expect(count(t.execute('show logging').output, MISMATCH)).toBe(1);
   });
 
   it('stays quiet when the native VLANs agree, and still reports mismatches created interactively', () => {
     const sim = new NetworkSim(trunkLab(''));
-    expect(count(show(sim, 'SW1', 'show logging'), MISMATCH)).toBe(0);
-    expect(count(show(sim, 'SW2', 'show logging'), MISMATCH)).toBe(0);
+    expect(count(logBuffer(sim, 'SW1'), MISMATCH)).toBe(0);
+    expect(count(logBuffer(sim, 'SW2'), MISMATCH)).toBe(0);
     cfg(sim, 'SW1', ['interface g0/1', 'switchport trunk native vlan 99']);
-    expect(count(show(sim, 'SW1', 'show logging'), MISMATCH)).toBe(1);
-    expect(count(show(sim, 'SW2', 'show logging'), MISMATCH)).toBe(1);
+    expect(count(logBuffer(sim, 'SW1'), MISMATCH)).toBe(1);
+    expect(count(logBuffer(sim, 'SW2'), MISMATCH)).toBe(1);
     // fix and break again: a new discovery is logged again (interactive behaviour is unchanged)
     cfg(sim, 'SW1', ['interface g0/1', 'no switchport trunk native vlan']);
     cfg(sim, 'SW1', ['interface g0/1', 'switchport trunk native vlan 77']);
-    expect(count(show(sim, 'SW1', 'show logging'), MISMATCH)).toBe(2);
-    expect(show(sim, 'SW1', 'show logging')).toMatch(/discovered on GigabitEthernet0\/1 \(77\), with SW2 GigabitEthernet0\/1 \(1\)/);
+    expect(count(logBuffer(sim, 'SW1'), MISMATCH)).toBe(2);
+    expect(logBuffer(sim, 'SW1')).toMatch(/discovered on GigabitEthernet0\/1 \(77\), with SW2 GigabitEthernet0\/1 \(1\)/);
   });
 
   it('is not logged at load when CDP is off on a switch', () => {
     const l = trunkLab(' switchport trunk native vlan 99');
     l.devices[1].config += '\nno cdp run';
     const sim = new NetworkSim(l);
-    expect(count(show(sim, 'SW1', 'show logging'), MISMATCH)).toBe(0);
-    expect(count(show(sim, 'SW2', 'show logging'), MISMATCH)).toBe(0);
+    expect(count(logBuffer(sim, 'SW1'), MISMATCH)).toBe(0);
+    expect(count(logBuffer(sim, 'SW2'), MISMATCH)).toBe(0);
   });
 });
 
@@ -461,7 +506,7 @@ describe('service timestamps', () => {
   /** Bring the link up so IOS logs %LINK-3-UPDOWN, then return `show logging`. */
   const linkUp = (sim: NetworkSim): string => {
     cfg(sim, 'R1', ['interface g0/0/0', 'no shutdown']);
-    return show(sim, 'R1', 'show logging');
+    return logBuffer(sim, 'R1');
   };
 
   it('keeps uptime in the running and startup configuration', () => {
@@ -517,7 +562,7 @@ describe('service timestamps', () => {
     cfg(sim, 'R1', ['interface g0/0/0', 'no shutdown']);
     cfg(sim, 'R1', ['service timestamps log uptime']);
     cfg(sim, 'R1', ['interface g0/0/0', 'shutdown']);
-    const log = show(sim, 'R1', 'show logging');
+    const log = logBuffer(sim, 'R1');
     expect(log).toMatch(/^\*Mar {2}1 \d\d:\d\d:\d\d\.\d{3}: %LINK-3-UPDOWN: Interface GigabitEthernet0\/0\/0, changed state to up$/m);
     expect(log).toMatch(/^\d\d:\d\d:\d\d: %LINK-5-CHANGED: Interface GigabitEthernet0\/0\/0, changed state to administratively down$/m);
     expect(show(sim, 'R1', 'show running-config | include timestamps log')).toBe('service timestamps log uptime');

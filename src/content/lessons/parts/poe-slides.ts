@@ -255,10 +255,8 @@ SW1(config-if-range)# end`,
     title: 'Verifying with show power inline',
     code: `SW1# show power inline
 
-Module   Available     Used     Remaining
-          (Watts)     (Watts)    (Watts)
-------   ---------   --------   ---------
-1           370.0      127.8       242.2
+Available:370.0(w)  Used:127.8(w)  Remaining:242.2(w)
+
 Interface Admin  Oper       Power   Device              Class Max
                             (Watts)
 --------- ------ ---------- ------- ------------------- ----- ----
