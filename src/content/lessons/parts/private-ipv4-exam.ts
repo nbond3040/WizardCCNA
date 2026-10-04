@@ -74,10 +74,10 @@ export const exam: Question[] = [
       },
     },
     options: [
-      "R1 is not translating PC1's private address, so replies from the Internet cannot return",
+      "R1 is not translating PC1's private address, so replies cannot return",
       'The web server uses a private address that the Internet cannot route',
-      'PC1 needs a public address as its default gateway',
-      'The /30 on the WAN link leaves no address available for NAT',
+      'PC1 must have a public address as its default gateway to reach the Internet',
+      'The /30 on the WAN link leaves no free address available for NAT to use',
     ],
     answer: 0,
     difficulty: 3,
@@ -141,8 +141,8 @@ GigabitEthernet0/0/0   192.168.1.1     YES manual up                    up
 GigabitEthernet0/0/1   100.72.19.4     YES DHCP   up                    up`,
     },
     options: [
-      'The ISP uses carrier-grade NAT, so traffic is translated again before it reaches the Internet',
-      'The WAN address is RFC 1918 private space',
+      'The ISP uses carrier-grade NAT, so traffic is translated again at the ISP',
+      'The WAN address is RFC 1918 private space and is routed normally by the ISP',
       'The WAN address is a public address reachable from anywhere on the Internet',
       'The WAN address comes from a documentation range and cannot pass traffic',
     ],
@@ -321,7 +321,7 @@ GigabitEthernet0/0/1   203.0.113.10    YES manual up                    up
 GigabitEthernet0/1/0   192.168.100.1   YES manual up                    up
 Loopback0              172.32.0.1      YES manual up                    up`,
     },
-    options: ['GigabitEthernet0/0/0', 'GigabitEthernet0/1/0', 'GigabitEthernet0/0/1', 'Loopback0'],
+    options: ['Gi0/0/0', 'Gi0/1/0', 'Gi0/0/1', 'Loopback0'],
     answers: [0, 1],
     difficulty: 2,
     explanation:

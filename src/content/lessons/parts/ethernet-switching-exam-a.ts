@@ -188,10 +188,10 @@ FastEthernet0/2 is up, line protocol is up (connected)
      0 babbles, 412 late collision, 0 deferred`,
     },
     options: [
-      'A duplex mismatch: SW1 could not negotiate with the PC and fell back to half duplex',
-      'A speed mismatch between SW1 and the PC',
+      'A duplex mismatch: SW1 could not negotiate and fell back to half duplex',
+      'A speed mismatch, because SW1 cannot detect the speed of a hard-coded NIC',
       'SW1 is using cut-through switching and forwarding corrupted frames',
-      'The MAC address table is full, so SW1 floods all traffic to Fa0/2',
+      'The MAC address table is full, so SW1 floods unknown unicast traffic to Fa0/2',
     ],
     answer: 0,
     difficulty: 3,

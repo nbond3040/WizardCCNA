@@ -200,10 +200,10 @@ GigabitEthernet0/0/1   [up/up]
     2001:DB8:ACAD:2::1`,
     },
     options: [
-      'R1 G0/0/0 is addressed in 2001:DB8:ACAD:10::/64, a different subnet from PC1',
+      'R1 G0/0/0 is in 2001:DB8:ACAD:10::/64, a different subnet from PC1',
       'R1 uses the same link-local address FE80::1 on two interfaces',
-      "PC1 must use R1's link-local address as its default gateway",
-      'G0/0/0 also needs the `ipv6 enable` command',
+      "PC1 must use R1's link-local address FE80::1 as its default gateway",
+      'G0/0/0 also needs the `ipv6 enable` command before it can answer pings',
     ],
     answer: 0,
     difficulty: 3,

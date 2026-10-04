@@ -48,10 +48,10 @@ export const quiz: Question[] = [
     type: 'single',
     stem: 'A laptop shows the address 169.254.37.5 with mask 255.255.0.0. What does this indicate?',
     options: [
-      'A DHCP server assigned a private address',
+      'A DHCP server assigned the laptop a private address',
       'The laptop did not receive a reply from a DHCP server',
-      'The laptop has a duplicate IP address',
-      'DNS resolution failed',
+      'The laptop detected a duplicate IP address on the network',
+      'DNS lookup failed when the laptop requested an address',
     ],
     answer: 1,
     difficulty: 1,
@@ -72,7 +72,7 @@ export const quiz: Question[] = [
     id: 'q4',
     type: 'multi',
     stem: 'Which two commands display the routing table on a Windows host? (Choose two.)',
-    options: ['`route print`', '`ipconfig /all`', '`netstat -rn`', '`arp -a`', '`tracert`'],
+    options: ['`route print`', '`ipconfig /all`', '`netstat -rn`', '`arp -a`', '`tracert 10.1.1.1`'],
     answers: [0, 2],
     difficulty: 1,
     explanation:

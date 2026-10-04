@@ -254,7 +254,7 @@ Tracing the route to 2001:DB8:2::100
   2 2001:DB8:2::100 3 msec 3 msec 2 msec`,
     },
     options: [
-      'The primary route is unusable, so the floating static route carries the traffic',
+      'The primary route is unusable, so the floating route carries the traffic',
       'Both routes are installed and traffic is load-balanced across both next hops',
       'The floating route has a lower AD than the primary route, so it is preferred',
       'Traceroute ignores the routing table and uses the lowest-numbered interface',
@@ -416,7 +416,7 @@ L   FF00::/8 [0/0]
     },
     options: [
       'R1 has no route to the next hop 2001:db8:34::4, so the recursive lookup fails',
-      'IPv6 static routes must use a link-local next hop and an exit interface',
+      'IPv6 static routes must use a link-local next hop together with an exit interface',
       'The route needs an explicitly configured administrative distance',
       'Only host routes to a single /128 address may use a global next hop',
     ],

@@ -19,7 +19,7 @@ export const exam: Question[] = [
       'It establishes a session with a three-way handshake before sending data',
       'It uses a fixed 8-byte header with ports, length and checksum',
       'It numbers bytes so the receiver can reorder segments and detect loss',
-      'It is preferred for real-time voice because it retransmits late packets',
+      'It is typically preferred for real-time voice because it retransmits late packets',
       'It sends data immediately without waiting for any acknowledgments',
     ],
     answers: [0, 2],
@@ -346,7 +346,7 @@ TCB       Local Address               Foreign Address             (state)
     options: [
       'The connection is closed in both directions once the server ACKs the FIN',
       'The client has finished sending, but the server can still send until its own FIN',
-      'The client can no longer receive data from the server after sending its FIN',
+      'The client can no longer receive any data from the server after it has sent its FIN',
       'The server rejected the client\'s close request and will send an RST',
     ],
     answer: 1,

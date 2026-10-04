@@ -61,6 +61,35 @@ export interface PortSecCfg {
   aging?: number;
 }
 
+/** One `permit|deny ip ... mac ...` line of an ARP access list (Dynamic ARP Inspection). */
+export interface ArpAclEntry {
+  action: 'permit' | 'deny';
+  /** optional `request` / `response` qualifier (absent: the line matches both) */
+  dir?: 'request' | 'response';
+  ip: { any?: boolean; addr: number; wc: number };
+  /** `mac` is 12 hex digits, `wc` the wildcard (1 bits are ignored) */
+  mac: { any?: boolean; mac: string; wc: string };
+  log?: boolean;
+}
+
+export interface ArpAcl {
+  name: string;
+  entries: ArpAclEntry[];
+}
+
+/** Per-VLAN Dynamic ARP Inspection counters (`show ip arp inspection statistics`). */
+export interface DaiStats {
+  dhcpPermits: number;
+  aclPermits: number;
+  probePermits: number;
+  dhcpDrops: number;
+  aclDrops: number;
+  srcMacFail: number;
+  dstMacFail: number;
+  ipFail: number;
+  invalidProto: number;
+}
+
 export interface IfStp {
   portfast?: 'edge' | 'trunk' | 'disable';
   bpduguard?: 'enable' | 'disable';
@@ -125,6 +154,9 @@ export interface IfCfg {
   snoopTrust: boolean;
   snoopRate?: number;
   arpTrust: boolean;
+  /** `ip arp inspection limit rate <pps>` ('none' = unlimited); absent = default (15 pps untrusted, unlimited trusted) */
+  arpRate?: number | 'none';
+  arpBurst?: number;
   proxyArp: boolean;
   redirects: boolean;
   /** accepted-but-unmodeled lines, printed in running-config */
@@ -303,6 +335,12 @@ export interface DevCfg {
   snoopOpt82: boolean;
   relayTrustAll: boolean;
   daiVlans: Ranges;
+  /** `ip arp inspection validate ...` (each command replaces the previous set); absent in older snapshots */
+  daiValidate?: { src: boolean; dst: boolean; ip: boolean; zeros: boolean };
+  daiLog?: { entries?: number; logs?: number; interval?: number };
+  /** `ip arp inspection filter <acl> vlan <list> [static]` */
+  daiFilters?: { acl: string; vlans: Ranges; static: boolean }[];
+  arpAcls?: Record<string, ArpAcl>;
   ntp: { servers: { ip: number; prefer: boolean }[]; master?: number; source?: string; extra: string[] };
   tz?: { name: string; h: number; m: number };
   log: { hosts: number[]; trap?: string; console?: string | false; buffered?: { size?: number; level?: string } | false; monitor?: string | false; source?: string };
@@ -322,6 +360,8 @@ export interface DevCfg {
   stpLoopguardDefault: boolean;
   errRecovery: string[];
   errInterval?: number;
+  /** causes whose detection was turned off with `no errdisable detect cause` */
+  errDetectOff?: string[];
   lb?: string;
   vtp: { mode: 'server' | 'client' | 'transparent' | 'off'; domain?: string; password?: string; version: number };
   http: boolean;
@@ -377,6 +417,8 @@ export interface DhcpBinding {
 
 export interface IfDyn {
   errDisabled?: string;
+  /** sim clock (ms) at which the port was err-disabled: the recovery timer starts here (absent in older snapshots) */
+  errAt?: number;
   inPkts: number;
   outPkts: number;
   inBytes: number;
@@ -413,6 +455,9 @@ export interface DevDyn {
   dhcpBind: Record<string, DhcpBinding>;
   dhcpConflicts: Record<string, { t: number }>;
   snoopBind: { mac: string; ip: number; lease: number; vlan: number; ifName: string }[];
+  /** Dynamic ARP Inspection counters by VLAN, and the syslog rate limiter state (absent until the first inspected ARP) */
+  daiStats?: Record<string, DaiStats>;
+  daiLog?: Record<string, { t: number; n: number }>;
   logBuf: string[];
   logCount: number;
   ifd: Record<string, IfDyn>;

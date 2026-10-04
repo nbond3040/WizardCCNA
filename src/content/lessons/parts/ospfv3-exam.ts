@@ -31,7 +31,7 @@ Neighbor ID     Pri   State           Dead Time   Interface ID    Interface
     options: [
       'The router with ID 3.3.3.3 is the DR on the link to Gi0/0/1',
       'R2 is the DR on the link connected to Gi0/0/1',
-      '1.1.1.1 is the IPv6 link-local address of R1 on Gi0/0/0',
+      '1.1.1.1 is the IPv6 link-local address of R1 on interface Gi0/0/0',
       'R2 has not yet synchronized its database with 3.3.3.3',
     ],
     answer: 0,

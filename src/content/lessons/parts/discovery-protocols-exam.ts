@@ -43,9 +43,9 @@ export const exam: Question[] = [
     stem: 'Which statement describes LLDP on a Cisco IOS switch with a default configuration?',
     options: [
       'LLDP is disabled and must be enabled globally with `lldp run`',
-      'LLDP is enabled on all interfaces, like CDP',
-      'LLDP is enabled only on trunk ports',
-      'LLDP cannot run while CDP is enabled',
+      'LLDP is enabled by default on each interface, just like CDP',
+      'LLDP is enabled by default, but it runs just on trunk ports',
+      'LLDP cannot run on the same switch while CDP is enabled',
     ],
     answer: 0,
     difficulty: 1,
@@ -333,7 +333,12 @@ Global CDP information:
     id: 'e20',
     type: 'single',
     stem: 'An engineer needs a Cisco switch to discover a directly connected switch from another vendor. Which protocol should be used?',
-    options: ['LLDP', 'CDP', 'VTP', 'DTP'],
+    options: [
+      'LLDP (neighbor discovery)',
+      'CDP (neighbor discovery)',
+      'VTP (VLAN synchronization)',
+      'DTP (trunk negotiation)',
+    ],
     answer: 0,
     difficulty: 1,
     explanation:

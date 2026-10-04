@@ -71,7 +71,7 @@ export const exam: Question[] = [
       'The customer routers can form routing adjacencies directly with each other',
       'Each CE router forms a routing adjacency with the PE router at its own site',
       'The provider network behaves like one Ethernet switch connecting all sites',
-      'P routers learn the customer IP routes in order to forward traffic',
+      'P routers can learn the customer IP routes in order to forward traffic',
       'The service provides a point-to-point connection between two customer sites',
     ],
     answers: [0, 2],

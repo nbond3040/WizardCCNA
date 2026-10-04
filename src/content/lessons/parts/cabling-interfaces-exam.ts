@@ -135,7 +135,7 @@ Te1/1/2      Bldg-B             notconnect   1            full    10G SFP-10GBas
     options: [
       'The local 10GBASE-SR optic is for short multimode runs and does not match the far-end LR optic',
       'The port needs `duplex full` configured on both switches before the 10G link can come up',
-      'A crossover fiber patch cord is required when two switches connect over single-mode fiber',
+      'A crossover fiber patch cord is required when two switches connect over a single-mode fiber link',
       'Te1/1/2 is administratively shut down and must be re-enabled with `no shutdown`',
     ],
     answer: 0,
@@ -181,7 +181,7 @@ Te1/1/2      Bldg-B             notconnect   1            full    10G SFP-10GBas
       },
     },
     options: [
-      'The link works because a PC and a router are different kinds of device',
+      'The link works because a PC and a router are different types of network device',
       'The link stays down because both devices are MDI and transmit on pins 1 and 2',
       'The link comes up at 10 Mbps half duplex after the devices fall back',
       'The link comes up, but data can flow in one direction from R1 to PC1',

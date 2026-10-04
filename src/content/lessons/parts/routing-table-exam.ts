@@ -192,7 +192,7 @@ D        172.16.1.0 [90/3072] via 10.0.13.2, 1d02h, GigabitEthernet0/0/2`,
     exhibit: { kind: 'cli', text: R3_V6_TABLE },
     options: [
       'OSPFv3 uses link-local next hops, so the exit interface is shown with them',
-      'The neighbor has no global unicast address configured on its link to R3',
+      'The neighbor has no global unicast address configured on its interface to R3',
       'The route is a static route that an administrator pointed at FE80::4',
       'IPv6 routers can forward packets only to link-local next-hop addresses',
     ],
@@ -336,7 +336,7 @@ D     192.168.10.0/24 [90/3072] via 10.0.24.1, 00:31:07, GigabitEthernet0/0/1
                       [90/3072] via 10.0.14.1, 00:31:07, GigabitEthernet0/0/0`,
     },
     options: [
-      'It load-balances across both paths, because they have the same AD and metric',
+      'It load-balances across both paths, because they have equal AD and metric',
       'It uses only 10.0.24.1, because that path is listed first in the table',
       'It uses only 10.0.14.1, because it is the lower next-hop address of the two',
       'It drops the packets, because two routes for one prefix are a conflict',

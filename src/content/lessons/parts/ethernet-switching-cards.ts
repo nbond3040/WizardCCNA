@@ -39,10 +39,10 @@ export const quiz: Question[] = [
     type: 'single',
     stem: 'A switch receives a unicast frame whose destination MAC address is not in its MAC address table. What does it do?',
     options: [
-      'Drops the frame',
+      'Drops the frame and sends an ARP request to learn the destination MAC',
       'Floods the frame out all ports in the VLAN except the ingress port',
-      'Sends the frame back out the port it arrived on',
-      'Forwards the frame to its default gateway',
+      'Returns the frame out the port it arrived on and waits for a reply',
+      'Forwards the frame to its default gateway to find the destination',
     ],
     answer: 1,
     difficulty: 1,
@@ -125,7 +125,12 @@ export const quiz: Question[] = [
     id: 'q7',
     type: 'single',
     stem: 'Which switching method verifies the FCS before forwarding a frame?',
-    options: ['Cut-through', 'Fragment-free', 'Store-and-forward', 'Fast-forward'],
+    options: [
+      'Cut-through switching mode',
+      'Fragment-free switching mode',
+      'Store-and-forward switching mode',
+      'Fast-forward switching mode',
+    ],
     answer: 2,
     difficulty: 1,
     explanation:

@@ -374,8 +374,8 @@ L        10.0.12.2/32 is directly connected, GigabitEthernet0/0/1
 S        10.1.1.0/24 [1/0] via 10.0.12.1`,
     },
     options: [
-      'R2 has no route to 10.2.2.0/24, so its default route sends traffic back to R1',
-      'R1 has no route to 10.2.2.0/24, so it cannot forward the traffic to R2',
+      'R2 has no 10.2.2.0/24 route, so its default route sends traffic back to R1',
+      'R1 has no route to 10.2.2.0/24, so it drops the traffic before it reaches R2',
       'R2 has no return route to 10.1.1.0/24, so replies cannot reach the PC',
       'Server1 has an incorrect default gateway and cannot reply to the PC',
     ],

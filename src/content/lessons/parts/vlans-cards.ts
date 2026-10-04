@@ -67,10 +67,10 @@ export const quiz: Question[] = [
     type: 'single',
     stem: 'An engineer deletes VLAN 30 while four ports are still assigned to it. What happens to those ports?',
     options: [
-      'They become inactive until VLAN 30 is recreated or they are reassigned',
-      'They move to VLAN 1 automatically',
-      'They are administratively shut down',
-      'They start trunking all VLANs',
+      'They become inactive until VLAN 30 is recreated or reassigned',
+      'They move to VLAN 1 and keep forwarding traffic there',
+      'They are administratively shut down and must be re-enabled manually',
+      'They turn into trunk ports carrying the remaining VLANs',
     ],
     answer: 0,
     difficulty: 2,
@@ -98,7 +98,12 @@ export const quiz: Question[] = [
     id: 'q6',
     type: 'single',
     stem: 'How does a Cisco IP phone learn which voice VLAN to use?',
-    options: ['From CDP messages sent by the switch', 'Through DTP negotiation', 'From VTP advertisements', 'From STP BPDUs'],
+    options: [
+      'From CDP messages sent by the switch',
+      'Through DTP negotiation with the switch',
+      'From VTP advertisements in the domain',
+      'From STP BPDUs sent by the switch',
+    ],
     answer: 0,
     difficulty: 1,
     explanation:

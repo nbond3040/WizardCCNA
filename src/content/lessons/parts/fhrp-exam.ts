@@ -97,7 +97,7 @@ GigabitEthernet0/0/0 - Group 1
     type: 'single',
     stem: 'What is the main advantage of GLBP compared with HSRP and VRRP?',
     options: [
-      'Several routers forward traffic for one virtual IP simultaneously',
+      'Several routers forward traffic for one virtual IP at once',
       'It is an open standard supported by all vendors, unlike HSRP',
       'It does not send hello messages, so failover happens instantly',
       'Hosts no longer need to be configured with a default gateway',

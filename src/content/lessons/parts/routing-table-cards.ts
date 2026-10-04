@@ -104,7 +104,7 @@ export const quiz: Question[] = [
       'The RIP route, because its hop count of 1 is lower than 30',
       'The OSPF route, because it has the lower administrative distance',
       'Both routes, and the router load-balances traffic between them',
-      'Neither route, because the two protocols disagree on the metric',
+      'Neither route, because the two protocols report incompatible metrics',
     ],
     answer: 1,
     difficulty: 2,

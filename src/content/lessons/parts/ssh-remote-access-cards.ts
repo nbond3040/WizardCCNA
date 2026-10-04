@@ -62,7 +62,7 @@ export const quiz: Question[] = [
     stem: 'Which two commands must be configured before `crypto key generate rsa` succeeds on a new router? (Choose two.)',
     options: [
       '`hostname R1`',
-      '`ip domain-name corp.example.com`',
+      '`ip domain-name lab.local`',
       '`ip ssh version 2`',
       '`transport input ssh`',
       '`login local`',
@@ -122,10 +122,10 @@ export const quiz: Question[] = [
     type: 'single',
     stem: 'Why is Telnet not recommended for managing network devices?',
     options: [
-      'It uses UDP, which is unreliable',
-      'It cannot be used on VTY lines',
+      'It uses UDP, which makes remote sessions unreliable',
+      'It cannot be used on the VTY lines of a Cisco router',
       'It sends usernames, passwords and commands in cleartext',
-      'It requires RSA keys that are hard to manage',
+      'It requires RSA key pairs that are hard to manage',
     ],
     answer: 2,
     difficulty: 1,

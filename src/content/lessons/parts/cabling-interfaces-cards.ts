@@ -38,7 +38,7 @@ export const quiz: Question[] = [
     id: 'q1',
     type: 'single',
     stem: 'Auto-MDIX is not available. Which cable connects a PC to a switch port?',
-    options: ['Straight-through cable', 'Crossover cable', 'Rollover cable', 'V.35 serial WAN cable'],
+    options: ['Straight-through cable', 'Crossover Ethernet cable', 'Rollover cable', 'V.35 serial WAN cable'],
     answer: 0,
     difficulty: 1,
     explanation:
