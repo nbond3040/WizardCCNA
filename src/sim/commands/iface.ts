@@ -719,6 +719,7 @@ export function ifRoots(): Node[] {
           k('limit', 'Configure Rate limit of incoming ARP packets', { nr: arpLimit }, [
             k('none', 'No limit on the rate of incoming ARP packets', { key: 'arpnone', run: arpLimit }),
             k('rate', 'Set the rate limit value', { nr: arpLimit }, [
+              k('none', 'No limit on the rate of incoming ARP packets', { key: 'arpnone', run: arpLimit }),
               num(0, 2048, 'Rate limit in packets per second (pps)', { key: 'arate', run: arpLimit }, [
                 k('burst', 'Configure Burst parameters', [k('interval', 'Burst interval', [num(1, 15, 'Burst interval in seconds', { key: 'aburst', run: arpLimit })])]),
               ]),

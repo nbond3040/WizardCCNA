@@ -8,6 +8,11 @@ import type { Lab } from '../labTypes';
  * switch inserted between the wall jack and PC3. Its initial config pings from its SVI, which presents SW2's
  * own MAC on Fa0/3 and err-disables the port when the lab loads. SW1 must be listed before SW2 so that its
  * port-security configuration is already in place when that ping runs.
+ *
+ * Sticky learning is verified through `show port-security address`. A secure address is only learned from a real
+ * frame, never by the (side-effect free) checks, so the learner pings SRV1 from the PC. The reference solution gets
+ * the same effect from SW1 itself: its management SVI pings the two PCs, and the ARP replies they send are the
+ * first frames SW1 sees from their MAC addresses, which therefore become sticky before `write memory` runs.
  */
 const lab: Lab = {
   id: 'lab-port-security',
@@ -36,6 +41,10 @@ const lab: Lab = {
         ' switchport port-security mac-address 0050.b6da.f581',
         'interface GigabitEthernet0/1',
         ' description Link to SRV1',
+        'interface Vlan1',
+        ' description Management',
+        ' ip address 192.168.10.2 255.255.255.0',
+        ' no shutdown',
       ].join('\n'),
     },
     { id: 'SRV1', model: 'server', x: 9, y: 2.4, host: { ip: '192.168.10.100', mask: '255.255.255.0' }, services: { http: true } },
@@ -64,7 +73,7 @@ const lab: Lab = {
       id: 'secure-fa01',
       title: 'Secure Fa0/1 (PC1): static access port, port security with **maximum 1** MAC address, sticky learning and violation mode **shutdown**',
       details:
-        '`switchport port-security` is only accepted on a port that is statically an access (or trunk) port, so set the mode first. With `switchport port-security mac-address sticky` the switch learns the first MAC it sees and writes it into the running configuration; the address only appears after PC1 has sent traffic, so ping SRV1 from PC1 and look at `show port-security address`. Shutdown is the default violation mode.',
+        '`switchport port-security` is only accepted on a port that is statically an access (or trunk) port, so set the mode first. With `switchport port-security mac-address sticky` the switch learns the first MAC it sees and writes it into the running configuration; the address only appears after PC1 has sent traffic, so ping SRV1 from PC1 (or ping PC1 from the switch\'s management address 192.168.10.2: the ARP reply is a frame from PC1 as well) and look at `show port-security address`: it must list a `SecureSticky` entry for Fa0/1. Shutdown is the default violation mode.',
       hint: 'Verify with `show port-security interface fa0/1`.',
       checks: [
         { type: 'switchport', device: 'SW1', iface: 'Fa0/1', mode: 'access' },
@@ -72,6 +81,7 @@ const lab: Lab = {
         { type: 'show', device: 'SW1', command: 'show port-security interface fa0/1', pattern: 'Maximum MAC Addresses\\s*:\\s*1\\b' },
         { type: 'show', device: 'SW1', command: 'show port-security interface fa0/1', pattern: 'Violation Mode\\s*:\\s*Shutdown' },
         { type: 'config', device: 'SW1', section: 'interface FastEthernet0/1', pattern: '^ switchport port-security mac-address sticky$' },
+        { type: 'show', device: 'SW1', command: 'show port-security address', pattern: 'SecureSticky\\s+Fa0/1\\b' },
         { type: 'ping', from: 'PC1', to: '192.168.10.100' },
       ],
     },
@@ -87,6 +97,7 @@ const lab: Lab = {
         { type: 'show', device: 'SW1', command: 'show port-security interface fa0/2', pattern: 'Maximum MAC Addresses\\s*:\\s*2\\b' },
         { type: 'show', device: 'SW1', command: 'show port-security interface fa0/2', pattern: 'Violation Mode\\s*:\\s*Restrict' },
         { type: 'config', device: 'SW1', section: 'interface FastEthernet0/2', pattern: '^ switchport port-security mac-address sticky$' },
+        { type: 'show', device: 'SW1', command: 'show port-security address', pattern: 'SecureSticky\\s+Fa0/2\\b' },
         { type: 'ping', from: 'PC2', to: '192.168.10.100' },
       ],
     },
@@ -164,6 +175,9 @@ const lab: Lab = {
       ' switchport port-security maximum 2',
       ' switchport port-security mac-address sticky',
       ' switchport port-security violation restrict',
+      ' exit',
+      'do ping 192.168.10.11',
+      'do ping 192.168.10.12',
       'interface fa0/3',
       ' switchport port-security violation restrict',
       ' shutdown',

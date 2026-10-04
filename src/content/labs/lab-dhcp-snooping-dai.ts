@@ -4,9 +4,11 @@ import type { Lab } from '../labTypes';
  * DHCP snooping + DAI lab.
  *
  * At load both PCs lease an address from the rogue server (it wins the race in the simulator), so the host
- * checks fail until snooping filters the rogue's offers and the PCs renew. The simulator does not enforce
- * Dynamic ARP Inspection (no ARP drops, no `show ip arp inspection`), so DAI is verified through the
- * running-config only.
+ * checks fail until snooping filters the rogue's offers and the PCs renew. The simulator enforces Dynamic ARP
+ * Inspection: ARP from an untrusted port is dropped unless it matches a snooping binding (or an ARP ACL), so the
+ * DAI task is verified by behaviour as well as by configuration: the trust/rate table of
+ * `show ip arp inspection interfaces`, the VLAN state of `show ip arp inspection vlan 10`, and a ping check proving
+ * that ROGUE - a host with a static address and therefore no DHCP snooping binding - is cut off from the gateway.
  */
 const lab: Lab = {
   id: 'lab-dhcp-snooping-dai',
@@ -18,7 +20,7 @@ const lab: Lab = {
   scenario:
     'The second-floor users sit in VLAN 10 (**192.168.10.0/24**) on access switch **SW1**. Router **R1**, connected to SW1 G0/1, is the legitimate DHCP server: pool USERS hands out addresses from .21 upwards with default gateway **192.168.10.1** and DNS server **192.168.10.2**. PC1 is on Fa0/1, PC2 on Fa0/2.\n\n' +
     'Somebody plugged an unauthorised DHCP server (**ROGUE**, 192.168.10.66) into the meeting-room wall socket on Fa0/3. It answers before R1, so PC1 and PC2 both leased an address from the rogue **192.168.10.200+** pool with the attacker as their default gateway and DNS server, a textbook man-in-the-middle. Check it with `ipconfig` on either PC.\n\n' +
-    'Protect VLAN 10 with **DHCP snooping**: enable it globally and for VLAN 10, trust only the uplink towards the real DHCP server, and rate-limit the access ports. Snooping only filters new DHCP exchanges, so the PCs must then renew their leases. Finally add **Dynamic ARP Inspection** for VLAN 10, which validates ARP packets against the snooping binding table. Save the configuration on SW1.',
+    'Protect VLAN 10 with **DHCP snooping**: enable it globally and for VLAN 10, trust only the uplink towards the real DHCP server, and rate-limit the access ports. Snooping only filters new DHCP exchanges, so the PCs must then renew their leases. Finally add **Dynamic ARP Inspection** for VLAN 10, which validates ARP packets against the snooping binding table: the clients keep working because they have a binding, while ROGUE, which uses a static address and never asked a DHCP server, must no longer be able to ARP for anybody. Save the configuration on SW1.',
   devices: [
     {
       id: 'R1',
@@ -135,21 +137,27 @@ const lab: Lab = {
     },
     {
       id: 'dai',
-      title: 'Enable Dynamic ARP Inspection on SW1 for VLAN **10** and trust ARP only on the uplink G0/1',
+      title: 'Enable Dynamic ARP Inspection on SW1 for VLAN **10**, trust ARP only on the uplink G0/1 and check that ROGUE (static address, no binding) is blocked',
       details:
-        'DAI checks every ARP packet that arrives on an untrusted port of the VLAN against the DHCP snooping binding table and drops the ones whose IP-to-MAC pairing is not in it, which stops ARP spoofing. The port towards R1 must be trusted because the router has no binding. Hosts with static addresses would need an ARP ACL; here every client uses DHCP.',
+        'DAI checks every ARP packet that arrives on an untrusted port of the VLAN against the DHCP snooping binding table and drops the ones whose IP-to-MAC pairing is not in it, which stops ARP spoofing. The port towards R1 must be trusted because the router has no binding. Verify with `show ip arp inspection vlan 10` (the VLAN must be Enabled and Active) and `show ip arp inspection interfaces` (Gi0/1 Trusted, the access ports Untrusted with the default limit of 15 pps). ROGUE keeps the static address 192.168.10.66 and never used DHCP, so it has no binding: its ARP requests are dropped (see the counters of `show ip arp inspection statistics` and the `%SW_DAI-4-DHCP_SNOOPING_DENY` log message) and a ping from ROGUE to the gateway fails. A legitimate host with a static address would need an ARP ACL (`arp access-list` with `ip arp inspection filter`); here every client uses DHCP.',
       hint: 'Both commands start with `ip arp inspection`: one global with a VLAN list, one on the interface.',
       checks: [
         { type: 'config', device: 'SW1', pattern: '^ip arp inspection vlan 10$' },
         { type: 'config', device: 'SW1', section: 'interface GigabitEthernet0/1', pattern: '^ ip arp inspection trust$' },
         { type: 'config', device: 'SW1', section: 'interface FastEthernet0/3', pattern: 'ip arp inspection trust', expect: false },
+        { type: 'show', device: 'SW1', command: 'show ip arp inspection vlan 10', pattern: '^\\s*10\\s+Enabled\\s+Active' },
+        { type: 'show', device: 'SW1', command: 'show ip arp inspection interfaces', pattern: 'Gi0/1\\s+Trusted\\s+None\\s+N/A' },
+        { type: 'show', device: 'SW1', command: 'show ip arp inspection interfaces', pattern: 'Fa0/1\\s+Untrusted\\s+15\\s+1\\b' },
+        { type: 'show', device: 'SW1', command: 'show ip arp inspection interfaces', pattern: 'Fa0/2\\s+Untrusted\\s+15\\s+1\\b' },
+        { type: 'show', device: 'SW1', command: 'show ip arp inspection interfaces', pattern: 'Fa0/3\\s+Untrusted\\s+15\\s+1\\b' },
+        { type: 'ping', from: 'ROGUE', to: '192.168.10.1', expect: false },
       ],
     },
     {
       id: 'verify',
       title: 'Verify that snooping is operational on VLAN 10 and the clients work with their legitimate leases',
-      details: 'From PC1 ping the gateway 192.168.10.1 and PC2; from PC2 ping the gateway too. `show ip dhcp snooping` must report VLAN 10 as operational.',
-      hint: 'If a ping fails after enabling DAI, check that the uplink is trusted.',
+      details: 'From PC1 ping the gateway 192.168.10.1 and PC2; from PC2 ping the gateway too. `show ip dhcp snooping` must report VLAN 10 as operational. The clients keep working with DAI on because their leases are in the snooping binding table.',
+      hint: 'If a ping fails after enabling DAI, check that the uplink is trusted, and that the PC renewed its lease after snooping was enabled (a lease from before has no binding).',
       checks: [
         { type: 'show', device: 'SW1', command: 'show ip dhcp snooping', pattern: 'operational on following VLANs:\\s*\\n10\\b' },
         { type: 'ping', from: 'PC1', to: '192.168.10.1' },

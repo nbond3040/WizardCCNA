@@ -589,7 +589,7 @@ export function execRoots(): Node[] {
       k('counters', 'Clear counters on one or all interfaces', { run: clearRun }, [iface('Interface', 'cif', clearRun)]),
       k('errdisable', 'Clear err-disable state', [k('interface', 'Interface', [iface('Interface', 'errdis', clearRun)])]),
       k('ip', 'IP', [
-        k('arp', 'IP ARP', { when: (e) => e.is('switch') }, [
+        k('arp', 'IP ARP', { key: 'iparp', when: (e) => e.is('switch') }, [
           k('inspection', 'Clear ARP Inspection statistics', [
             k('statistics', 'Clear ARP Inspection statistics', { key: 'daistat', run: clearRun }, [
               k('vlan', 'Clear statistics for specific vlans', [a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'dvl', run: clearRun })]),
