@@ -331,7 +331,7 @@ SW1(config-if)#`,
     answer: 1,
     difficulty: 2,
     explanation:
-      'Syslog uses UDP 514, which is connectionless: there is no acknowledgement and no retransmission, so a lost datagram is simply gone. Classic syslog also sends plain text and does not authenticate the sender, which is why the other options are wrong.',
+      'Syslog uses UDP 514, which is connectionless: there is no acknowledgement and no retransmission, so a lost datagram is simply gone. Classic syslog also sends plain text and does not authenticate the sender, so the claims about retransmission, default encryption and router authentication are wrong.',
   },
   {
     id: 'e22',

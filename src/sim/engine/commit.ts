@@ -2,7 +2,6 @@
  * Commit pipeline pieces: persisting sticky protocol decisions (err-disable, OSPF router IDs and DR roles,
  * HSRP active router, DHCP leases) and logging observable transitions like IOS does on the console.
  */
-import { ifDyn } from '../model/state';
 import { parentOf, shortIf } from '../model/ifname';
 import { ipStr } from '../util/ip';
 import { ek, type Net } from './net';

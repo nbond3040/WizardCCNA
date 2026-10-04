@@ -15,6 +15,8 @@ import { ek, type Net } from './net';
 import type { Derived } from './derived';
 import { flood, type L2Endpoint, type L2Hop, type L2Wire } from './l2';
 import { noteFrames } from './counters';
+import { daiInspect, NO_MAC } from './dai';
+import { errDisable } from './errdisable';
 import { hostEffective, hostEffective6, lookup, lookup6, type V6Addr } from './l3';
 import { evalAcl } from './acl';
 import { isInsideAddr, natIn, natOut } from './nat';
@@ -41,6 +43,8 @@ export interface Walk {
   arpDrop: boolean;
   fail?: { dev: string; kind: string; text: string };
   icmp?: { dev: string; src: number; type: 'unreach' | 'ttl'; code: number; pkt: Pkt };
+  /** set when a switch (Dynamic ARP Inspection) dropped the ARP request/reply of the last resolution */
+  arpBlock?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -91,7 +95,11 @@ function learnMac(net: Net, sw: IosDevice, vlan: number, mac: string, port: stri
   sw.st.dyn.mac[`${vlan}|${mac}`] = { port, t: net.clock };
 }
 
-/** Port security at a switch ingress port. Returns false when the frame is dropped. */
+/**
+ * Port security at a switch ingress port: every frame from an access port goes through here (ARP, data, DHCP,
+ * IPv6 ND), learning the source MAC as a dynamic or sticky secure address while there is room and applying the
+ * violation mode when an unknown MAC arrives at the maximum. Returns false when the frame is dropped.
+ */
 export function psIngress(net: Net, sw: IosDevice, port: string, vlan: number, mac: string): boolean {
   const c = sw.st.cfg.ifaces[port];
   if (!c?.ps.enabled) return true;
@@ -112,19 +120,29 @@ export function psIngress(net: Net, sw: IosDevice, port: string, vlan: number, m
     return true;
   }
   const mode = c.ps.violation ?? 'shutdown';
+  // protect drops the frame silently: no violation counter, no syslog message
+  if (mode === 'protect') return false;
   dyn.psViolations++;
   dyn.psLast = `${macDotted(mac)}:${vlan}`;
   if (mode === 'shutdown') {
-    if (!dyn.errDisabled) {
-      dyn.errDisabled = 'psecure-violation';
+    if (errDisable(net, sw, port, 'psecure-violation')) {
       net.log(sw.id, `%PM-4-ERR_DISABLE: psecure-violation error detected on ${shortIf(port)}, putting ${shortIf(port)} in err-disable state`);
       net.log(sw.id, `%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address ${macDotted(mac)} on port ${port}.`);
       net.touch();
     }
-  } else if (mode === 'restrict') {
+  } else {
     net.log(sw.id, `%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address ${macDotted(mac)} on port ${port}.`);
   }
   return false;
+}
+
+/** The ingress hook every frame a device originates uses: port security first, then MAC learning. */
+export function frameIngress(net: Net, mac: string): (sw: IosDevice, port: string, vlan: number) => boolean {
+  return (sw, port, vlan) => {
+    if (!psIngress(net, sw, port, vlan, mac)) return false;
+    learnMac(net, sw, vlan, mac, port);
+    return true;
+  };
 }
 
 function countIf(dev: Device, ifName: string, dir: 'in' | 'out', size: number): void {
