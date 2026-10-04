@@ -113,10 +113,10 @@ export const quiz: Question[] = [
     type: 'single',
     stem: 'Which is a common disadvantage of public cloud compared with on-premises infrastructure?',
     options: [
-      'Slower provisioning of new capacity',
-      'Large up-front hardware purchases',
+      'Slower provisioning of new computing capacity',
+      'Large up-front purchases of servers and storage',
       'Less control over the underlying infrastructure',
-      'No ability to scale down',
+      'No ability to scale down when demand drops',
     ],
     answer: 2,
     difficulty: 2,

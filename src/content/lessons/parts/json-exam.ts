@@ -47,7 +47,7 @@ export const exam: Question[] = [
     answer: 0,
     difficulty: 2,
     explanation:
-      'The first option is an object with a quoted key and an array of numbers. The second ends the array with a **trailing comma**. The third uses parentheses, which are not JSON containers (a Python tuple, not JSON). The fourth has an **unquoted key**, which JSON forbids.',
+      '`{"vlans": [10, 20, 30]}` is an object with a quoted key and an array of numbers. The version ending `30,]` has a **trailing comma**. The one written with `(10, 20, 30)` uses parentheses, which are not JSON containers (a Python tuple, not JSON). The one that starts `{vlans:` has an **unquoted key**, which JSON forbids.',
   },
   {
     id: 'e5',
@@ -88,7 +88,7 @@ export const exam: Question[] = [
     answer: 0,
     difficulty: 2,
     explanation:
-      'ACC-8 is the **third** device, and array indexes start at 0, so it is index **2**. Index 3 does not exist (it would raise an error), index 1 returns ACC-7 (10.0.7.7), and the last option looks for a top-level key `managementIpAddress`, which does not exist because that key lives inside each device object.',
+      'ACC-8 is the **third** device, and array indexes start at 0, so it is index **2**. Index 3 does not exist (it would raise an error), index 1 returns ACC-7 (10.0.7.7), and `data["managementIpAddress"][2]` looks for a top-level key `managementIpAddress`, which does not exist because that key lives inside each device object.',
   },
   {
     id: 'e6',
@@ -216,7 +216,7 @@ export const exam: Question[] = [
     answer: 0,
     difficulty: 3,
     explanation:
-      'Gi0/0/1 is the **second** interface (index 1), the ACL information is in its `acl` object, and the outbound entry is the key `out`, which holds `"WAN-OUT"`. Index 2 does not exist, the `ipv4` object has no `out` key, and the last option applies a key to the `interfaces` array, which only accepts integer indexes.',
+      'Gi0/0/1 is the **second** interface (index 1), the ACL information is in its `acl` object, and the outbound entry is the key `out`, which holds `"WAN-OUT"`. Index 2 does not exist, the `ipv4` object has no `out` key, and `data["interfaces"]["acl"][1]["out"]` applies a key to the `interfaces` array, which only accepts integer indexes.',
   },
   {
     id: 'e12',
@@ -388,7 +388,7 @@ export const exam: Question[] = [
     answer: 0,
     difficulty: 2,
     explanation:
-      'A JSON **object** (key/value pairs) becomes a Python **dict**, and a JSON **array** (ordered values) becomes a Python **list**. The second option reverses them, and tuples and sets have no JSON equivalent.',
+      'A JSON **object** (key/value pairs) becomes a Python **dict**, and a JSON **array** (ordered values) becomes a Python **list**. The pairing that puts `list` first reverses them, and tuples and sets have no JSON equivalent.',
   },
   {
     id: 'e20',

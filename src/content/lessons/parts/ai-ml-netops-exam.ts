@@ -232,7 +232,7 @@ Secrets and real addresses have been removed.`,
     answer: 0,
     difficulty: 3,
     explanation:
-      'The current time is 03:00, so the **03:00 baseline** applies. WAN utilisation of 41 percent is far above the expected 2 to 6 percent, while DHCP response time (35 ms) and client count (45) fall inside their 03:00 ranges. The last option wrongly uses the 10:00 baseline, which is exactly why time-aware baselines beat one static threshold.',
+      'The current time is 03:00, so the **03:00 baseline** applies. WAN utilisation of 41 percent is far above the expected 2 to 6 percent, while DHCP response time (35 ms) and client count (45) fall inside their 03:00 ranges. The choice claiming every value is inside the 10:00 baselines wrongly uses the 10:00 baseline, which is exactly why time-aware baselines beat one static threshold.',
   },
   {
     id: 'e14',
