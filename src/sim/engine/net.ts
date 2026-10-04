@@ -240,14 +240,19 @@ export class Net {
 
   /* ---------------- logging ---------------- */
 
+  /** The "<stamp>: " that `service timestamps log` puts in front of a message ('' when stamps are off). */
+  logPrefix(dev: IosDevice): string {
+    if (!dev.st.cfg.tsLog) return '';
+    const dyn = dev.st.dyn;
+    const tz = dev.st.cfg.tz ? { name: dev.st.cfg.tz.name, offsetMin: dev.st.cfg.tz.h * 60 + dev.st.cfg.tz.m } : undefined;
+    return logTimestamp(parseTsFormat(dev.st.cfg.tsLogFmt ?? DEFAULT_TS_FORMAT), this.devClock(dev), this.uptimeSec(dev), dyn.clockSet || !!dyn.ntpSync, tz);
+  }
+
   log(devId: string, msg: string): void {
     const dev = this.ios(devId);
     if (!dev || this.dry) return;
     const dyn = dev.st.dyn;
-    const auth = dyn.clockSet || !!dyn.ntpSync;
-    const tz = dev.st.cfg.tz ? { name: dev.st.cfg.tz.name, offsetMin: dev.st.cfg.tz.h * 60 + dev.st.cfg.tz.m } : undefined;
-    const ts = dev.st.cfg.tsLog ? logTimestamp(parseTsFormat(dev.st.cfg.tsLogFmt ?? DEFAULT_TS_FORMAT), this.devClock(dev), this.uptimeSec(dev), auth, tz) : '';
-    const line = ts + msg;
+    const line = this.logPrefix(dev) + msg;
     dyn.logBuf.push(line);
     if (dyn.logBuf.length > 300) dyn.logBuf.splice(0, dyn.logBuf.length - 300);
     dyn.logCount++;

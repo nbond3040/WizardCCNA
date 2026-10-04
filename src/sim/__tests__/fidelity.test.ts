@@ -563,6 +563,19 @@ describe('service timestamps', () => {
     expect(linkUp(off)).toMatch(/^%LINK-3-UPDOWN: Interface GigabitEthernet0\/0\/0, changed state to up$/m);
   });
 
+  it('stamps the reload banner like any other log message', () => {
+    const reload = (sim: NetworkSim): string => {
+      const t = sim.terminal('R1');
+      t.execute('enable');
+      t.execute('reload');
+      expect(t.prompt()).toBe('Proceed with reload? [confirm]');
+      return t.execute('').output;
+    };
+    expect(reload(withConfig('service timestamps log uptime'))).toMatch(/^\d\d:\d\d:\d\d: %SYS-5-RELOAD: Reload requested by console\. Reload Reason: Reload Command\./m);
+    expect(reload(withConfig(''))).toMatch(/^\*Mar {2}1 \d\d:\d\d:\d\d\.\d{3}: %SYS-5-RELOAD: Reload requested by console\./m);
+    expect(reload(withConfig('no service timestamps log'))).toMatch(/^%SYS-5-RELOAD: Reload requested by console\./m);
+  });
+
   it('can be switched interactively and applies to messages logged afterwards only', () => {
     const sim = withConfig('');
     cfg(sim, 'R1', ['interface g0/0/0', 'no shutdown']);

@@ -16,7 +16,7 @@ import { hostEffective } from './engine/l3';
 import { roundTrip4, roundTrip6 } from './engine/packet';
 import { ipStr, parseIp } from './util/ip';
 import { parseV6, v6Str } from './util/ipv6';
-import { hms, logStamp } from './util/format';
+import { hms } from './util/format';
 
 export type {
   CheckResult,
@@ -226,6 +226,7 @@ export class NetworkSim {
     const old = dev.st;
     const nextReg = old.cfg.nextConfReg;
     net.log(dev.id, `%SYS-5-RELOAD: Reload requested by console. Reload Reason: Reload Command.`);
+    const stamp = net.logPrefix(dev); // the message is stamped the way the device was configured before the reload
     const lastLog = old.dyn.logBuf.slice(-1);
     const cfg = newDevCfg(dev.hw, dev.kind === 'router' ? 'Router' : 'Switch');
     const dyn = newDevDyn(net.clock);
@@ -252,7 +253,7 @@ export class NetworkSim {
     const boot = bootText(dev);
     void lastLog;
     for (const t of this.terms.values()) {
-      if (t.deviceId === dev.id) t.resetConsole([`*${logStamp(net.devClock(dev))}: %SYS-5-RELOAD: Reload requested by console. Reload Reason: Reload Command.`, ...boot], t === from);
+      if (t.deviceId === dev.id) t.resetConsole([`${stamp}%SYS-5-RELOAD: Reload requested by console. Reload Reason: Reload Command.`, ...boot], t === from);
       else t.dropSessionsTo(dev.id);
     }
   }
