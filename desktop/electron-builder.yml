@@ -1,0 +1,30 @@
+appId: com.wizardccna.app
+productName: WizardCCNA
+copyright: WizardCCNA
+directories:
+  output: release
+  buildResources: build
+files:
+  - main.cjs
+  - package.json
+  - build/icon.png
+  - web/**/*
+asar: true
+compression: normal
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: WizardCCNA
+  artifactName: WizardCCNA-Setup-${version}.${ext}
+portable:
+  artifactName: WizardCCNA-Portable-${version}.${ext}

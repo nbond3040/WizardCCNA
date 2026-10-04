@@ -1,0 +1,18 @@
+{
+  "name": "wizardccna-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WizardCCNA - the complete CCNA 200-301 course as an offline desktop app",
+  "author": "WizardCCNA",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "node scripts/prepare.cjs && electron .",
+    "smoke": "node scripts/prepare.cjs && electron . --smoke-test",
+    "dist": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --win --publish never",
+    "dist:dir": "node scripts/prepare.cjs && electron-builder --config electron-builder.yml --win --dir --publish never"
+  },
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
+  }
+}

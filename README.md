@@ -29,6 +29,21 @@ your exam date picks the right blueprint automatically.
 
 Progress is stored locally in your browser (export/import from Settings). No account needed.
 
+## Windows desktop app
+
+The same app also ships as an offline Windows program (Electron, in `desktop/`): a normal installer and a
+single-file portable `.exe`, ~100 MB, no browser or internet needed. Your progress is stored on your PC
+(`%APPDATA%\WizardCCNA`) and is separate from the website's; use *Settings → Export/Import progress* to move it.
+
+- **Get the .exe:** *Actions → Build Windows app → Run workflow*; when it finishes, download the
+  `WizardCCNA-windows` artifact (installer + portable). Pushing a tag such as `v1.0.0` also attaches both files to a
+  GitHub Release. The workflow starts the packaged app on the Windows runner and fails if the dashboard, a lesson,
+  the practice page or a lab don't load.
+- **Run it locally:** `npm run build`, then `cd desktop && npm install && npm start`
+  (`npm run smoke` runs the same headless check as CI).
+- The installer is **unsigned**, so Windows SmartScreen shows "Windows protected your PC" on first run:
+  click *More info → Run anyway*. Removing the warning needs a code-signing certificate.
+
 ## Develop
 
 ```bash

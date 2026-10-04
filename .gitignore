@@ -5,3 +5,7 @@ dist
 *.tsbuildinfo
 coverage
 .vite
+
+# Desktop app
+desktop/web
+desktop/release

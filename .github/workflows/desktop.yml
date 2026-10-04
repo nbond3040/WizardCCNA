@@ -1,0 +1,83 @@
+name: Build Windows app
+
+# Builds the desktop edition of WizardCCNA (Electron) on a Windows runner:
+#   - WizardCCNA-Setup-<version>.exe     installer (choose folder, Start menu + desktop shortcuts, uninstaller)
+#   - WizardCCNA-Portable-<version>.exe  single file, no install
+# Run it from the Actions tab ("Run workflow"), or push a tag like v1.0.0 to also attach the files to a GitHub Release.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # only used to attach the .exe files to a release when a tag is pushed
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            desktop/package-lock.json
+
+      - name: Build the web app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Use the tag as the app version
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: desktop
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          npm pkg set "version=$v"
+
+      - name: Package the Windows app
+        working-directory: desktop
+        run: |
+          npm ci
+          npm run dist
+
+      - name: Upload the installer and portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: WizardCCNA-windows
+          path: |
+            desktop/release/*.exe
+          if-no-files-found: error
+
+      # Starts the real packaged exe, loads the dashboard, a lesson, the practice page and a lab, and fails on any error.
+      - name: Smoke test the packaged app
+        working-directory: desktop
+        shell: pwsh
+        env:
+          WIZARDCCNA_SMOKE_OUT: ${{ github.workspace }}\desktop\release\smoke-result.txt
+          WIZARDCCNA_SMOKE_SHOT: ${{ github.workspace }}\desktop\release\smoke-dashboard.png
+        run: |
+          $p = Start-Process -FilePath "release\win-unpacked\WizardCCNA.exe" -ArgumentList "--smoke-test" -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill(); Write-Error "Smoke test timed out"; exit 1 }
+          if (Test-Path release\smoke-result.txt) { Get-Content release\smoke-result.txt }
+          if ($p.ExitCode -ne 0) { Write-Error "Smoke test failed (exit code $($p.ExitCode))"; exit 1 }
+
+      - name: Upload the smoke test screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test
+          path: |
+            desktop/release/smoke-result.txt
+            desktop/release/smoke-dashboard.png
+          if-no-files-found: ignore
+
+      - name: Attach to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/release/*.exe
