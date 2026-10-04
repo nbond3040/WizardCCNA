@@ -6,11 +6,12 @@ import { newOspfCfg, type DhcpPool, type IosDevice, type LineCfg, defaultLine } 
 import { parseIfRange, shortIf } from '../model/ifname';
 import { makeSecret, type7Decode, secretTypeOf, type SecretType } from '../util/crypto';
 import { ipStr, isMask, maskFromLen, maskLen, netOf, parseIp } from '../util/ip';
-import { DEFAULT_TS_FORMAT, normRanges, parseTsFormat, rangesStr, rangesToList, tsFormatText, type Ranges } from '../util/format';
+import { DEFAULT_TS_FORMAT, normRanges, parseTsFormat, rangesStr, rangesSubtract, rangesToList, tsFormatText, type Ranges } from '../util/format';
 import { parseV6, v6Str, v6Net } from '../util/ipv6';
 import { accessListNode, getAcl } from './acl';
 import { candidateRid } from '../engine/ospf';
 import { vlanExists } from '../engine/l2';
+import { DETECT_CAUSES, RECOVERY_CAUSES, causeKey } from '../engine/errdisable';
 
 /* ------------------------------------------------------------------ */
 /* helpers                                                             */
@@ -945,6 +946,16 @@ function errdisableRun(c: Ctx): void {
   if (!c.neg) cfg.errRecovery.push(cause);
 }
 
+/** `[no] errdisable detect cause <cause|all>`: detection is on for every cause by default; `no` switches it off. */
+function errdisableDetect(c: Ctx): void {
+  const cfg = c.dev.st.cfg;
+  const cause = c.a.dcause as string;
+  const causes = cause === 'all' ? DETECT_CAUSES : [cause];
+  const off = (cfg.errDetectOff ?? []).filter((x) => !causes.includes(x));
+  if (c.neg) off.push(...causes);
+  cfg.errDetectOff = off.length ? off : undefined;
+}
+
 function confReg(c: Ctx): void {
   const v = c.a.reg as number;
   c.dev.st.cfg.nextConfReg = c.neg ? undefined : v;
@@ -955,6 +966,63 @@ function arpInspection(c: Ctx): void {
   const r = c.a.dvlans as Ranges;
   if (c.neg) cfg.daiVlans = cfg.daiVlans.filter(([x, y]) => !r.some(([p, q]) => p <= x && y <= q));
   else cfg.daiVlans = normRanges([...cfg.daiVlans, ...r]);
+}
+
+/** `ip arp inspection validate [src-mac] [dst-mac] [ip [allow-zeros]]`: every command replaces the previous set. */
+function arpValidate(c: Ctx): void {
+  const cfg = c.dev.st.cfg;
+  const v = { src: !!c.a['v-src'], dst: !!c.a['v-dst'], ip: !!c.a['v-ip'], zeros: !!c.a['v-zeros'] };
+  if (!c.neg) {
+    cfg.daiValidate = v;
+    return;
+  }
+  // `no ... validate` drops every check, `no ... validate ip` just the listed ones
+  const cur = cfg.daiValidate ?? { src: false, dst: false, ip: false, zeros: false };
+  const all = !v.src && !v.dst && !v.ip;
+  const next = all ? { src: false, dst: false, ip: false, zeros: false } : { src: cur.src && !v.src, dst: cur.dst && !v.dst, ip: cur.ip && !v.ip, zeros: cur.zeros && !v.ip && !v.zeros };
+  cfg.daiValidate = next.src || next.dst || next.ip ? next : undefined;
+}
+
+/** `ip arp inspection log-buffer entries <n>` / `logs <n> interval <s>` (stored and shown; the log itself is not modelled). */
+function arpLogBuffer(c: Ctx): void {
+  const cfg = c.dev.st.cfg;
+  const cur = (cfg.daiLog ??= {});
+  if (c.a.entries) cur.entries = c.neg ? undefined : (c.a.lbentries as number);
+  else if (c.a.logs) {
+    cur.logs = c.neg ? undefined : (c.a.lblogs as number);
+    cur.interval = c.neg ? undefined : (c.a.lbint as number | undefined);
+  }
+  if (cur.entries === undefined && cur.logs === undefined) cfg.daiLog = undefined;
+}
+
+/** `ip arp inspection filter <acl> vlan <list> [static]`: one ARP ACL per VLAN, a new filter takes the VLANs over. */
+function arpFilter(c: Ctx): void {
+  const cfg = c.dev.st.cfg;
+  const name = c.a.fname as string;
+  const vlans = c.a.fvlans as Ranges;
+  const list = (cfg.daiFilters ?? []).map((f) => ({ ...f, vlans: f.vlans.map(([x, y]) => [x, y] as [number, number]) }));
+  for (const f of list) if (!c.neg || f.acl === name) f.vlans = rangesSubtract(f.vlans, vlans);
+  const next = list.filter((f) => f.vlans.length);
+  if (!c.neg) {
+    const same = next.find((f) => f.acl === name && f.static === !!c.a.fstatic);
+    if (same) same.vlans = normRanges([...same.vlans, ...vlans]);
+    else next.push({ acl: name, vlans, static: !!c.a.fstatic });
+  }
+  cfg.daiFilters = next.length ? next : undefined;
+}
+
+/** `arp access-list <name>`: enter the ARP ACL sub-mode (creating the list); `no` deletes it. */
+function arpAclMode(c: Ctx): void {
+  const cfg = c.dev.st.cfg;
+  const name = c.a.arpname as string;
+  const acls = (cfg.arpAcls ??= {});
+  if (c.neg) {
+    delete acls[name];
+    return;
+  }
+  acls[name] ??= { name, entries: [] };
+  c.s.acl = name;
+  c.s.mode = 'arp-nacl';
 }
 
 function relayTrustAll(c: Ctx): void {
@@ -1035,7 +1103,31 @@ export function globalRoots(): Node[] {
       k('resequence', 'Resequence Access List', [word('WORD', 'Access-list name or number', 'rsname', undefined, [num(1, 2147483647, 'Starting Sequence Number', { key: 'rstart' }, [num(1, 2147483647, 'Step to increment the sequence number', { key: 'rstep', run: aclResequence })])])]),
       k('standard', 'Standard Access List', [num(1, 1999, 'Standard IP access-list number', { key: 'aclname', run: aclModeRun }), word('WORD', 'Access-list name', 'aclname', aclModeRun)]),
     ]),
-    k('arp', 'IP ARP global configuration', [k('inspection', 'Arp Inspection configuration', [k('vlan', 'Enable/Disable ARP Inspection on vlans', { when: (e) => e.is('switch') }, [a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'dvlans', run: arpInspection })])])]),
+    k('arp', 'IP ARP global configuration', { when: (e) => e.is('switch') }, [
+      k('inspection', 'Arp Inspection configuration', [
+        k('filter', 'Specify ARP acl to be applied', [
+          word('WORD', 'ARP acl name', 'fname', undefined, [
+            k('vlan', 'Apply the ARP acl to vlans', [
+              a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'fvlans', run: arpFilter }, [k('static', 'Treat implicit deny in ARP ACL as explicit deny', { key: 'fstatic', run: arpFilter })]),
+            ]),
+          ]),
+        ]),
+        k('log-buffer', 'Log Buffer Configuration', [
+          k('entries', 'Number of entries for log buffer', { nr: arpLogBuffer }, [num(0, 1024, 'Number of entries (0-1024)', { key: 'lbentries', run: arpLogBuffer })]),
+          k('logs', 'Number of entries to be logged', { nr: arpLogBuffer }, [
+            num(0, 1024, 'Number of entries to be logged (0-1024)', { key: 'lblogs' }, [k('interval', 'Interval for controlling logging rate', [num(0, 86400, 'Interval in seconds (0-86400)', { key: 'lbint', run: arpLogBuffer })])]),
+          ]),
+        ]),
+        k('validate', 'Validate addresses', { nr: arpValidate }, function validateOpts(): Node[] {
+          return [
+            k('dst-mac', 'Validate destination MAC address', { key: 'v-dst', run: arpValidate }, validateOpts),
+            k('ip', 'Validate IP addresses', { key: 'v-ip', run: arpValidate }, () => [k('allow-zeros', 'Allow 0.0.0.0 sender IP addresses', { key: 'v-zeros', run: arpValidate }), ...validateOpts()]),
+            k('src-mac', 'Validate source MAC address', { key: 'v-src', run: arpValidate }, validateOpts),
+          ];
+        }),
+        k('vlan', 'Enable/Disable ARP Inspection on vlans', [a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'dvlans', run: arpInspection })]),
+      ]),
+    ]),
     k('cef', 'Cisco Express Forwarding', { run: silent }),
     k('classless', 'Follow classless routing forwarding rules', { run: silent, hide: true }),
     k('default-gateway', 'Specify default gateway (if not routing IP)', [ipv4('IP address of default gateway', 'gw', defaultGateway)]),
@@ -1209,9 +1301,13 @@ export function globalRoots(): Node[] {
       k('password', 'Assign the privileged level password (MAX of 25 characters)', { nr: enPw }, pwBody(enPw, "The UNENCRYPTED (cleartext) 'enable' password")),
       k('secret', 'Assign the privileged level secret (MAX of 25 characters)', { nr: enSecret }, secretBody(enSecret)),
     ]),
+    k('arp', 'Set a static ARP entry', { when: (e) => e.is('switch') }, [k('access-list', 'Configure a ARP ACL', [word('WORD', 'ARP acl name', 'arpname', arpAclMode)])]),
     k('errdisable', 'Error disable', [
+      k('detect', 'Error disable detection', [
+        k('cause', 'Enable error disable detection for application', ['all', ...DETECT_CAUSES].map((x) => k(x, `Enable error disable detection for ${x}`, { key: `dcause=${x}`, run: (c: Ctx) => { c.a.dcause = x; errdisableDetect(c); } }))),
+      ]),
       k('recovery', 'Error disable recovery', [
-        k('cause', 'Enable error disable recovery for application', ['all', 'arp-inspection', 'bpduguard', 'channel-misconfig', 'dhcp-rate-limit', 'link-flap', 'loopback', 'psecure-violation', 'security-violation', 'storm-control', 'udld'].map((x) => k(x, `Enable timer to recover from ${x} error disable state`, { key: `cause=${x}`, run: (c: Ctx) => { c.a.cause = x; errdisableRun(c); } }))),
+        k('cause', 'Enable error disable recovery for application', ['all', ...RECOVERY_CAUSES.map(causeKey)].map((x) => k(x, `Enable timer to recover from ${x} error disable state`, { key: `cause=${x}`, run: (c: Ctx) => { c.a.cause = x; errdisableRun(c); } }))),
         k('interval', 'Error disable recovery timer value', [num(30, 86400, 'timer-interval(sec)', { key: 'interval', run: errdisableRun })]),
       ]),
     ]),

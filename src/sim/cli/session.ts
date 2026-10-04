@@ -18,6 +18,7 @@ export type Mode =
   | 'std-nacl'
   | 'ext-nacl'
   | 'v6-nacl'
+  | 'arp-nacl'
   | 'block';
 
 export interface Session {
@@ -64,6 +65,7 @@ const SUFFIX: Record<Mode, string> = {
   'std-nacl': '(config-std-nacl)#',
   'ext-nacl': '(config-ext-nacl)#',
   'v6-nacl': '(config-ipv6-acl)#',
+  'arp-nacl': '(config-arp-nacl)#',
   block: '(config)#',
 };
 

@@ -309,12 +309,17 @@ export function showInterfaces(c: Ctx): void {
 export function showIntStatus(c: Ctx): void {
   const dev = c.dev;
   const d = c.net.d;
-  c.out.push('', 'Port      Name               Status       Vlan       Duplex  Speed Type ');
+  const errOnly = !!c.a.errdis;
+  c.out.push('', errOnly ? 'Port      Name               Status       Reason               Err-disabled Vlans' : 'Port      Name               Status       Vlan       Duplex  Speed Type ');
   const list = ifNames(dev).filter((n) => isPhysical(dev, n) || n.startsWith('Port-channel'));
   for (const n of list) {
-    if (c.a.errdis && !d.l2.ifs.get(ek(dev.id, n))?.errdis) continue;
+    if (errOnly && !d.l2.ifs.get(ek(dev.id, n))?.errdis) continue;
     const cfg = dev.st.cfg.ifaces[n];
     const st = d.l2.ifs.get(ek(dev.id, n));
+    if (errOnly) {
+      c.out.push(`${pad(shortIf(n), 10)}${pad((cfg.description ?? '').slice(0, 18), 19)}${pad('err-disabled', 13)}${st?.errdis ?? ''}`);
+      continue;
+    }
     const status = st?.errdis ? 'err-disabled' : st?.status === 'disabled' ? 'disabled' : st?.status ?? 'notconnect';
     const o = d.l2.oper.get(ek(dev.id, n));
     const vlan = !cfg.sw ? 'routed' : o?.mode === 'trunk' ? 'trunk' : String(cfg.accessVlan);

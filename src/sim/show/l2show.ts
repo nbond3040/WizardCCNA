@@ -1,6 +1,7 @@
 /** Layer 2 show commands. */
 import type { Ctx } from '../cli/session';
 import { ek } from '../engine/net';
+import { RECOVERY_CAUSES, causeKey, errInterval, errTimeLeft, recoveryEnabled } from '../engine/errdisable';
 import { ifNames, isPhysical, ifMac } from '../engine/topo';
 import { vlanExists, portCarries, stpForwarding, type StpPort, type StpVlan } from '../engine/l2';
 import type { IosDevice } from '../model/state';
@@ -698,21 +699,24 @@ export function showVtpStatus(c: Ctx): void {
 }
 
 export function showErrdisableRecovery(c: Ctx): void {
-  const cfg = c.dev.st.cfg;
-  const causes = ['arp-inspection', 'bpduguard', 'channel-misconfig (STP)', 'dhcp-rate-limit', 'link-flap', 'loopback', 'psecure-violation', 'security-violation', 'storm-control', 'udld'];
+  const dev = c.dev;
+  const cfg = dev.st.cfg;
   c.out.push('ErrDisable Reason            Timer Status', '-----------------            --------------');
-  for (const x of causes) {
-    const on = cfg.errRecovery.includes('all') || cfg.errRecovery.includes(x.split(' ')[0]);
-    c.out.push(`${pad(x, 29)}${on ? 'Enabled' : 'Disabled'}`);
-  }
-  c.out.push('', `Timer interval: ${cfg.errInterval ?? 300} seconds`, '', 'Interfaces that will be enabled at the next timeout:', '');
+  for (const x of RECOVERY_CAUSES) c.out.push(`${pad(x, 29)}${recoveryEnabled(cfg, x) ? 'Enabled' : 'Disabled'}`);
+  c.out.push('', `Timer interval: ${errInterval(cfg)} seconds`, '', 'Interfaces that will be enabled at the next timeout:', '');
   const rows: string[] = [];
-  for (const [n, dd] of Object.entries(c.dev.st.dyn.ifd)) {
-    if (!dd.errDisabled) continue;
-    const on = cfg.errRecovery.includes('all') || cfg.errRecovery.includes(dd.errDisabled);
-    if (on) rows.push(`${pad(shortIf(n), 16)}${padL(dd.errDisabled, 20)}${padL(cfg.errInterval ?? 300, 13)}`);
+  for (const n of ifNames(dev)) {
+    const dd = dev.st.dyn.ifd[n];
+    if (!dd?.errDisabled || !recoveryEnabled(cfg, dd.errDisabled)) continue;
+    rows.push(`${pad(shortIf(n), 16)}${pad(dd.errDisabled, 27)}${errTimeLeft(c.net, dev, dd)}`);
   }
   if (rows.length) c.out.push('Interface       Errdisable reason       Time left(sec)', '---------       -----------------       --------------', ...rows);
+}
+
+export function showErrdisableDetect(c: Ctx): void {
+  const off = c.dev.st.cfg.errDetectOff ?? [];
+  c.out.push('ErrDisable Reason            Detection    Mode', '-----------------            ---------    ----');
+  for (const x of RECOVERY_CAUSES) c.out.push(`${pad(x, 29)}${pad(off.includes(causeKey(x)) ? 'Disabled' : 'Enabled', 13)}${x === 'psecure-violation' ? 'port/vlan' : 'port'}`);
 }
 
 export function showPowerInline(c: Ctx): void {

@@ -7,7 +7,7 @@ import { globalRoots, configExitMessage } from '../commands/global';
 import { ifRoots } from '../commands/iface';
 import { lineRoots } from '../commands/line';
 import { ospfRoots, ospf6Roots } from '../commands/router';
-import { vlanRoots, dhcpRoots, stdAclRoots, extAclRoots, blockRoots, applyVlanPending } from '../commands/submodes';
+import { vlanRoots, dhcpRoots, stdAclRoots, extAclRoots, arpAclRoots, blockRoots, applyVlanPending } from '../commands/submodes';
 
 const cache = new Map<string, Node[]>();
 
@@ -97,6 +97,8 @@ export function rootsFor(mode: Mode, s: Session): Node[] {
       return withCommon('ext-nacl', extAclRoots, 'config');
     case 'v6-nacl':
       return withCommon('v6-nacl', extAclRoots, 'config');
+    case 'arp-nacl':
+      return withCommon('arp-nacl', arpAclRoots, 'config');
     case 'block':
       return withCommon('block', blockRoots, 'config');
   }
@@ -127,6 +129,8 @@ export function modeHeader(mode: Mode): string {
     case 'ext-nacl':
     case 'v6-nacl':
       return 'Ext Access List configuration commands:';
+    case 'arp-nacl':
+      return 'ARP Access List configuration commands:';
     case 'block':
       return 'Configuration commands:';
   }

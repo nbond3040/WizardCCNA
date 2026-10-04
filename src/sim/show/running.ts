@@ -1,7 +1,7 @@
 /** `show running-config` generator: IOS ordering, defaults omitted, password encodings. */
 import type { Net } from '../engine/net';
 import { ifConfigOrder, isPhysical } from '../engine/topo';
-import type { Acl, AclAddr, AclEntry, IfCfg, IosDevice, LineCfg, PortMatch, Pw } from '../model/state';
+import type { Acl, AclAddr, AclEntry, ArpAclEntry, IfCfg, IosDevice, LineCfg, PortMatch, Pw } from '../model/state';
 import { typeOfName } from '../model/ifname';
 import { DEFAULT_TS_FORMAT, iosClock, rangesStr, rangesEqual } from '../util/format';
 import { ipStr, maskLen } from '../util/ip';
@@ -62,6 +62,13 @@ export function aclShowText(acl: Acl, e: AclEntry): string {
     return `${act} ${t}${e.log ? ' log' : ''}`;
   }
   return aclEntryText(acl, e);
+}
+
+/** `permit ip host 10.0.0.50 mac host 0050.b6aa.0001` */
+function arpEntryText(e: ArpAclEntry): string {
+  const ip = e.ip.any ? 'any' : e.ip.wc === 0 ? `host ${ipStr(e.ip.addr)}` : `${ipStr(e.ip.addr)} ${ipStr(e.ip.wc)}`;
+  const mac = e.mac.any ? 'any' : /^0+$/.test(e.mac.wc) ? `host ${macDotted(e.mac.mac)}` : `${macDotted(e.mac.mac)} ${macDotted(e.mac.wc)}`;
+  return `${e.action}${e.dir ? ` ${e.dir}` : ''} ip ${ip} mac ${mac}${e.log ? ' log' : ''}`;
 }
 
 function numberedAclLines(acl: Acl): string[] {
@@ -204,6 +211,8 @@ export function interfaceLines(dev: IosDevice, name: string): string[] {
   out.push(...stpLines(c));
   if (c.snoopTrust) out.push(' ip dhcp snooping trust');
   if (c.arpTrust) out.push(' ip arp inspection trust');
+  if (c.arpRate === 'none') out.push(' ip arp inspection limit rate none');
+  else if (c.arpRate !== undefined && (c.arpRate !== 15 || (c.arpBurst ?? 1) !== 1)) out.push(` ip arp inspection limit rate ${c.arpRate}${(c.arpBurst ?? 1) !== 1 ? ` burst interval ${c.arpBurst}` : ''}`);
   return out;
 }
 
@@ -314,7 +323,12 @@ export function configBody(net: Net, dev: IosDevice): string[] {
     if (!c.snoopOpt82) L.push('no ip dhcp snooping information option');
     if (c.snoop) L.push('ip dhcp snooping');
   }
+  const dv = c.daiValidate;
+  if (dv && (dv.src || dv.dst || dv.ip)) L.push(`ip arp inspection validate ${[dv.src && 'src-mac', dv.dst && 'dst-mac', dv.ip && 'ip', dv.ip && dv.zeros && 'allow-zeros'].filter(Boolean).join(' ')}`);
+  if (c.daiLog?.entries !== undefined) L.push(`ip arp inspection log-buffer entries ${c.daiLog.entries}`);
+  if (c.daiLog?.logs !== undefined) L.push(`ip arp inspection log-buffer logs ${c.daiLog.logs} interval ${c.daiLog.interval ?? 5}`);
   if (c.daiVlans.length) L.push(`ip arp inspection vlan ${rangesStr(c.daiVlans)}`);
+  for (const f of c.daiFilters ?? []) L.push(`ip arp inspection filter ${f.acl} vlan ${rangesStr(f.vlans)}${f.static ? ' static' : ''}`);
   for (const x of c.extra.filter((l) => l.startsWith('login ') || l.startsWith('security '))) L.push(x);
   if (c.v6Routing) L.push('ipv6 unicast-routing');
   if (!sw) L.push('!', 'multilink bundle-name authenticated');
@@ -342,6 +356,7 @@ export function configBody(net: Net, dev: IosDevice): string[] {
       return acc;
     }, []))} priority ${p}`);
   }
+  for (const cause of c.errDetectOff ?? []) L.push(`no errdisable detect cause ${cause}`);
   for (const cause of c.errRecovery) L.push(`errdisable recovery cause ${cause}`);
   if (c.errInterval !== undefined) L.push(`errdisable recovery interval ${c.errInterval}`);
   if (c.lb) L.push(`port-channel load-balance ${c.lb}`);
@@ -441,6 +456,10 @@ export function configBody(net: Net, dev: IosDevice): string[] {
   const numbered = acls.filter((a) => a.numbered).sort((a, b) => Number(a.name) - Number(b.name));
   if (numbered.length) L.push('!');
   for (const acl of numbered) L.push(...numberedAclLines(acl));
+  for (const acl of Object.values(c.arpAcls ?? {})) {
+    L.push(`arp access-list ${acl.name}`);
+    for (const e of acl.entries) L.push(` ${arpEntryText(e)}`);
+  }
   if (c.log.trap && c.log.trap !== 'informational') L.push(`logging trap ${c.log.trap}`);
   if (c.log.source) L.push(`logging source-interface ${c.log.source}`);
   for (const h of c.log.hosts) L.push(`logging host ${ipStr(h)}`);

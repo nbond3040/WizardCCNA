@@ -2,6 +2,7 @@
 import { a, k, num, type Node } from '../cli/grammar';
 import type { Ctx, Session } from '../cli/session';
 import type { Net } from '../engine/net';
+import type { ArpAclEntry } from '../model/state';
 import { isMask, maskFromLen } from '../util/ip';
 import { namedAclNodes } from './acl';
 import { createVlan } from './global';
@@ -162,6 +163,46 @@ export function stdAclRoots(): Node[] {
 }
 export function extAclRoots(): Node[] {
   return (eRoots ??= namedAclNodes('extended'));
+}
+
+/* ---------------- ARP access list (Dynamic ARP Inspection) ---------------- */
+
+function arpAclRun(c: Ctx): void {
+  const acl = c.dev.st.cfg.arpAcls?.[c.s.acl ?? ''];
+  if (!acl) return;
+  const ip: ArpAclEntry['ip'] = c.a.ipany ? { any: true, addr: 0, wc: 0xffffffff } : c.a.iphost !== undefined ? { addr: c.a.iphost as number, wc: 0 } : { addr: c.a.ipaddr as number, wc: c.a.ipwc as number };
+  const mac: ArpAclEntry['mac'] = c.a.macany ? { any: true, mac: '000000000000', wc: 'ffffffffffff' } : c.a.machost !== undefined ? { mac: c.a.machost as string, wc: '000000000000' } : { mac: c.a.macaddr as string, wc: c.a.macwc as string };
+  const e: ArpAclEntry = { action: c.a.permit ? 'permit' : 'deny', ip, mac };
+  if (c.a.request) e.dir = 'request';
+  else if (c.a.response) e.dir = 'response';
+  if (c.a.alog) e.log = true;
+  const same = (x: ArpAclEntry) =>
+    x.action === e.action && x.dir === e.dir && !!x.ip.any === !!e.ip.any && x.ip.addr === e.ip.addr && x.ip.wc === e.ip.wc && !!x.mac.any === !!e.mac.any && x.mac.mac === e.mac.mac && x.mac.wc === e.mac.wc;
+  if (c.neg) {
+    acl.entries = acl.entries.filter((x) => !same(x));
+    return;
+  }
+  if (!acl.entries.some(same)) acl.entries.push(e);
+}
+
+let aRoots: Node[] | null = null;
+/** `permit|deny [request|response] ip {any | host A.B.C.D | A.B.C.D wildcard} mac {any | host H.H.H | H.H.H wildcard} [log]` */
+export function arpAclRoots(): Node[] {
+  if (aRoots) return aRoots;
+  const logN = (): Node[] => [k('log', 'Log on match', { key: 'alog', run: arpAclRun })];
+  const macPart = (): Node[] => [
+    k('any', 'Any source MAC address', { key: 'macany', run: arpAclRun }, logN),
+    k('host', 'A single source MAC host', [a('mac', 'H.H.H', 'Source MAC address', { key: 'machost', run: arpAclRun }, logN)]),
+    a('mac', 'H.H.H', 'Source MAC address', { key: 'macaddr' }, [a('mac', 'H.H.H', 'Source MAC wildcard bits (1 = ignore)', { key: 'macwc', run: arpAclRun }, logN)]),
+  ];
+  const ipPart = (): Node[] => [
+    k('any', 'Any source IP address', { key: 'ipany' }, [k('mac', 'MAC address', macPart)]),
+    k('host', 'A single source IP host', [a('ipv4', 'A.B.C.D', 'Source IP address', { key: 'iphost' }, [k('mac', 'MAC address', macPart)])]),
+    a('ipv4', 'A.B.C.D', 'Source IP address', { key: 'ipaddr' }, [a('ipv4', 'A.B.C.D', 'Source IP wildcard bits', { key: 'ipwc' }, [k('mac', 'MAC address', macPart)])]),
+  ];
+  const body = (): Node[] => [k('ip', 'IP address', ipPart), k('request', 'ARP requests', [k('ip', 'IP address', ipPart)]), k('response', 'ARP responses', [k('ip', 'IP address', ipPart)])];
+  aRoots = [k('deny', 'Specify packets to reject', body), k('permit', 'Specify packets to forward', body)];
+  return aRoots;
 }
 
 /* ---------------- generic blocks (key chain, tacacs server, radius server) ---------------- */

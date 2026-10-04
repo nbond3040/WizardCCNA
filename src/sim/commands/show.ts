@@ -3,6 +3,7 @@ import { a, k, num, type Node } from '../cli/grammar';
 import type { Ctx } from '../cli/session';
 import * as B from '../show/basic';
 import * as L2 from '../show/l2show';
+import * as DAI from '../show/daishow';
 import * as L3 from '../show/l3show';
 
 let roots: Node[] | null = null;
@@ -25,7 +26,15 @@ export function showRoots(): Node[] {
 
   const ipNodes: Node[] = [
     k('access-lists', 'List IP access lists', { key: 'iponly', run: L3.showAccessLists }, [a('word', 'WORD', 'Access list name or number', { key: 'aname', run: L3.showAccessLists })]),
-    k('arp', 'IP ARP table', { run: B.showArp }),
+    k('arp', 'IP ARP table', { run: B.showArp }, [
+      k('inspection', 'Show Dynamic ARP Inspection information', { ...sw, run: DAI.showArpInspection }, [
+        k('interfaces', 'Show Dynamic ARP Inspection interface information', { run: DAI.showArpInspectionInterfaces }, [iface('Interface', 'ifn', DAI.showArpInspectionInterfaces)]),
+        k('statistics', 'Show Dynamic ARP Inspection statistics', { run: DAI.showArpInspectionStatistics }, [
+          k('vlan', 'Show Dynamic ARP Inspection statistics for specific vlans', [a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'vlans', run: DAI.showArpInspectionStatistics })]),
+        ]),
+        k('vlan', 'Show Dynamic ARP Inspection configuration for specific vlans', [a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'vlans', run: DAI.showArpInspection })]),
+      ]),
+    ]),
     k('dhcp', 'Show items in the DHCP database', [
       k('binding', 'DHCP address bindings', { run: L3.showDhcpBinding }),
       k('conflict', 'DHCP address conflicts', { run: L3.showDhcpConflict }),
@@ -89,7 +98,7 @@ export function showRoots(): Node[] {
     k('controllers', 'Interface controller status', [iface('Interface', 'ifn', B.showControllers)]),
     k('crypto', 'Encryption module', [k('key', 'Show long term public keys', [k('mypubkey', 'Show public keys associated with this router', [k('rsa', 'Show RSA public keys', { run: L3.showCryptoKey })])])]),
     k('dhcp', 'Dynamic Host Configuration Protocol status', { hide: true, run: L3.showDhcpBinding }),
-    k('errdisable', 'Error disable', [k('recovery', 'Error disable recovery', { run: L2.showErrdisableRecovery })]),
+    k('errdisable', 'Error disable', [k('detect', 'Error disable detection', { run: L2.showErrdisableDetect }), k('recovery', 'Error disable recovery', { run: L2.showErrdisableRecovery })]),
     k('etherchannel', 'EtherChannel information', [
       k('port-channel', 'Port-channel information', { run: L2.showEtherPortChannel }),
       k('summary', 'One-line summary per channel-group', { run: L2.showEtherSummary }),
