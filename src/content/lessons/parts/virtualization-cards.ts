@@ -90,7 +90,7 @@ export const quiz: Question[] = [
     id: 'q5',
     type: 'single',
     stem: 'A switch port connects to a hypervisor host whose VMs use VLANs 10 and 20. How should the port be configured?',
-    options: ['Access port in VLAN 10', 'Access port in VLAN 20', '802.1Q trunk allowing VLANs 10 and 20', 'Routed port with an IP address'],
+    options: ['Access port in VLAN 10 with PortFast', 'Access port in VLAN 20 with PortFast', '802.1Q trunk allowing VLANs 10 and 20', 'Routed port with an IP address and mask'],
     answer: 2,
     difficulty: 2,
     explanation:

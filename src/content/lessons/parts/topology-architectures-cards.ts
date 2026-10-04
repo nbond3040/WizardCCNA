@@ -36,11 +36,16 @@ export const quiz: Question[] = [
     id: 'q1',
     type: 'single',
     stem: 'Which campus layer is normally the boundary between Layer 2 switching and Layer 3 routing?',
-    options: ['Access', 'Distribution', 'Core', 'Edge'],
+    options: [
+      'Access layer, which connects endpoints to the network',
+      'Distribution layer, which aggregates the access-layer switches',
+      'Core layer, which carries high-speed traffic between blocks',
+      'Edge layer, which connects the campus to the WAN or Internet',
+    ],
     answer: 1,
     difficulty: 1,
     explanation:
-      'The **distribution** layer hosts the default gateways and inter-VLAN routing, so it is where Layer 2 ends and Layer 3 begins. The access layer connects endpoints, and the core provides fast transport between distribution blocks.',
+      'The **distribution** layer hosts the default gateways and inter-VLAN routing, so it is where Layer 2 ends and Layer 3 begins. The access layer connects endpoints, the core provides fast transport between distribution blocks, and the edge connects the campus to the WAN or Internet.',
   },
   {
     id: 'q2',

@@ -74,9 +74,9 @@ export const quiz: Question[] = [
     stem: 'What does `terraform plan` do?',
     options: [
       'Previews the changes that apply would make, without changing anything',
-      'Creates all the resources in the configuration',
-      'Deletes resources that are missing from the state file',
-      'Downloads the provider plugins',
+      'Creates the resources in the configuration and updates the state file',
+      'Deletes the resources that are no longer defined in the configuration',
+      'Downloads the provider plugins and initializes the working directory',
     ],
     answer: 0,
     difficulty: 2,

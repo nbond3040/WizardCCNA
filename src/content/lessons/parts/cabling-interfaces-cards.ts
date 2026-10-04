@@ -38,7 +38,7 @@ export const quiz: Question[] = [
     id: 'q1',
     type: 'single',
     stem: 'Auto-MDIX is not available. Which cable connects a PC to a switch port?',
-    options: ['Straight-through', 'Crossover', 'Rollover', 'V.35 serial'],
+    options: ['Straight-through cable', 'Crossover cable', 'Rollover cable', 'V.35 serial WAN cable'],
     answer: 0,
     difficulty: 1,
     explanation:
@@ -51,9 +51,9 @@ export const quiz: Question[] = [
     options: [
       'It uses a laser light source',
       'It supports longer distances than multimode fiber',
-      'It has a 62.5 µm core',
+      'It has a 62.5 µm core like OM1 fiber',
       'It typically uses LED light sources',
-      'It is limited to 100 m',
+      'It is limited to about 100 m per segment',
     ],
     answers: [0, 1],
     difficulty: 1,

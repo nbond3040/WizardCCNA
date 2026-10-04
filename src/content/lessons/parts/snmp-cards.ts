@@ -56,7 +56,13 @@ export const quiz: Question[] = [
     id: 'q3',
     type: 'multi',
     stem: 'Which two operations were introduced with SNMPv2c? (Choose two.)',
-    options: ['GetBulk', 'Get', 'Inform', 'Set', 'Trap'],
+    options: [
+      'GetBulk, which retrieves many table rows in one request',
+      'Get, which retrieves the value of one named object',
+      'Inform, which sends an acknowledged notification',
+      'Set, which changes the value of a writable object',
+      'Trap, which sends an unacknowledged notification',
+    ],
     answers: [0, 2],
     difficulty: 2,
     explanation:
@@ -93,9 +99,9 @@ export const quiz: Question[] = [
     stem: 'What does the RO keyword in snmp-server community NOC RO allow a manager to do?',
     options: [
       'Read values with Get, GetNext and GetBulk, but not Set',
-      'Read and write values with any operation',
-      'Receive traps only',
-      'Use SNMPv3 with encryption',
+      'Read and write values with Get, GetNext, GetBulk and Set',
+      'Receive traps from the agent but not poll any values',
+      'Use SNMPv3 with authentication and encryption',
     ],
     answer: 0,
     difficulty: 2,

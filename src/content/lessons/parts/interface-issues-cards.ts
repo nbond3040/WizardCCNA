@@ -40,9 +40,9 @@ export const quiz: Question[] = [
     stem: 'An interface shows "administratively down, line protocol is down". What is the cause?',
     options: [
       'The `shutdown` command is configured on the interface',
-      'The cable is unplugged',
-      'Port security disabled the port',
-      'The two ends have a duplex mismatch',
+      'The cable is unplugged from the interface or damaged',
+      'Port security disabled the interface after a violation',
+      'The two ends of the link have a duplex mismatch',
     ],
     answer: 0,
     difficulty: 1,
@@ -53,7 +53,7 @@ export const quiz: Question[] = [
     id: 'q2',
     type: 'single',
     stem: 'Which counter increments on the half-duplex side of a duplex mismatch?',
-    options: ['Giants', 'Late collisions', 'Runts', 'CRC'],
+    options: ['Giant frames', 'Late collisions', 'Runt frames', 'Input CRC errors'],
     answer: 1,
     difficulty: 1,
     explanation:

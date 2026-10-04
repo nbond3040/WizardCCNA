@@ -49,9 +49,9 @@ export const quiz: Question[] = [
     options: [
       'A console server cabled to the console ports of the routers',
       'A dedicated management network connected to management Ethernet ports',
-      'SSH to a switch SVI in the user data VLAN',
+      'SSH to a switch SVI in the user data VLAN from the admin PC',
       'HTTPS to a router LAN interface that also forwards user traffic',
-      'SNMP polling across the production WAN',
+      'SNMP polling of router interfaces across the production WAN',
     ],
     answers: [0, 1],
     difficulty: 1,

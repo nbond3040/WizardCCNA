@@ -98,11 +98,11 @@ export const quiz: Question[] = [
     id: 'q6',
     type: 'single',
     stem: 'Which Catalyst Center feature lets a new switch obtain its configuration automatically when it is connected and powered on?',
-    options: ['Path Trace', 'Plug and Play', 'Assurance', 'Intent API'],
+    options: ['Command Runner', 'Plug and Play', 'Assurance', 'Intent API'],
     answer: 1,
     difficulty: 1,
     explanation:
-      'Plug and Play provides zero-touch onboarding with a day-0 configuration. Path Trace analyzes a path, Assurance monitors health, and the Intent API is the northbound REST interface.',
+      'Plug and Play provides zero-touch onboarding with a day-0 configuration. Command Runner sends read-only commands to devices, Assurance monitors health, and the Intent API is the northbound REST interface.',
   },
   {
     id: 'q7',
@@ -119,10 +119,10 @@ export const quiz: Question[] = [
     type: 'single',
     stem: 'Which is a benefit of Catalyst Center compared with traditional box-by-box management?',
     options: [
-      'It forwards user traffic faster than the switches',
-      'It replaces routing protocols on all devices',
+      'It forwards user traffic faster than the switch hardware can',
+      'It replaces the routing protocols that run on the switches',
       'It pushes consistent configuration to many devices from templates',
-      'It removes the need for any device credentials',
+      'It removes the need for credentials on the devices it manages',
     ],
     answer: 2,
     difficulty: 2,

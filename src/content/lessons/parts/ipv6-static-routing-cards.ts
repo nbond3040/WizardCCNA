@@ -33,7 +33,7 @@ export const quiz: Question[] = [
     id: 'q1',
     type: 'single',
     stem: 'Which global command must be configured before an IOS router forwards IPv6 packets between its interfaces?',
-    options: ['`ipv6 unicast-routing`', '`ipv6 enable`', '`ip routing`', '`ipv6 route ::/0`'],
+    options: ['`ipv6 unicast-routing`', '`ipv6 enable`', '`ip routing`', '`ipv6 route ::/0 Null0`'],
     answer: 0,
     difficulty: 1,
     explanation:
