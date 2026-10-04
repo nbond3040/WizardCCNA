@@ -38,7 +38,7 @@ export const quiz: Question[] = [
     id: 'q1',
     type: 'single',
     stem: 'Which term describes a weakness in a system that could be used to compromise it?',
-    options: ['Threat', 'Vulnerability', 'Exploit', 'Risk'],
+    options: ['Threat actor', 'Vulnerability', 'Exploit code', 'Risk rating'],
     answer: 1,
     difficulty: 1,
     explanation:

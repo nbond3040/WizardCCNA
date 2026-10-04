@@ -89,9 +89,9 @@ export const quiz: Question[] = [
     stem: 'Which statement about a security policy is true?',
     options: [
       'It is an optional set of recommendations that users may ignore',
-      'It replaces the need for awareness and training',
-      'It is a formal written document approved by management that states the rules',
-      'It is a technical control enforced only by firewalls',
+      'It replaces the need for user awareness and training programs',
+      'It is a formal document approved by management that sets the rules',
+      'It is a technical control enforced by the firewalls and routers',
     ],
     answer: 2,
     difficulty: 2,

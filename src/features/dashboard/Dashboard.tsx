@@ -52,7 +52,7 @@ export function Dashboard() {
       ? {
           slides: Object.values(content).reduce((a, c) => a + c.slides.length, 0),
           cards: Object.values(content).reduce((a, c) => a + c.flashcards.length, 0),
-          questions: Object.values(content).reduce((a, c) => a + c.exam.length + c.quiz.length, 0),
+          questions: Object.values(content).reduce((a, c) => a + c.exam.length, 0),
         }
       : null;
     return (

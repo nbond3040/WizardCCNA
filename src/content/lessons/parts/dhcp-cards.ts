@@ -56,7 +56,13 @@ export const dhcpQuiz: Question[] = [
     id: 'q3',
     type: 'multi',
     stem: 'In the initial DHCP exchange on a single subnet, which two messages does the client send as broadcasts? (Choose two.)',
-    options: ['DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPACK', 'DHCPNAK'],
+    options: [
+      'DHCPDISCOVER, which looks for available servers',
+      'DHCPOFFER, which proposes an address and lease',
+      'DHCPREQUEST, which accepts one server’s offer',
+      'DHCPACK, which confirms the lease to the client',
+      'DHCPNAK, which refuses the client’s request',
+    ],
     answers: [0, 2],
     difficulty: 1,
     explanation:
@@ -68,9 +74,9 @@ export const dhcpQuiz: Question[] = [
     stem: 'The DHCP server is on another subnet. On which R2 interface should `ip helper-address` be configured?',
     options: [
       'The interface that receives the clients’ broadcasts',
-      'The interface that faces the DHCP server',
-      'Every interface on R2',
-      'The loopback interface',
+      'The interface that connects R2 to the DHCP server',
+      'Every interface on R2 that has an IP address',
+      'The loopback interface used as the router ID',
     ],
     answer: 0,
     difficulty: 2,

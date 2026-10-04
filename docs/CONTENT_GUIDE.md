@@ -86,6 +86,12 @@ These feed timed practice exams, so they must feel like the real CCNA:
   "An engineer must… Which command…", "Which configuration…".
 - Difficulty mix: ~20% level 1, ~50% level 2, ~30% level 3 (analysis/troubleshooting).
 - Distractors must be plausible (real commands, real values, common misconceptions) — never silly.
+- **Balance option lengths.** The correct option must not be the longest by habit: make distractors match its
+  length and sentence structure (a quick check: it should be the strictly longest in about a third of
+  questions at most). Likewise avoid "always/never/only" appearing only in wrong options.
+- Options are **shuffled at runtime**, so never refer to options by position in an `explanation` ("the second
+  option", "Option B"); describe each option's content instead. (An explanation that does cite positions
+  makes the app keep the authored order, which weakens answer-position randomization.)
 - Every explanation says why the right answer is right **and** why the tempting wrong ones are wrong.
 - `input` answers: list all acceptable forms (e.g. `["/26", "255.255.255.192"]`).
 - Ids `e1`, `e2`, … unique within the lesson.

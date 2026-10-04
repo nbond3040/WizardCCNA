@@ -9,16 +9,19 @@ your exam date picks the right blueprint automatically.
 - **Goal-date study plan** — pick your exam date, study days and (optionally) a daily budget. WizardCCNA
   lays out every lesson, lab, checkpoint, practice exam and review across your calendar, and re-plans from
   your real progress every day (falling behind raises the daily load; working ahead frees days).
-- **Slide decks for every exam topic** — minimalist slides with diagrams drawn from a declarative DSL
-  (topologies, packet headers, protocol sequences, binary math, layer stacks, flows) and a full
-  instructor explanation for every slide.
+- **68 lessons, 1,350+ slides** — minimalist slides covering every exam topic, with diagrams drawn
+  from a declarative DSL (topologies, packet headers, protocol sequences, binary math, layer stacks, flows)
+  and a full instructor explanation for every slide.
 - **Post-deck quizzes** — a short quiz at the end of each deck; 80% marks the lesson mastered.
-- **Flashcards** — each lesson's cards unlock when you finish its deck. Spaced repetition (SM-2);
+- **1,900+ flashcards** — each lesson's cards unlock when you finish its deck. Spaced repetition (SM-2);
   every card you miss goes to a **missed queue** and comes back — later in the same session and in
   future sessions — until you recall it correctly.
-- **Network labs** — a Packet-Tracer-style simulator in the browser: open consoles on routers, switches
-  and PCs, type real IOS commands, and watch tasks turn green as they're verified live.
-- **Practice exams** — timed, blueprint-weighted simulations (100 questions / 120 minutes) with
+- **32 hands-on labs** — a Packet-Tracer-style simulator in the browser: open consoles on routers,
+  switches and PCs, type real IOS commands (modes, `?` help, error messages, `show` output), and watch
+  tasks turn green as they're verified live. Includes troubleshooting labs with pre-broken networks, plus
+  a wireless-controller GUI simulator and a REST API sandbox against a mock Catalyst Center.
+- **Practice exams** — a 1,450-question exam bank (plus 490 deck-quiz questions); timed, blueprint-weighted
+  simulations (100 questions / 120 minutes) with
   single/multiple choice, drag-and-drop matching, ordering, categorizing, fill-in and CLI/topology
   exhibits; scored 300–1000 with a per-domain report. Missed questions feed a review queue.
 - **Speed drills** — unlimited generated subnetting, VLSM, wildcard, summarization, IPv6 and conversion

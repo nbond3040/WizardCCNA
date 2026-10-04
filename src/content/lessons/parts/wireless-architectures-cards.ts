@@ -97,7 +97,7 @@ export const quiz: Question[] = [
     id: 'q6',
     type: 'single',
     stem: 'In a Cisco Meraki cloud-managed WLAN, which traffic is sent to the cloud dashboard?',
-    options: ['All client data', 'Management and monitoring traffic only', 'Only DHCP and DNS traffic', 'CAPWAP control and data tunnels'],
+    options: ['All client data and management traffic', 'Management and monitoring traffic only', 'Only DHCP and DNS traffic from clients', 'CAPWAP control and data tunnels from APs'],
     answer: 1,
     difficulty: 2,
     explanation:
