@@ -220,13 +220,13 @@ udp  198.51.100.9:52004    10.20.2.40:52004      192.0.2.53:53         192.0.2.5
       "Renumber one company's 10.0.0.0/16 networks into an unused private range",
       "Translate one company's overlapping addresses with NAT at the interconnection",
       'Route both 10.0.0.0/16 networks and let longest prefix match choose',
-      'Replace the overlapping networks with addresses from 100.64.0.0/10',
+      'Number the link between the edge routers from public address space so the overlap no longer matters',
       'Advertise both 10.0.0.0/16 networks to the Internet so each side can reach the other',
     ],
     answers: [0, 1],
     difficulty: 3,
     explanation:
-      "Both companies use 10.0.0.0/16, so a destination such as 10.0.5.9 is ambiguous. Either **renumber** one side into an unused private range, or **translate** one side with NAT so its addresses appear as a unique range. Two identical prefixes give longest match nothing to choose between, 100.64.0.0/10 is reserved for ISP carrier-grade NAT, and private networks must never be advertised to the Internet.",
+      "Both companies use 10.0.0.0/16, so a destination such as 10.0.5.9 is ambiguous. Either **renumber** one side into an unused private range, or **translate** one side with NAT so its addresses appear as a unique range. Two identical prefixes give longest match nothing to choose between, addressing the link between the edge routers does not make the hosts' addresses unique, and private networks must never be advertised to the Internet.",
   },
   {
     id: 'e13',

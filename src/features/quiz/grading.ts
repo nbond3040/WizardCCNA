@@ -11,11 +11,15 @@ export type Response =
 
 const NO_SHUFFLE = /\b(all|none|both|neither) of the (above|options|following)\b|\b(options?|answers?) [A-F]\b|^\s*[A-F] and [A-F]\s*$/i;
 
+/** An explanation that points at options by position ("the second option", "Option B") only reads right in the authored order. */
+const BY_POSITION =
+  /\b(first|second|third|fourth|fifth|last|final)( two| three| four)? (of the )?(options?|choices?|distractors?)\b|\b(first|second|third|fourth|fifth)( two| three| four)? answers?\b|\b(options?|choices?|answers?) [A-F]\b|\boptions? [1-5]\b/i;
+
 /** Display order of options for single/multi questions (stable per seed). */
 export function optionOrder(q: Question, seed: number): number[] {
   if (q.type !== 'single' && q.type !== 'multi') return [];
   const idx = q.options.map((_, i) => i);
-  if (q.options.some((o) => NO_SHUFFLE.test(o))) return idx;
+  if (q.options.some((o) => NO_SHUFFLE.test(o)) || BY_POSITION.test(q.explanation)) return idx;
   return shuffle(idx, seededRandom(seed ^ hashString(q.id)));
 }
 

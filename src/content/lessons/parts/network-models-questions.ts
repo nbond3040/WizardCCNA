@@ -408,7 +408,7 @@ Approximate round trip times in milli-seconds:
     answer: 0,
     difficulty: 3,
     explanation:
-      'A CRC error means the recalculated FCS did not match, so the frame is **discarded**. The FCS only *detects* errors — it cannot correct them — and Ethernet has no acknowledgments or retransmissions. Recovery is left to upper layers: **TCP** notices the missing bytes (no acknowledgment) and retransmits them. IP does not repair corrupted frames, and switches never knowingly forward frames that fail the FCS check (store-and-forward switching).',
+      'A CRC error means the recalculated FCS did not match, so the frame is **discarded**. The FCS only *detects* errors — it cannot correct them — and Ethernet has no acknowledgments or retransmissions. Recovery is left to upper layers: **TCP** notices the missing bytes (no acknowledgment) and retransmits them. IP does not repair corrupted frames, and a store-and-forward switch (the Catalyst default) never forwards a frame that fails the FCS check.',
   },
   {
     id: 'e15',

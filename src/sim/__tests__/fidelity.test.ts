@@ -84,8 +84,14 @@ function pair(a: string[] = [], b: string[] = [], port = 'g0/1', via: 'load' | '
 
 const VIA = ['load', 'cli'] as const;
 
-/** The log buffer only (messages already delivered to the console are not repeated in it). */
-const logBuffer = (sim: NetworkSim, dev: string): string => show(sim, dev, 'show logging | begin Log Buffer');
+/**
+ * The log buffer only: messages generated since the last command are echoed to an open console after its next
+ * command, so drain the console first and they are not counted twice.
+ */
+function logBuffer(sim: NetworkSim, dev: string): string {
+  sim.terminal(dev).execute('');
+  return show(sim, dev, 'show logging | begin Log Buffer');
+}
 
 /** Send real traffic across the pair (ARP + echo requests and replies). */
 const traffic = (sim: NetworkSim): string => run(sim, 'PC1', 'ping 192.168.10.12');
