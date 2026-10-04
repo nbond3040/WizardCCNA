@@ -107,7 +107,7 @@ Directory of flash:/
     answers: [1, 2],
     difficulty: 2,
     explanation:
-      'In active mode the client tells the server which port to call with `PORT`, and the server initiates the data connection from TCP 20. The first option describes passive mode. SSH keys belong to SFTP and SCP, and UDP 69 belongs to TFTP.',
+      'In active mode the client tells the server which port to call with `PORT`, and the server initiates the data connection from TCP 20. A client-initiated data connection to a high server port describes passive mode. SSH keys belong to SFTP and SCP, and UDP 69 belongs to TFTP.',
   },
   {
     id: 'e7',

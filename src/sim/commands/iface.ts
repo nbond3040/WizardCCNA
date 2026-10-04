@@ -5,6 +5,7 @@ import type { ChMode, IfCfg } from '../model/state';
 import { ifDyn, newOspfCfg } from '../model/state';
 import { parentOf, shortIf, typeOfName } from '../model/ifname';
 import { ensureIf, isPhysical } from '../engine/topo';
+import { clearErrDisable } from '../engine/errdisable';
 import { bcastOf, inNet, ipStr, isMask, maskLen, netOf } from '../util/ip';
 import { normRanges, rangesSubtract, rangesToList, type Ranges } from '../util/format';
 import { v6Str, v6Net } from '../util/ipv6';
@@ -57,8 +58,7 @@ const shutdown = each((c, cfg, name) => {
     return;
   }
   cfg.shutdown = true;
-  const dd = c.dev.st.dyn.ifd[name];
-  if (dd?.errDisabled) dd.errDisabled = undefined;
+  clearErrDisable(c.dev.st.dyn.ifd[name]);
 });
 
 function ipAddress(c: Ctx): void {
@@ -201,6 +201,21 @@ const snoopRate = each((c, cfg) => {
 });
 const arpTrust = each((c, cfg) => {
   cfg.arpTrust = !c.neg;
+});
+/** `ip arp inspection limit {rate <pps> [burst interval <s>] | none}`; `no ...` restores the default (15 pps untrusted) */
+const arpLimit = each((c, cfg) => {
+  if (c.neg) {
+    cfg.arpRate = undefined;
+    cfg.arpBurst = undefined;
+    return;
+  }
+  if (c.a.arpnone) {
+    cfg.arpRate = 'none';
+    cfg.arpBurst = undefined;
+    return;
+  }
+  cfg.arpRate = c.a.arate as number;
+  cfg.arpBurst = c.a.aburst as number | undefined;
 });
 
 function extraLine(text: (c: Ctx) => string) {
@@ -699,7 +714,19 @@ export function ifRoots(): Node[] {
         ipv4('IP address', 'addr', undefined, [ipv4('IP subnet mask', 'mask', ipAddress, [k('secondary', 'Make this IP address a secondary address', { run: ipAddress })])]),
         k('dhcp', 'IP Address negotiated via DHCP', { run: ipAddress }),
       ]),
-      k('arp', 'Configure ARP features', { when: (e) => e.is('switch') }, [k('inspection', 'Arp Inspection configuration', [k('trust', 'Configure Trust state', { run: arpTrust })])]),
+      k('arp', 'Configure ARP features', { when: (e) => e.is('switch') }, [
+        k('inspection', 'Arp Inspection configuration', [
+          k('limit', 'Configure Rate limit of incoming ARP packets', { nr: arpLimit }, [
+            k('none', 'No limit on the rate of incoming ARP packets', { key: 'arpnone', run: arpLimit }),
+            k('rate', 'Set the rate limit value', { nr: arpLimit }, [
+              num(0, 2048, 'Rate limit in packets per second (pps)', { key: 'arate', run: arpLimit }, [
+                k('burst', 'Configure Burst parameters', [k('interval', 'Burst interval', [num(1, 15, 'Burst interval in seconds', { key: 'aburst', run: arpLimit })])]),
+              ]),
+            ]),
+          ]),
+          k('trust', 'Configure Trust state', { run: arpTrust }),
+        ]),
+      ]),
       k('dhcp', 'Configure DHCP parameters for this interface', [
         k('relay', 'DHCP relay configuration', [k('information', 'DHCP relay information option', [k('trusted', 'Received DHCP packets may contain relay info option with zero giaddr', { run: extraLine(() => 'ip dhcp relay information trusted') })])]),
         k('snooping', 'DHCP Snooping', { when: (e) => e.is('switch') }, [

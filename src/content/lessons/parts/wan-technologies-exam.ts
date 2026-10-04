@@ -353,7 +353,7 @@ interface Serial0/1/0
     answer: 1,
     difficulty: 2,
     explanation:
-      'The **CSU/DSU** is the DCE and supplies the clock; the router is the DTE. Routers set `clock rate` only in labs, when they hold the DCE end of a back-to-back cable. Synchronous serial links depend on a shared clock, so the last option is false.',
+      'The **CSU/DSU** is the DCE and supplies the clock; the router is the DTE. Routers set `clock rate` only in labs, when they hold the DCE end of a back-to-back cable. Synchronous serial links depend on a shared clock, so claiming they do not use clocking is false.',
   },
   {
     id: 'e20',

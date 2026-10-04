@@ -326,7 +326,7 @@ Tracing the route to 2001:DB8:2::100
     answer: 0,
     difficulty: 3,
     explanation:
-      'The primary default toward ISP-A keeps the default AD of 1, and the backup toward ISP-B gets a higher AD (5), so it floats until the ISP-A route disappears. The second option reverses the roles, the third installs two equal routes and load-balances across both providers, and ::/128 is a host route for the unspecified address, not a default route.',
+      'The primary default toward ISP-A keeps the default AD of 1, and the backup toward ISP-B gets a higher AD (5), so it floats until the ISP-A route disappears. Giving ISP-A the AD of 5 instead reverses the roles, leaving both routes at the default AD installs two equal routes and load-balances across both providers, and ::/128 is a host route for the unspecified address, not a default route.',
   },
   {
     id: 'e17',
@@ -364,7 +364,7 @@ S   2001:DB8:2::100/128 [5/0]
     answer: 0,
     difficulty: 3,
     explanation:
-      'Route selection starts with the **longest prefix match**, and the /128 is longer than both the /64 and ::/0, so its next hop 2001:DB8:99::2 is used. AD 5 versus 1 is irrelevant, because AD only breaks ties between routes to the *same* prefix. The default route is the last resort, not the first choice, and routes to different prefixes never load-balance.',
+      'Route selection starts with the **longest prefix match**, and the /128 is longer than both the /64 and ::/0, so its next hop 2001:DB8:99::2 is used. AD 5 versus 1 is irrelevant, because AD only breaks ties between routes to the *same* prefix. The default route is only a last resort and is never tried first, and routes to different prefixes never load-balance.',
   },
   {
     id: 'e19',

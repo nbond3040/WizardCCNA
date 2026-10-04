@@ -43,7 +43,7 @@ export const quiz: Question[] = [
     answer: 0,
     difficulty: 1,
     explanation:
-      'A default route has prefix **0.0.0.0** and mask **0.0.0.0**, followed by the next hop. A mask of 255.255.255.255 would make a host route, `ip default-network` flags a classful network rather than creating this route, and the last option puts the next hop where the prefix belongs.',
+      'A default route has prefix **0.0.0.0** and mask **0.0.0.0**, followed by the next hop. A mask of 255.255.255.255 would make a host route, `ip default-network` flags a classful network rather than creating this route, and `ip route 203.0.113.1 0.0.0.0 0.0.0.0` puts the next hop where the prefix belongs.',
   },
   {
     id: 'q2',

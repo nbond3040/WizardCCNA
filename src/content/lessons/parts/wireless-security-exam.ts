@@ -395,7 +395,7 @@ There is 1 interface on the system:
     type: 'single',
     stem: 'Which statement about TKIP is true?',
     options: [
-      'It wraps RC4 with per-packet keys and a MIC so WEP-era hardware could be upgraded',
+      'It wraps RC4 with per-packet keys and a MIC so WEP-era hardware needs a firmware update',
       'It is the AES-based cipher protocol that IEEE 802.11i mandates for WPA2 networks',
       'It replaces the pre-shared key exchange with a Dragonfly handshake in WPA3',
       'It is required for 802.11n and later high-throughput data rates in the 5 GHz band',

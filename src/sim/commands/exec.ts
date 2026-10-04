@@ -5,7 +5,7 @@ import type { Net } from '../engine/net';
 import type { Device } from '../model/state';
 import { ipHostAddr } from '../model/state';
 import { verifySecret } from '../util/crypto';
-import { chunk, iosClock, monthIndex, EPOCH_MS } from '../util/format';
+import { chunk, iosClock, monthIndex, rangesToList, EPOCH_MS, type Ranges } from '../util/format';
 import { ipStr, parseIp } from '../util/ip';
 import { parseV6, v6Ios } from '../util/ipv6';
 import { pingSeries, roundTrip6, traceroute4, type RoundTrip } from '../engine/packet';
@@ -14,6 +14,7 @@ import { showRoots } from './show';
 import { normalizeConfig, runningConfig, savedConfigText } from '../show/running';
 import { configExitMessage } from './global';
 import { clearCounters } from '../engine/counters';
+import { clearErrDisable } from '../engine/errdisable';
 import { ifNames, lookupIf } from '../engine/topo';
 
 /* ------------------------------------------------------------------ */
@@ -316,14 +317,20 @@ function clearRun(c: Ctx): void {
     });
     return;
   }
+  if (c.a.daistat) {
+    // `clear ip arp inspection statistics [vlan <list>]`
+    const only = c.a.dvl as Ranges | undefined;
+    if (!only) dyn.daiStats = {};
+    else for (const v of rangesToList(only)) delete dyn.daiStats?.[String(v)];
+    return;
+  }
   if (c.a.psec) {
     for (const d of Object.values(dyn.ifd)) d.psLearned = [];
     c.net.touch();
     return;
   }
   if (c.a.errdis !== undefined) {
-    const d = dyn.ifd[c.a.errdis as string];
-    if (d) d.errDisabled = undefined;
+    clearErrDisable(dyn.ifd[c.a.errdis as string]);
     c.net.touch();
   }
 }
@@ -582,6 +589,13 @@ export function execRoots(): Node[] {
       k('counters', 'Clear counters on one or all interfaces', { run: clearRun }, [iface('Interface', 'cif', clearRun)]),
       k('errdisable', 'Clear err-disable state', [k('interface', 'Interface', [iface('Interface', 'errdis', clearRun)])]),
       k('ip', 'IP', [
+        k('arp', 'IP ARP', { when: (e) => e.is('switch') }, [
+          k('inspection', 'Clear ARP Inspection statistics', [
+            k('statistics', 'Clear ARP Inspection statistics', { key: 'daistat', run: clearRun }, [
+              k('vlan', 'Clear statistics for specific vlans', [a('vlanlist', 'WORD', 'vlan range, example: 1,3-5,7,9-11', { key: 'dvl', run: clearRun })]),
+            ]),
+          ]),
+        ]),
         k('dhcp', 'Delete items from the DHCP database', [k('binding', 'DHCP address bindings', { key: 'dhcpb' }, [k('*', 'Clear all automatic bindings', { run: clearRun }), a('ipv4', 'A.B.C.D', 'DHCP address binding', { key: 'bip', run: clearRun })])]),
         k('nat', 'Clear NAT', [k('translation', 'Clear dynamic translation', { key: 'nat' }, [k('*', 'Delete all dynamic translations', { run: clearRun })])]),
         k('ospf', 'OSPF clear commands', [k('process', 'Reset OSPF process', { run: clearRun }), num(1, 65535, 'Process ID', { key: 'opid' }, [k('process', 'Reset OSPF process', { run: clearRun })])]),

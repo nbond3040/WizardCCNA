@@ -37,7 +37,7 @@ router ospf 1
     answer: 0,
     difficulty: 2,
     explanation:
-      'A /27 mask is 255.255.255.224, so the wildcard is **0.0.0.31**, and 192.168.10.64 0.0.0.31 covers .64 to .95, which contains .65. The second option puts a subnet mask where OSPF expects a wildcard, the third matches the whole /24 and could enable other interfaces, and the last covers .96 to .127, which does not include .65.',
+      'A /27 mask is 255.255.255.224, so the wildcard is **0.0.0.31**, and 192.168.10.64 0.0.0.31 covers .64 to .95, which contains .65. The version written with 255.255.255.224 puts a subnet mask where OSPF expects a wildcard, `192.168.10.0 0.0.0.255` matches the whole /24 and could enable other interfaces, and `192.168.10.96 0.0.0.31` covers .96 to .127, which does not include .65.',
   },
   {
     id: 'e3',

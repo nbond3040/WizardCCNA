@@ -490,12 +490,12 @@ end`,
     options: [
       'VLANs separate Layer 2 broadcast domains; VRFs separate Layer 3 routing tables',
       'VLANs separate Layer 3 routing tables; VRFs separate Layer 2 broadcast domains',
-      'Both technologies separate only Layer 2 broadcast domains on a switch or a router',
+      'Both technologies separate Layer 2 broadcast domains on a switch or a router',
       'VLANs require MPLS labels to forward frames; VRFs require 802.1Q trunks',
     ],
     answer: 0,
     difficulty: 1,
     explanation:
-      '**VLANs** virtualize a switch at Layer 2 (broadcast domains), and **VRFs** virtualize a router at Layer 3 (routing tables). Swapping the roles is backwards, claiming that both only separate Layer 2 domains ignores VRFs, and neither technology depends on the other\'s protocol: VLANs use 802.1Q tags and VRFs work with or without MPLS.',
+      '**VLANs** virtualize a switch at Layer 2 (broadcast domains), and **VRFs** virtualize a router at Layer 3 (routing tables). Swapping the roles is backwards, claiming that both separate Layer 2 domains ignores VRFs, and neither technology depends on the other\'s protocol: VLANs use 802.1Q tags and VRFs work with or without MPLS.',
   },
 ];

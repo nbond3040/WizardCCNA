@@ -51,7 +51,7 @@ export const quiz: Question[] = [
     difficulty: 1,
     tags: V2,
     explanation:
-      '`ipv6 ospf 1 area 0` enables OSPFv3 on the interface. OSPFv3 has no `network` command, `ip ospf 1 area 0` enables OSPFv2, and the last option is not valid syntax.',
+      '`ipv6 ospf 1 area 0` enables OSPFv3 on the interface. OSPFv3 has no `network` command, `ip ospf 1 area 0` enables OSPFv2, and `ospf ipv6 1 area 0` is not valid syntax.',
   },
   {
     id: 'q3',

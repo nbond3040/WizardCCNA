@@ -7,9 +7,10 @@ import { hash32 } from '../util/mac';
 import { rangesHas } from '../util/format';
 import { ifMac } from './topo';
 import { ek, type Net } from './net';
+import type { Derived } from './derived';
 import { flood } from './l2';
 import { hostEffective } from './l3';
-import { forward4 } from './packet';
+import { forward4, frameIngress } from './packet';
 
 export interface Lease {
   ip: number;
@@ -111,6 +112,12 @@ function hostServer(net: Net, dev: Device, giaddr: number | null, mac: string): 
   return { ip, mask, gw: parseIp(s.gateway) ?? undefined, dns: s.dns ? parseIp(s.dns) ?? undefined : undefined, server: hostEffective(dev).ip ?? 0, leaseSec: 86400 };
 }
 
+/** Server (or relay) → client direction: OFFER/ACK frames also pass port security and MAC learning on their way. */
+function serverFlood(net: Net, d: Derived, sdev: Device, ifName: string) {
+  const smac = ifMac(sdev, ifName);
+  return flood(net, d.l2, sdev, ifName, { srcMac: smac, dhcpServer: true, onIngress: frameIngress(net, smac) });
+}
+
 /**
  * Run a DORA exchange for a client interface. Returns the lease or the reason it failed.
  */
@@ -119,14 +126,8 @@ export function dhcpExchange(net: Net, client: Device, clientIf: string): DhcpRe
   const mac = ifMac(client, clientIf);
   const st = d.l2.ifs.get(ek(client.id, clientIf));
   if (!st || st.line !== 'up' || st.proto !== 'up') return { ok: false, reason: 'interface is down' };
-  const disc = flood(net, d.l2, client, clientIf, {
-    srcMac: mac,
-    dhcpClient: true,
-    onIngress: (sw, port, vlan) => {
-      sw.st.dyn.mac[`${vlan}|${mac}`] = { port, t: net.clock };
-      return true;
-    },
-  });
+  // the DISCOVER is a frame like any other: port security (learning, sticky addresses, violations) and MAC learning apply
+  const disc = flood(net, d.l2, client, clientIf, { srcMac: mac, dhcpClient: true, onIngress: frameIngress(net, mac) });
   const reasons: string[] = [...disc.drops.filter((x) => x.includes('snooping'))];
   for (const ep of disc.eps) {
     const sdev = net.dev(ep.dev)!;
@@ -134,7 +135,7 @@ export function dhcpExchange(net: Net, client: Device, clientIf: string): DhcpRe
     if (sdev.t === 'host') {
       const l = hostServer(net, sdev, null, mac);
       if (l) {
-        const back = flood(net, d.l2, sdev, ep.ifName, { dhcpServer: true });
+        const back = serverFlood(net, d, sdev, ep.ifName);
         if (back.eps.some((e) => e.dev === client.id)) return { ok: true, lease: l, via: sdev.id };
         reasons.push(...back.drops);
       }
@@ -157,7 +158,7 @@ export function dhcpExchange(net: Net, client: Device, clientIf: string): DhcpRe
         reasons.push(`pool ${pool.name} on ${cfg.hostname} has no free addresses`);
         continue;
       }
-      const back = flood(net, d.l2, sdev, ep.ifName, { dhcpServer: true });
+      const back = serverFlood(net, d, sdev, ep.ifName);
       if (!back.eps.some((e) => e.dev === client.id)) {
         reasons.push(...(back.drops.length ? back.drops : [`OFFER from ${cfg.hostname} did not reach the client`]));
         continue;
@@ -206,7 +207,7 @@ export function dhcpExchange(net: Net, client: Device, clientIf: string): DhcpRe
           if (server.t === 'ios') delete server.st.dyn.dhcpBind[String(lease.ip)];
           continue;
         }
-        const back = flood(net, d.l2, sdev, ep.ifName, { dhcpServer: true });
+        const back = serverFlood(net, d, sdev, ep.ifName);
         if (!back.eps.some((e) => e.dev === client.id)) {
           reasons.push(...(back.drops.length ? back.drops : ['OFFER did not reach the client']));
           continue;

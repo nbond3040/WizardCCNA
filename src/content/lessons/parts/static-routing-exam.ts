@@ -26,7 +26,7 @@ S        10.2.2.0/24 is directly connected, GigabitEthernet0/0/1`,
     answer: 1,
     difficulty: 2,
     explanation:
-      'Only a static route that names **just an exit interface** is displayed as "is directly connected" with no [AD/metric] brackets. A next-hop route would show `[1/0] via 10.0.12.2`, and a fully specified route would show `[1/0] via 10.0.12.2, GigabitEthernet0/0/1`. The last option uses a wildcard mask, which `ip route` does not accept.',
+      'Only a static route that names **just an exit interface** is displayed as "is directly connected" with no [AD/metric] brackets. A next-hop route would show `[1/0] via 10.0.12.2`, and a fully specified route would show `[1/0] via 10.0.12.2, GigabitEthernet0/0/1`. The route written with `0.0.0.255` uses a wildcard mask, which `ip route` does not accept.',
   },
   {
     id: 'e2',

@@ -193,12 +193,22 @@ function resolve4(net: Net, d: Derived, dev: Device, ifName: string, nh: number,
   }
   const myMac = ifMac(dev, ifName);
   const myIp = primaryIp(d, dev, ifName);
+  // With the entry already cached a real host would not broadcast: Dynamic ARP Inspection still decides whether the
+  // path works, it just does not count the packets that were never sent.
+  const cachedEnt = arpTable(dev)[String(nh)];
+  const cached = !!cachedEnt && (dev.t === 'host' || cachedEnt.ifName === ifName);
+  const arpDrops: { dev: string; iface: string; text: string }[] = [];
+  const ingress = frameIngress(net, myMac);
   const fl = flood(net, d.l2, dev, ifName, {
     srcMac: myMac,
     onIngress: (sw, port, vlan) => {
-      if (!psIngress(net, sw, port, vlan, myMac)) return false;
-      learnMac(net, sw, vlan, myMac, port);
-      return true;
+      if (!ingress(sw, port, vlan)) return false;
+      if (myIp === undefined) return true;
+      // Dynamic ARP Inspection: the ARP request is inspected where it enters each switch
+      const v = daiInspect(net, sw, port, vlan, { kind: 'req', sip: myIp, smac: myMac, tip: nh, tmac: NO_MAC }, cached);
+      if (v.ok) return true;
+      arpDrops.push({ dev: sw.id, iface: shortIf(port), text: v.text! });
+      return false;
     },
   });
   let found: { ep: L2Endpoint; mac: string; proxy?: boolean } | undefined;
@@ -245,19 +255,41 @@ function resolve4(net: Net, d: Derived, dev: Device, ifName: string, nh: number,
       }
     }
   }
-  if (!found) return null;
+  if (!found) {
+    // the request never reached anyone: say why when Dynamic ARP Inspection dropped it
+    for (const x of arpDrops) w.hops.push({ device: x.dev, iface: x.iface, action: x.text, ok: false });
+    if (arpDrops.length) w.arpBlock = arpDrops[0].text;
+    return null;
+  }
   const table = arpTable(dev);
   const ent = table[String(nh)];
   const hit = !!ent && ent.mac === found.mac && (dev.t === 'host' || ent.ifName === ifName);
+  const target = net.dev(found.ep.dev)!;
+  // the target learns the requester from the ARP request it received (real hosts do; proxy ARP answers for others)
+  const learnRequester = () => {
+    if (myIp === undefined || found!.proxy) return;
+    const tt = arpTable(target);
+    if (target.t === 'ios') tt[String(myIp)] = { mac: myMac, ifName: found!.ep.ifName, t: net.clock };
+    else tt[String(myIp)] = { mac: myMac, t: net.clock };
+  };
+  // the ARP reply comes back along the same switches and is inspected where it enters each of them
+  if (myIp !== undefined) {
+    for (let i = found.ep.hops.length - 1; i >= 0; i--) {
+      const h = found.ep.hops[i];
+      if (!h.outPort) continue;
+      const v = daiInspect(net, net.ios(h.dev)!, h.outPort, h.vlan, { kind: 'rep', sip: nh, smac: found.mac, tip: myIp, tmac: myMac }, hit);
+      if (v.ok) continue;
+      if (!hit) learnRequester();
+      noteFrames(net, fl.wires);
+      w.hops.push({ device: h.dev, iface: shortIf(h.outPort), action: v.text!, ok: false });
+      w.arpBlock = v.text;
+      return null;
+    }
+  }
   if (!hit) {
     if (dev.t === 'ios') table[String(nh)] = { mac: found.mac, ifName, t: net.clock };
     else table[String(nh)] = { mac: found.mac, t: net.clock };
-    const target = net.dev(found.ep.dev)!;
-    if (myIp !== undefined && !found.proxy) {
-      const tt = arpTable(target);
-      if (target.t === 'ios') tt[String(myIp)] = { mac: myMac, ifName: found.ep.ifName, t: net.clock };
-      else tt[String(myIp)] = { mac: myMac, t: net.clock };
-    }
+    learnRequester();
     w.hops.push({ device: dev.id, iface: shortIf(ifName), action: `ARP for ${ipStr(nh)}: reply from ${devName(target)} ${shortIf(found.ep.ifName)} (${macDotted(found.mac)})${found.proxy ? ' [proxy ARP]' : ''}`, ok: true });
     // the request is broadcast over every wire of the flood domain, the reply comes back along the path
     noteFrames(net, fl.wires);
@@ -488,7 +520,7 @@ export function forward4(net: Net, origin: Device, pkt0: Pkt, opts: FwdOpts = {}
     }
     const res = resolve4(net, d, cur, egress, nh, w);
     if (!res) {
-      w.fail = { dev: cur.id, kind: 'arp', text: `${devName(cur)} cannot resolve ${ipStr(nh)} (no ARP reply on ${shortIf(egress)})` };
+      w.fail = { dev: cur.id, kind: 'arp', text: `${devName(cur)} cannot resolve ${ipStr(nh)} (${w.arpBlock ?? `no ARP reply on ${shortIf(egress)}`})` };
       w.hops.push({ device: cur.id, iface: shortIf(egress), action: `ARP for ${ipStr(nh)} failed: no reply`, ok: false });
       return w;
     }
@@ -684,7 +716,9 @@ function resolve6(net: Net, d: Derived, dev: Device, ifName: string, nh: bigint)
     const peer = net.peerOf(dev.id, ifName);
     return peer && ifUp(d, peer.dev, peer.ifName) ? { ...peer, wires: [] } : null;
   }
-  const fl = flood(net, d.l2, dev, ifName);
+  // neighbour solicitations are frames like any other: port security and MAC learning apply to their source
+  const myMac = ifMac(dev, ifName);
+  const fl = flood(net, d.l2, dev, ifName, { srcMac: myMac, onIngress: frameIngress(net, myMac) });
   for (const ep of fl.eps) {
     const edev = net.dev(ep.dev)!;
     if (edev.id === dev.id) continue;

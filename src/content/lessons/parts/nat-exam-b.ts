@@ -14,7 +14,7 @@ export const natExamB: Question[] = [
     answer: 0,
     difficulty: 2,
     explanation:
-      'The syntax is `ip nat pool <name> <start> <end> {netmask <mask> | prefix-length <len>}`, so **prefix-length 29** is correct (netmask 255.255.255.248 would also work if the `netmask` keyword were present). The second option omits the `netmask` keyword, the third uses a network and wildcard instead of a start and end address, and `ip nat inside source` binds an ACL to a pool rather than defining one.',
+      'The syntax is `ip nat pool <name> <start> <end> {netmask <mask> | prefix-length <len>}`, so **prefix-length 29** is correct (netmask 255.255.255.248 would also work if the `netmask` keyword were present). The pool written with a bare 255.255.255.248 omits the `netmask` keyword, `203.0.113.64 0.0.0.7` uses a network and wildcard instead of a start and end address, and `ip nat inside source` binds an ACL to a pool rather than defining one.',
   },
   {
     id: 'e13',
@@ -142,7 +142,7 @@ NAT*: s=192.0.2.80, d=203.0.113.21->10.1.1.40 [5530]`,
     answer: 0,
     difficulty: 3,
     explanation:
-      'On the outside link the server replies to the only address it knows for PC1, the inside global **203.0.113.10**, from its own address 192.0.2.80. R1 rewrites the destination to 10.1.1.10 only after the packet arrives on the outside interface, so the private address never appears on the ISP link. The third option is the outbound request direction, and the interface address is not used because static NAT maps PC1 to 203.0.113.10.',
+      'On the outside link the server replies to the only address it knows for PC1, the inside global **203.0.113.10**, from its own address 192.0.2.80. R1 rewrites the destination to 10.1.1.10 only after the packet arrives on the outside interface, so the private address never appears on the ISP link. Source 203.0.113.10 with destination 192.0.2.80 is the outbound request direction, and an address taken from the interface is not used because static NAT maps PC1 to 203.0.113.10.',
   },
   {
     id: 'e20',

@@ -39,7 +39,7 @@ export const quiz: Question[] = [
     answer: 0,
     difficulty: 1,
     explanation:
-      '`ip ospf <process-id> area <area-id>` is the interface-mode command. `network` needs an address and wildcard, `router ospf 1` takes no area, and the last option is not an IOS command.',
+      '`ip ospf <process-id> area <area-id>` is the interface-mode command. `network` needs an address and wildcard, `router ospf 1` takes no area, and `ospf 1 area 0 enable` is not an IOS command.',
   },
   {
     id: 'q2',
