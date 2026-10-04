@@ -9,17 +9,22 @@ export type Response =
   | { type: 'categorize'; map: (number | null)[] }
   | { type: 'input'; text: string };
 
-const NO_SHUFFLE = /\b(all|none|both|neither) of the (above|options|following)\b|\b(options?|answers?) [A-F]\b|^\s*[A-F] and [A-F]\s*$/i;
+// Options that point at each other ("All of the above", "Options A and B"), or explanations that point at options by
+// position ("the second option", "Option B"), only make sense in the authored order, so those questions are not shuffled.
+const ALL_OF = /\b(?:all|none|both|neither) of the (?:above|options|following)\b/i;
+const LETTER_REF = /\b(?:[Oo]ptions?|[Cc]hoices?|[Aa]nswers?) [A-F]\b/; // case-sensitive letter: "answer a question" is not a reference
+const PAIR_REF = /^\s*[A-F] and [A-F]\s*$/;
+const ORDINAL_REF =
+  /\b(?:first|second|third|fourth|fifth|last|final)(?: two| three| four)? (?:of the )?(?:options?|choices?|distractors?)\b|\b(?:first|second|third|fourth|fifth)(?: two| three| four)? answers?\b|\boptions? [1-5]\b/i;
 
-/** An explanation that points at options by position ("the second option", "Option B") only reads right in the authored order. */
-const BY_POSITION =
-  /\b(first|second|third|fourth|fifth|last|final)( two| three| four)? (of the )?(options?|choices?|distractors?)\b|\b(first|second|third|fourth|fifth)( two| three| four)? answers?\b|\b(options?|choices?|answers?) [A-F]\b|\boptions? [1-5]\b/i;
+const refersToOthers = (option: string) => ALL_OF.test(option) || LETTER_REF.test(option) || PAIR_REF.test(option);
+const citesPositions = (text: string) => ORDINAL_REF.test(text) || LETTER_REF.test(text);
 
 /** Display order of options for single/multi questions (stable per seed). */
 export function optionOrder(q: Question, seed: number): number[] {
   if (q.type !== 'single' && q.type !== 'multi') return [];
   const idx = q.options.map((_, i) => i);
-  if (q.options.some((o) => NO_SHUFFLE.test(o)) || BY_POSITION.test(q.explanation)) return idx;
+  if (q.options.some(refersToOthers) || citesPositions(q.explanation)) return idx;
   return shuffle(idx, seededRandom(seed ^ hashString(q.id)));
 }
 

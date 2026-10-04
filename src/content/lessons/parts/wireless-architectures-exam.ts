@@ -73,7 +73,7 @@ export const exam: Question[] = [
     answer: 3,
     difficulty: 2,
     explanation:
-      'Split-MAC divides the work by timing: time-critical radio functions (beacons, ACKs, queuing, encryption) stay on the **AP**, and functions that need a network-wide view (RRM, authentication, roaming, policy) move to the **WLC**. The second option reverses the roles, the first describes dual-band radios, and the third confuses split-MAC with the two CAPWAP tunnels, which separate control messages from client data rather than traffic classes.',
+      'Split-MAC divides the work by timing: time-critical radio functions (beacons, ACKs, queuing, encryption) stay on the **AP**, and functions that need a network-wide view (RRM, authentication, roaming, policy) move to the **WLC**. Giving management to the AP and real-time processing to the WLC reverses the roles, splitting work between the 2.4 GHz and 5 GHz radios describes dual-band operation, and dividing client traffic by class confuses split-MAC with the two CAPWAP tunnels, which separate control messages from client data rather than traffic classes.',
   },
   {
     id: 'e5',

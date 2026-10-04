@@ -308,7 +308,7 @@ Reply from 198.51.100.40: bytes=32 time=211ms TTL=47`,
     options: [
       'Patching the application servers run by the provider',
       'Maintaining the hypervisor that runs the application',
-      'Deciding which users can access the service and its data',
+      'Deciding which users get access to the service and its data',
       'Replacing failed physical disks in the data center',
       'Securing the endpoint devices used to reach the service',
     ],

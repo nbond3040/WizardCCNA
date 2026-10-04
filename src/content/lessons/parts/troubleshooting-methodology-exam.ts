@@ -249,8 +249,8 @@ FastEthernet0/24 is up, line protocol is up (connected)
     options: [
       'It sends five 100-byte ICMP echo requests by default',
       'The source address is the outgoing interface address by default',
-      'It sets the DF bit in the IP header of each echo by default',
-      'It uses a 5-second timeout for each echo request by default',
+      'It sets the DF bit in the IP header of the packets by default',
+      'It uses a 5-second timeout for the echo replies by default',
       'It sends UDP probes to port 33434 on the destination host',
     ],
     answers: [0, 1],

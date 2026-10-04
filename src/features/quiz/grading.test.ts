@@ -23,6 +23,13 @@ describe('optionOrder', () => {
     }
   });
 
+  it('ignores prose that merely contains "answer a" or "final answer"', () => {
+    for (const text of ['A model refusing to answer a question is a limitation.', 'The question answers a design need.']) {
+      const order = optionOrder(single('q-prose', text), 5);
+      expect([...order].sort()).toEqual([0, 1, 2, 3]);
+    }
+  });
+
   it('does not treat unrelated "final answer" wording as positional', () => {
     const order = optionOrder(single('q-final', 'Asks the server for the final answer.'), 5);
     expect([...order].sort()).toEqual([0, 1, 2, 3]);
